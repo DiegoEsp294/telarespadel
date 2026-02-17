@@ -1,10 +1,8 @@
 services:
   - type: web
     name: telarespadel
-    env: php
-    phpVersion: 7.4
-    buildCommand: "mkdir -p application/logs application/cache && chmod -R 755 application/logs application/cache"
-    startCommand: "php -S 0.0.0.0:$PORT"
+    dockerfile: Dockerfile
+    dockerfilePath: ./Dockerfile
     plan: free
 
   - type: mysql
@@ -13,4 +11,5 @@ services:
     mysqlVersion: 5.7
     databaseName: torneos_telares
     user: telarespadel_user
+
 
