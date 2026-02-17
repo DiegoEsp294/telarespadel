@@ -17,12 +17,13 @@ RUN apt-get update && apt-get install -y \
 # -----------------------------
 RUN a2enmod rewrite
 
-RUN echo '<Directory /var/www/html>\
-    Options Indexes FollowSymLinks\
-    AllowOverride All\
-    Require all granted\
-</Directory>' > /etc/apache2/conf-available/override.conf \
+RUN printf "<Directory /var/www/html>\n\
+    Options Indexes FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>\n" > /etc/apache2/conf-available/override.conf \
     && a2enconf override
+
 
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
