@@ -9,13 +9,18 @@ RUN a2enmod rewrite
 # Copiar el proyecto
 COPY . /var/www/html/
 
-# Permisos
-RUN chmod -R 755 /var/www/html/application/logs
-RUN chmod -R 755 /var/www/html/application/cache
-RUN chown -R www-data:www-data /var/www/html
+# Crear carpetas necesarias (si no existen)
+RUN mkdir -p /var/www/html/application/logs \
+    && mkdir -p /var/www/html/application/cache
+
+# Permisos correctos para Apache
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/application
+
+RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
 # Exponer puerto
 EXPOSE 80
 
-# Comando para ejecutar
+# Ejecutar Apache
 CMD ["apache2-foreground"]
