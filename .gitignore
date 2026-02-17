@@ -1,0 +1,36 @@
+# Sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# PHP
+composer.phar
+/vendor/
+.env
+.env.local
+
+# CodeIgniter
+application/cache/*
+!application/cache/.htaccess
+application/logs/*
+!application/logs/.htaccess
+system/logs/*
+
+# Base de datos
+*.sql
+database/*.sql
+
+# Node
+node_modules/
+npm-debug.log
+
+# OS
+desktop.ini
