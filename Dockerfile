@@ -1,28 +1,37 @@
 FROM php:7.4-apache
 
-# Instalar extensiones necesarias
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+# -----------------------------
+# Dependencias del sistema
+# -----------------------------
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && docker-php-ext-install \
+        mysqli \
+        pdo \
+        pdo_mysql \
+        pgsql \
+        pdo_pgsql
 
-RUN docker-php-ext-install mysqli pdo pdo_mysql pdo_pgsql pgsql
-
-# Habilitar mod_rewrite
+# -----------------------------
+# Apache config
+# -----------------------------
 RUN a2enmod rewrite
+RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
-# Copiar el proyecto
+# -----------------------------
+# Copiar proyecto
+# -----------------------------
 COPY . /var/www/html/
 
-# Crear carpetas necesarias (si no existen)
+# Crear carpetas necesarias
 RUN mkdir -p /var/www/html/application/logs \
     && mkdir -p /var/www/html/application/cache
 
-# Permisos correctos para Apache
+# Permisos
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/application
 
-RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
-
-# Exponer puerto
+# Puerto
 EXPOSE 80
 
-# Ejecutar Apache
 CMD ["apache2-foreground"]
