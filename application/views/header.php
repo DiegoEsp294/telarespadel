@@ -197,7 +197,7 @@
     <nav class="navbar">
         <div class="container-nav">
             <div class="logo-section">
-                <img src="<?php echo base_url('assets/images/logo.png'); ?>" alt="Telares Padel" class="logo">
+                <img src="<?php echo base_url('logo.png'); ?>" alt="Telares Padel" class="logo">
                 <div class="club-title">
                     <h1>TELARES PADEL</h1>
                 </div>
