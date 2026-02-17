@@ -2,11 +2,13 @@
     RewriteEngine On
     RewriteBase /
 
-    # Si el archivo existe, servirlo directamente
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Si no existe, enviar a CodeIgniter
     RewriteRule ^(.*)$ index.php/$1 [L]
+</IfModule>
+
+<IfModule mod_authz_core.c>
+    Require all granted
 </IfModule>
