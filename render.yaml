@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: telarespadel
+    env: php
+    buildCommand: >
+      composer install 2>/dev/null;
+      mkdir -p application/logs application/cache;
+      chmod -R 755 application/logs application/cache;
+    startCommand: "php -S 0.0.0.0:$PORT"
+    plan: free
+    envVars:
+      - key: CI_ENVIRONMENT
+        value: production
+      - key: ENVIRONMENT
+        value: production
+    disk:
+      name: telarespadel-disk
+      sizeGB: 1
+      mountPath: /var/data
+
+  - type: mysql
+    name: telarespadel-db
+    plan: free
+    ipAllowList: []
+    databaseName: torneos_telares
+    user: telarespadel
