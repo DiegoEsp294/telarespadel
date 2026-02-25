@@ -24,7 +24,6 @@ class FixtureService
         $categorias = $this->CI->Torneo_model->obtenerCategoriasFixture($torneo_id);
         foreach ($categorias as $categoria)
         {
-            if($categoria->categoria_id != 3) continue;
 
             $parejas = $this->CI->Torneo_model->obtenerParejas(
                 $torneo_id,
@@ -38,6 +37,8 @@ class FixtureService
             if (count($parejas) < 3) {
                 continue;
             }
+
+
 
             $config = $this->calcularZonasAPA(count($parejas));
 
