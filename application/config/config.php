@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-$config['base_url'] = 'http://localhost/torneos-telares-padel/'; //'https://telarespadel.onrender.com/';
+$config['base_url'] = 'https://telarespadel.onrender.com/'; //'http://localhost/torneos-telares-padel/';
 $config['index_page'] = '';
 $config['uri_protocol']	= 'REQUEST_URI';
 $config['url_suffix'] = '';
