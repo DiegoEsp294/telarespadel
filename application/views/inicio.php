@@ -4,7 +4,15 @@
             <h2>Bienvenidos a Telares Padel</h2>
             <div class="cta-buttons">
                 <a href="#torneos" class="btn btn-primary">Ver Torneos</a>
-                <a href="#contacto" class="btn btn-secondary">Contactanos</a>
+                
+                <?php 
+                // Mostrar botón de administración solo para admin (1), organizador (2) y moderador (3)
+                if ($usuario_logueado && in_array($usuario_rol, array(1, 2, 3))): 
+                ?>
+                    <a href="<?php echo base_url('admin/Torneos/torneos'); ?>" class="btn btn-primary">
+                        <i class="fas fa-cog"></i> Panel de Administración
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -15,10 +23,7 @@
             <div class="info-content">
                 <div class="info-text">
                     <h2>Sobre Nosotros</h2>
-                    <p><?php echo isset($club_descripcion) ? $club_descripcion : 'Club de Padel de excelencia'; ?></p>
-                    <p>Bienvenidos a Telares Padel, tu lugar para jugar y disfrutar del padel en buena compañía. 
-                    Somos un club accesible donde jugadores de todos los niveles vienen a competir, mejorar y pasar momentos inolvidables. 
-                    Aquí el padel es para todos, y la pasión por el deporte es lo que nos une.</p>
+                    <p>Bienvenidos a Telares Padel, Club de Padel de excelencia, un lugar para jugar y disfrutar del padel en buena compañía. Somos un club accesible donde jugadores de todos los niveles y localidades vienen a competir, mejorar y pasar momentos inolvidables. Aquí el padel es para todos, y la pasión por el deporte es lo que nos une.</p>
                     
                     <div class="club-stats">
                         <div class="stat">
@@ -26,35 +31,52 @@
                             <p>Canchas</p>
                         </div>
                         <div class="stat">
-                            <h3>6+</h3>
+                            <h3>+6</h3>
                             <p>Torneos anuales</p>
+                            <p>torneos particulares y avalados por APA</p>
                         </div>
                     </div>
                 </div>
                 <div class="info-contact">
                     <h3>Información del Club</h3>
+
                     <div class="contact-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <p><?php echo $club_info['ubicacion'] ?? 'Tu localidad'; ?></p>
+                        <p>
+                            General Paz, S/N.<br>
+                            B° Santa Teresa
+                        </p>
                     </div>
+
+                    <div class="contact-item map-link">
+                        <i class="fas fa-map"></i>
+                        <p>
+                            <a href="https://maps.app.goo.gl/GWugdNAaGAFqtPuL7" target="_blank">
+                                Ver ubicación en Google Maps
+                            </a>
+                        </p>
+                    </div>
+
                     <div class="contact-item">
                         <i class="fas fa-phone"></i>
                         <p><?php echo $club_info['telefono'] ?? '+54 (XXX) XXXX-XXXX'; ?></p>
                     </div>
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <p><?php echo $club_info['email'] ?? 'info@telarespadel.com'; ?></p>
-                    </div>
+
                     <div class="contact-item">
                         <i class="fas fa-clock"></i>
                         <p>Lun - Dom: 08:00 - 22:00</p>
                     </div>
+
                     <div class="social-links">
-                        <a href="<?php echo $club_info['facebook'] ?? '#'; ?>" target="_blank" title="Facebook"><i class="fab fa-facebook"></i></a>
-                        <a href="<?php echo $club_info['instagram'] ?? '#'; ?>" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="https://whatsapp.com" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                        <a href="<?php echo $club_info['instagram'] ?? '#'; ?>" target="_blank" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://wa.me/549XXXXXXXXXX" target="_blank" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
@@ -68,7 +90,9 @@
             <div class="torneos-grid">
                 <?php if(isset($torneos) && !empty($torneos)): ?>
                     <?php foreach($torneos as $torneo): ?>
+
                         <div class="torneo-card <?php echo 'status-' . $torneo->estado; ?>">
+
                             <div class="torneo-header">
                                 <h3><?php echo $torneo->nombre; ?></h3>
                                 <span class="status-badge <?php echo $torneo->estado; ?>">
@@ -89,15 +113,17 @@
                                     ?>
                                 </span>
                             </div>
+
                             <div class="torneo-body">
                                 <div class="torneo-info-item">
                                     <i class="fas fa-calendar"></i>
                                     <div>
                                         <strong>Fechas</strong>
-                                        <p><?php 
+                                        <p>
+                                            <?php 
                                             $fecha_inicio = (!empty($torneo->fecha_inicio) && $torneo->fecha_inicio != '0000-00-00') ? date('d/m/Y', strtotime($torneo->fecha_inicio)) : null;
                                             $fecha_fin = (!empty($torneo->fecha_fin) && $torneo->fecha_fin != '0000-00-00') ? date('d/m/Y', strtotime($torneo->fecha_fin)) : null;
-                                            
+
                                             if ($fecha_inicio || $fecha_fin) {
                                                 $inicio = $fecha_inicio ?? 'a confirmar';
                                                 $fin = $fecha_fin ?? 'a confirmar';
@@ -105,34 +131,55 @@
                                             } else {
                                                 echo 'a confirmar';
                                             }
-                                        ?></p>
+                                            ?>
+                                        </p>
                                     </div>
                                 </div>
+
                                 <div class="torneo-info-item">
                                     <i class="fas fa-users"></i>
                                     <div>
-                                        <strong>Categoría</strong>
-                                        <p><?php echo $torneo->categoria; ?></p>
+                                        <strong>Categorías</strong>
+                                        <p><?php echo $torneo->categorias_label; ?></p>
                                     </div>
                                 </div>
+
                                 <div class="torneo-info-item">
-                                    <i class="fas fa-users-group"></i>
+                                    <i class="fas fa-user"></i>
                                     <div>
-                                        <strong>Participantes</strong>
-                                        <p><?php echo $torneo->participantes; ?></p>
+                                        <strong>Organizador</strong>
+                                        <p><?php echo $torneo->nombre_organizador; ?></p>
                                     </div>
                                 </div>
-                                <p class="torneo-description"><?php echo $torneo->descripcion; ?></p>
                             </div>
+
+                            <!-- ✅ IMAGEN DEL FLYER -->
+                            <div class="torneo-image">
+                                <?php if (!empty($torneo->imagen)) : ?>
+                                    <img 
+                                        src="data:image/jpeg;base64,<?php echo $torneo->imagen; ?>"
+                                        alt="Flyer del torneo <?php echo $torneo->nombre; ?>">
+                                <?php else : ?>
+                                    <img 
+                                        src="<?php echo base_url('assets/img/torneo-default.jpg'); ?>"
+                                        alt="Flyer por defecto">
+                                <?php endif; ?>
+                            </div>
+
                             <div class="torneo-footer">
-                                <a href="<?php echo site_url('home/torneo/'.$torneo->id); ?>" class="btn-info">Más Información</a>
+                                <a href="<?php echo base_url('home/torneo/'.$torneo->id); ?>" class="btn-info">
+                                    Más Información
+                                </a>
                             </div>
+
                         </div>
+
                     <?php endforeach; ?>
                 <?php else: ?>
                     <p class="no-torneos">No hay torneos registrados en este momento.</p>
                 <?php endif; ?>
             </div>
+
         </div>
     </section>
 
@@ -171,40 +218,6 @@
                     <h3>Comunidad</h3>
                     <p>Únete a una comunidad de jugadores apasionados y eventos sociales.</p>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Sección de Contacto -->
-    <section id="contacto" class="contacto-section">
-        <div class="container">
-            <h2>Contactanos</h2>
-            <p class="section-subtitle">¿Tienes preguntas? Comunícate con nosotros</p>
-            
-            <div class="contacto-content">
-                <form class="contacto-form">
-                    <div class="form-group">
-                        <label for="nombre">Nombre</label>
-                        <input type="text" id="nombre" name="nombre" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="telefono">Teléfono</label>
-                        <input type="tel" id="telefono" name="telefono">
-                    </div>
-                    <div class="form-group">
-                        <label for="asunto">Asunto</label>
-                        <input type="text" id="asunto" name="asunto" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="mensaje">Mensaje</label>
-                        <textarea id="mensaje" name="mensaje" rows="5" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
-                </form>
             </div>
         </div>
     </section>

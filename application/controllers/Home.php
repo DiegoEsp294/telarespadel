@@ -17,6 +17,11 @@ class Home extends CI_Controller {
         $data['club_descripcion'] = 'Club de Padel de excelencia en tu localidad';
         $data['club_info'] = $this->Configuracion_model->obtener_configuracion();
 
+        // Cargar información del usuario si está logueado
+        $data['usuario_logueado'] = $this->session->userdata('usuario_id');
+        $data['usuario_rol'] = $this->session->userdata('id_roles');
+        $data['usuario_nombre'] = $this->session->userdata('usuario_nombre');
+
         // Cargar torneos desde la base de datos
         $data['torneos'] = $this->Torneo_model->obtener_proximos();
 
@@ -47,6 +52,36 @@ class Home extends CI_Controller {
         $data['total_inscriptos'] = $this->Torneo_model->contar_inscriptos($id);
         $data['inscriptos_por_categoria'] = $this->Torneo_model->obtener_inscriptos_por_categoria($id);
         $data['solicitudes'] = $this->Torneo_model->obtener_solicitudes($id);
+
+        $categorias = " ";
+        foreach($data['inscriptos_por_categoria'] as $cat){
+            $categorias .=$cat->categoria.' ';
+        }
+        $data['categorias_label'] = $categorias;
+
+        $this->load->library('FixtureService');
+
+        $categoria_id = $this->input->get('categoria_id');
+
+        $categorias = $this->Torneo_model
+            ->obtenerCategoriasPorTorneo($id);
+
+        // si no viene por GET, usamos la primera
+        if (!$categoria_id && !empty($categorias)) {
+            $categoria_id = $categorias[0]->id;
+        }
+        
+        $data['categorias'] = $categorias;
+        $data['categoria_id'] = $categoria_id;
+
+        // traer todo el fixture armado
+        $data['zonas'] = $this->fixtureservice->obtenerFixtureCompleto($id, $categoria_id);
+        $playoff = $this->Torneo_model
+            ->obtenerFixturePlayoff($id, $categoria_id);
+        
+        $data['playoff'] = $playoff;
+
+        $data['fixture'] = $data;
 
         // Cargar vista
         $this->load->view('header', array('club_nombre' => 'Telares Padel'));

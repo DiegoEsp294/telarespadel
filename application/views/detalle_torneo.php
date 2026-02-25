@@ -262,7 +262,29 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         grid-template-columns: 1fr;
     }
 }
+
+    .info-grid{
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+        gap:15px;
+        margin-bottom:20px;
+    }
+
+    .info-grid div{
+        background:#f8f9fb;
+        padding:12px;
+        border-radius:6px;
+        border-left:4px solid #FF6600;
+    }
 </style>
+
+<?php
+    $mensaje_wpp = urlencode(
+        "Hola! Quiero consultar por el torneo '{$torneo->nombre}'. ¿Me podés pasar info?"
+    );
+
+    $link_wpp = "https://wa.me/".$torneo->telefono_organizador."?text=".$mensaje_wpp;
+?>
 
 <section class="detalle-torneo">
     <div class="container">
@@ -284,6 +306,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             <h1><?php echo $torneo->nombre; ?></h1>
             
             <div class="info-row">
+                <div style="margin-top:25px;">
+                    <a href="<?php echo $link_wpp; ?>" 
+                    target="_blank"
+                    class="btn-enviar"
+                    style="display:inline-block; width:auto; padding:12px 25px;">
+                        <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
+                    </a>
+                </div>
                 <div class="info-item">
                     <i class="fas fa-calendar"></i>
                     <div>
@@ -306,8 +336,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 <div class="info-item">
                     <i class="fas fa-users"></i>
                     <div>
-                        <strong>Categoría</strong>
-                        <p><?php echo $torneo->categoria; ?></p>
+                        <strong>Categorías</strong>
+                        <p><?php echo $categorias_label; ?></p>
                     </div>
                 </div>
 
@@ -328,8 +358,26 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             </div>
         </div>
 
+        <?php if(!empty($torneo->imagen)): ?>
+            <div class="card" style="padding:15px;">
+                <h2>Flyer del Torneo</h2>
+
+                <div style="text-align:center;">
+                    <img 
+                        src="data:image/jpeg;base64,<?php echo $torneo->imagen; ?>"
+                        alt="Flyer <?php echo $torneo->nombre; ?>"
+                        style="
+                            max-width:100%;
+                            border-radius:10px;
+                            box-shadow:0 5px 20px rgba(0,0,0,0.15);
+                        "
+                    >
+                </div>
+            </div>
+        <?php endif; ?>
+
         <!-- Contenido Principal -->
-        <div class="content-grid">
+        <div class="">
             <div>
                 <!-- Descripción del Torneo -->
                 <div class="card">
@@ -337,22 +385,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     <p class="descripcion"><?php echo nl2br($torneo->descripcion); ?></p>
 
                     <!-- Estadísticas -->
-                    <h3>Estadísticas</h3>
-                    <div class="estadisticas">
-                        <div class="stat-box">
-                            <div class="numero"><?php echo $total_inscriptos; ?></div>
-                            <div class="label">Inscriptos</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="numero"><?php echo $torneo->participantes; ?></div>
-                            <div class="label">Cupo Total</div>
-                        </div>
-                    </div>
 
                     <!-- Inscriptos por Categoría -->
                     <?php if (!empty($inscriptos_por_categoria)): ?>
                         <h3>Inscriptos por Categoría</h3>
-                        <div class="estadisticas">
+                        <div class="">
                             <?php foreach ($inscriptos_por_categoria as $cat): ?>
                                 <div class="stat-box">
                                     <div class="numero"><?php echo $cat->cantidad; ?></div>
@@ -362,138 +399,52 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         </div>
                     <?php endif; ?>
 
-                    <!-- Listado de Inscriptos -->
-                    <h3>Listado de Inscriptos</h3>
-                    <?php if (!empty($inscriptos)): ?>
-                        <table class="tabla-inscriptos">
-                            <thead>
-                                <tr>
-                                    <th>Pareja</th>
-                                    <th>Categoría</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($inscriptos as $inscripto): ?>
-                                    <tr>
-                                        <td>
-                                            <?php 
-                                                $pareja = '';
-                                                if (!empty($inscripto->nombre_p1)) {
-                                                    $pareja .= $inscripto->nombre_p1 . ' ' . $inscripto->apellido_p1;
-                                                }
-                                                if (!empty($inscripto->nombre_p2)) {
-                                                    if (!empty($pareja)) $pareja .= ' - ';
-                                                    $pareja .= $inscripto->nombre_p2 . ' ' . $inscripto->apellido_p2;
-                                                }
-                                                echo !empty($pareja) ? $pareja : 'Pareja no especificada';
-                                            ?>
-                                        </td>
-                                        <td><span class="categoria-badge"><?php echo $inscripto->categoria ?? 'Sin categoría'; ?></span></td>
-                                        <td>
-                                            <?php 
-                                                $estados_badge = array(
-                                                    'confirmada' => '<span style="color: #28a745;">✓ Confirmada</span>',
-                                                    'pendiente' => '<span style="color: #ffc107;">⧖ Pendiente</span>',
-                                                    'cancelada' => '<span style="color: #dc3545;">✗ Cancelada</span>'
-                                                );
-                                                echo $estados_badge[$inscripto->estado] ?? $inscripto->estado;
-                                            ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php else: ?>
-                        <div class="sin-inscriptos">
-                            <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px;"></i>
-                            <p>Aún no hay inscriptos confirmados en este torneo.</p>
+
+                    <div class="info-extra">
+                        <h3>Datos del Torneo</h3>
+
+                        <div class="info-grid">
+                            <?php if(!empty($torneo->sede)): ?>
+                                <div><strong>📍 Sede:</strong> <?php echo $torneo->sede; ?></div>
+                            <?php endif; ?>
+
+                            <?php if(!empty($torneo->precio_inscripcion)): ?>
+                                <div><strong>💰 Inscripción:</strong> $<?php echo $torneo->precio_inscripcion.' por integrante'; ?></div>
+                            <?php endif; ?>
+
+                            <?php if(!empty($torneo->fecha_cierre_inscripcion)): ?>
+                                <div>
+                                    <strong>⏳ Cierre inscripción:</strong>
+                                    <?php echo date('d/m/Y', strtotime($torneo->fecha_cierre_inscripcion)); ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if(!empty($torneo->premios)): ?>
+                                <div><strong>🏆 Premios:</strong> <?php echo $torneo->premios; ?></div>
+                            <?php endif; ?>
                         </div>
-                    <?php endif; ?>
+                    </div>
                 </div>
             </div>
 
-            <!-- Formulario de Inscripción -->
-            <div>
-                <div class="formulario-inscripcion">
-                    <h3><i class="fas fa-edit"></i> Solicitar Inscripción</h3>
-                    
-                    <div class="cupo-disponible">
-                        <strong>Cupo disponible:</strong> 
-                        <?php 
-                            $cupo_text = (strpos($torneo->participantes, 'Sin') === false) ? 
-                                $torneo->participantes : 'Sin límite';
-                            echo $cupo_text;
-                        ?>
-                    </div>
-
-                    <form method="POST" action="<?php echo site_url('home/solicitar_inscripcion'); ?>">
-                        <input type="hidden" name="torneo_id" value="<?php echo $torneo->id; ?>">
-
-                        <div class="form-group">
-                            <label for="nombre">Nombre *</label>
-                            <input type="text" id="nombre" name="nombre" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="apellido">Apellido</label>
-                            <input type="text" id="apellido" name="apellido">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="email">Email *</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="telefono">Teléfono</label>
-                            <input type="tel" id="telefono" name="telefono" placeholder="+54 (XXX) XXXX-XXXX">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="categoria">Categoría</label>
-                            <select id="categoria" name="categoria">
-                                <option value="">Seleccionar...</option>
-                                <option value="Masculino">Masculino</option>
-                                <option value="Femenino">Femenino</option>
-                                <option value="Mixto">Mixto</option>
-                                <option value="Otro">Otro</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="compañero">Nombre del Compañero/a</label>
-                            <textarea id="compañero" name="compañero" rows="2" placeholder="Nombre y teléfono de tu pareja de juego"></textarea>
-                        </div>
-
-                        <button type="submit" class="btn-enviar">
-                            <i class="fas fa-paper-plane"></i> Enviar Solicitud
-                        </button>
-
-                        <p style="font-size: 12px; color: #999; margin-top: 15px; text-align: center;">
-                            * Campos requeridos. Nos contactaremos pronto para confirmar tu inscripción.
-                        </p>
-                    </form>
-                </div>
-
-                <!-- Solicitudes Pendientes (para admin) -->
-                <?php if (!empty($solicitudes)): ?>
-                    <div class="card">
-                        <h2>Solicitudes Pendientes</h2>
-                        <p style="font-size: 12px; color: #999;">Total: <?php echo count($solicitudes); ?> solicitud(es)</p>
-                        
-                        <?php foreach ($solicitudes as $solicitud): ?>
-                            <div style="padding: 15px; border: 1px solid #eee; border-radius: 5px; margin-bottom: 10px;">
-                                <p><strong><?php echo $solicitud->nombre . ' ' . $solicitud->apellido; ?></strong></p>
-                                <p><i class="fas fa-envelope"></i> <?php echo $solicitud->email; ?></p>
-                                <p><i class="fas fa-phone"></i> <?php echo $solicitud->telefono; ?></p>
-                                <p><small style="color: #999;">Solicitud: <?php echo date('d/m/Y H:i', strtotime($solicitud->fecha_solicitud)); ?></small></p>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
         </div>
+
+        <div class="card" style="text-align:center;">
+            <h2>¿Querés participar?</h2>
+
+            <p>Contactá al organizador o asegurá tu lugar ahora.</p>
+
+            <a href="<?php echo $link_wpp; ?>" target="_blank" class="btn-enviar">
+                <i class="fab fa-whatsapp"></i> Consultar disponibilidad
+            </a>
+        </div>
+
+        
+        <?php 
+            if(count($zonas) > 0):
+                $this->load->view('fixture', $fixture); 
+            endif;
+        ?>
 
         <!-- Botón Volver -->
         <div style="margin-top: 30px; text-align: center;">

@@ -4,8 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($club_nombre) ? $club_nombre : 'Telares Padel'; ?></title>
-    <link rel="stylesheet" href="<?php echo base_url('assets/css/style.css'); ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/style.css?v='.time()); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="<?php echo base_url('assets/css/admin.css'); ?>">
+
+    <?php 
+        $usuario_logueado = $this->session->userdata('usuario_id');
+        $usuario_rol = $this->session->userdata('id_roles');
+        $usuario_nombre = $this->session->userdata('usuario_nombre');
+    ?>
+
     <style>
         .menu-toggle {
             display: none;
@@ -219,10 +229,10 @@
                 
                 <!-- Autenticación dentro del menú -->
                 <li class="nav-auth-item">
-                    <?php if ($this->session->userdata('usuario_id')): ?>
+                    <?php if (isset($usuario_logueado) && $usuario_logueado): ?>
                         <div class="usuario-info">
                             <i class="fas fa-user-circle"></i>
-                            <span><?php echo $this->session->userdata('usuario_nombre'); ?></span>
+                            <span><?php echo isset($usuario_nombre) ? $usuario_nombre : 'Usuario'; ?></span>
                         </div>
                         <a href="<?php echo site_url('auth/perfil'); ?>" class="nav-link" title="Mi Perfil">
                             <i class="fas fa-cog"></i> Mi Perfil
@@ -246,6 +256,16 @@
     </nav>
 
     <script>
+        // Debug: Verificar estado de login
+        console.log('usuario_logueado:', '<?php echo isset($usuario_logueado) && $usuario_logueado ? "SI" : "NO"; ?>');
+        console.log('usuario_nombre:', '<?php echo isset($usuario_nombre) ? $usuario_nombre : "VACIO"; ?>');
+        console.log('usuario_rol:', '<?php echo isset($usuario_rol) ? $usuario_rol : "VACIO"; ?>');
+        
+        // Mostrar alert en desarrollo
+        <?php if ($this->input->get('debug')): ?>
+            alert('DEBUG LOGIN:\n\nLogueado: <?php echo isset($usuario_logueado) && $usuario_logueado ? "SÍ ✅" : "NO ❌"; ?>\nNombre: <?php echo isset($usuario_nombre) ? $usuario_nombre : "(vacío)"; ?>\nRol: <?php echo isset($usuario_rol) ? $usuario_rol : "(vacío)"; ?>');
+        <?php endif; ?>
+        
         // Toggle del menú móvil
         document.addEventListener('DOMContentLoaded', function() {
             const menuToggle = document.getElementById('menuToggle');

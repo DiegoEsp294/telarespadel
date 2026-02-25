@@ -17,9 +17,14 @@ class Auth extends CI_Controller {
             redirect('/');
         }
 
+        $data['error'] = '';
+
         if ($this->input->method() === 'post') {
             $email = $this->input->post('email');
             $password = $this->input->post('password');
+
+            // Debug: Registrar el intento
+            log_message('info', 'Intento de login con email: ' . $email);
 
             // Validación
             $this->form_validation->set_rules('email', 'Email', 'required|valid_email');
@@ -27,28 +32,52 @@ class Auth extends CI_Controller {
 
             if ($this->form_validation->run() == FALSE) {
                 $data['error'] = validation_errors();
+                log_message('error', 'Errores de validación: ' . $data['error']);
             } else {
                 // Buscar usuario
                 $usuario = $this->Usuario_model->obtener_por_email($email);
 
-                if ($usuario && $this->Usuario_model->verificar_contraseña($password, $usuario->password)) {
-                    // Login exitoso
-                    $this->Usuario_model->registrar_acceso($usuario->id);
-                    $this->session->set_userdata('usuario_id', $usuario->id);
-                    $this->session->set_userdata('usuario_nombre', $usuario->nombre);
-                    $this->session->set_userdata('usuario_email', $usuario->email);
-                    $this->session->set_flashdata('success', '¡Bienvenido ' . $usuario->nombre . '!');
-                    redirect('/');
+                if ($usuario) {
+                    log_message('info', 'Usuario encontrado: ' . $usuario->email . ' - rol: ' . $usuario->id_roles);
+                    
+                    if ($this->Usuario_model->verificar_contraseña($password, $usuario->password)) {
+                        // Login exitoso
+                        log_message('info', 'Contraseña válida para: ' . $usuario->email);
+                        
+                        $this->Usuario_model->registrar_acceso($usuario->id);
+                        
+                        // Setear datos en sesión
+                        $this->session->set_userdata([
+                            'usuario_id'      => $usuario->id,
+                            'usuario_nombre'  => $usuario->nombre,
+                            'usuario_email'   => $usuario->email,
+                            'id_roles'        => $usuario->id_roles
+                        ]);
+
+                        redirect('/');
+
+                    } else {
+                        log_message('error', 'Contraseña inválida para: ' . $email);
+                        $data['error'] = 'Email o contraseña incorrecta.';
+                    }
                 } else {
+                    log_message('error', 'Usuario NO encontrado: ' . $email);
                     $data['error'] = 'Email o contraseña incorrecta.';
                 }
             }
         }
 
+        // Cargar datos de sesión para el header
         $data['club_nombre'] = 'Telares Padel';
+        $data['usuario_logueado'] = $this->session->userdata('usuario_id');
+        $data['usuario_rol'] = $this->session->userdata('id_roles');
+        $data['usuario_nombre'] = $this->session->userdata('usuario_nombre');
+
+
         $this->load->view('header', $data);
         $this->load->view('login', $data);
         $this->load->view('footer');
+
     }
 
     public function registro()
@@ -87,7 +116,8 @@ class Auth extends CI_Controller {
                         'telefono' => $telefono,
                         'password' => $password,
                         'categoria' => NULL,
-                        'estado' => 'activo'
+                        'estado' => 'activo',
+                        'id_roles' => 1
                     );
 
                     if ($this->Usuario_model->crear_usuario($usuario_data)) {
@@ -100,7 +130,12 @@ class Auth extends CI_Controller {
             }
         }
 
+        // Cargar datos de sesión para el header
         $data['club_nombre'] = 'Telares Padel';
+        $data['usuario_logueado'] = $this->session->userdata('usuario_id');
+        $data['usuario_rol'] = $this->session->userdata('id_roles');
+        $data['usuario_nombre'] = $this->session->userdata('usuario_nombre');
+
         $this->load->view('header', $data);
         $this->load->view('registro', $data);
         $this->load->view('footer');
@@ -122,6 +157,11 @@ class Auth extends CI_Controller {
         $usuario_id = $this->session->userdata('usuario_id');
         $data['usuario'] = $this->Usuario_model->obtener_por_id($usuario_id);
         $data['club_nombre'] = 'Telares Padel';
+        
+        // Cargar datos de sesión para el header
+        $data['usuario_logueado'] = $this->session->userdata('usuario_id');
+        $data['usuario_rol'] = $this->session->userdata('id_roles');
+        $data['usuario_nombre'] = $this->session->userdata('usuario_nombre');
 
         $this->load->view('header', $data);
         $this->load->view('perfil_usuario', $data);

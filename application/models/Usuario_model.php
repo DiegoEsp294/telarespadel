@@ -10,7 +10,14 @@ class Usuario_model extends CI_Model {
 
     public function obtener_por_email($email)
     {
-        $query = $this->db->where('email', $email)->where('estado', 'activo')->get('usuarios');
+        $this->db->select('u.*, r.nombre AS rol_nombre');
+        $this->db->from('usuarios u');
+        $this->db->join('roles r', 'r.id_roles = u.id_roles', 'left');
+        $this->db->where('u.email', $email);
+        $this->db->where('u.estado', 'activo');
+
+        $query = $this->db->get();
+
         return $query->row();
     }
 
