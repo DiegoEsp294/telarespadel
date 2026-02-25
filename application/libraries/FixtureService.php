@@ -39,7 +39,6 @@ class FixtureService
             }
 
 
-
             $config = $this->calcularZonasAPA(count($parejas));
 
             $zonas = $this->crearZonas(

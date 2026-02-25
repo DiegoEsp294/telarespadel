@@ -227,7 +227,7 @@ class Torneo_model extends CI_Model {
         return $this->db
             ->where('torneo_id', $torneo_id)
             ->where('categoria_id', $categoria_id)
-            ->where('estado', 'confirmada')
+            // ->where('estado', 'confirmada')
             ->order_by('id', 'ASC')
             ->get('inscripciones')
             ->result();
