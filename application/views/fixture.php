@@ -8,7 +8,7 @@
             ============================= -->
 
             <form method="get">
-                <select name="categoria_id"
+                <select name="categoria_id" class="select-categoria"
                         onchange="this.form.submit()">
 
                     <?php foreach($categorias as $cat): ?>

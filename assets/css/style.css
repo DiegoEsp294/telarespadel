@@ -1847,3 +1847,40 @@ body {
         font-size:13px;
     }
 }
+
+.select-categoria {
+    appearance: none; /* elimina estilo nativo */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    padding: 10px 40px 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    background-color: #fff;
+
+    cursor: pointer;
+    outline: none;
+
+    transition: all 0.2s ease;
+
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.select-categoria:hover {
+    border-color: #bdbdbd;
+}
+
+.select-categoria:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+.select-categoria {
+    min-width: 200px;
+}
