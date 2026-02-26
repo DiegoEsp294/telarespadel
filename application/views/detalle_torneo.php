@@ -441,9 +441,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
         
         <?php 
-            if(count($zonas) > 0):
-                $this->load->view('fixture', $fixture); 
-            endif;
+            $this->load->view('fixture', $fixture); 
         ?>
 
         <!-- Botón Volver -->
