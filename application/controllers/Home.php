@@ -77,7 +77,7 @@ class Home extends CI_Controller {
         // traer todo el fixture armado
         $data['zonas'] = $this->fixtureservice->obtenerFixtureCompleto($id, $categoria_id);
         $playoff = $this->Torneo_model
-            ->obtenerFixturePlayoff($id, $categoria_id);
+            ->obtener_clasificados_playoff($id, $categoria_id);
         
         $data['playoff'] = $playoff;
 

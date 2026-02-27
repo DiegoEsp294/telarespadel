@@ -131,11 +131,30 @@ class Torneo_model extends CI_Model {
             ->update('torneos', $data);
     }
 
-    public function eliminar($id)
+    public function eliminarTorneoCompleto($torneo_id)
     {
-        return $this->db
-            ->where('id', $id)
-            ->delete('torneos');
+        $this->db->trans_start();
+
+        $this->db->query("
+            DELETE FROM resultados_partido
+            WHERE partido_id IN (
+                SELECT id FROM partidos WHERE torneo_id = ?
+            )
+        ", [$torneo_id]);
+
+        $this->db->query("
+            DELETE FROM partido_sets
+            WHERE partido_id IN (
+                SELECT id FROM partidos WHERE torneo_id = ?
+            )
+        ", [$torneo_id]);
+
+        $this->db->delete('partidos', ['torneo_id' => $torneo_id]);
+        $this->db->delete('inscripciones', ['torneo_id' => $torneo_id]);
+        $this->db->delete('zonas', ['torneo_id' => $torneo_id]);
+        $this->db->delete('torneos', ['id' => $torneo_id]);
+
+        $this->db->trans_complete();
     }
 
     public function asignarCategoria($torneo_id, $categoria_id)
@@ -200,8 +219,8 @@ class Torneo_model extends CI_Model {
         $query = $this->db
             ->where('tc.torneo_id', $id_torneo)
             ->select('
-                i.*, 
-                p1.nombre as nombre1, p2.nombre as nombre2, 
+                i.*,
+                p1.nombre as nombre1, p2.nombre as nombre2,
                 p1.apellido as apellido1, p2.apellido as apellido2,
                 p1.telefono as telefono1, p2.telefono as telefono2,
                 c.nombre as categoria'
@@ -212,7 +231,7 @@ class Torneo_model extends CI_Model {
             ->join('categorias c', 'i.categoria_id=c.id', 'LEFT')
             ->join('torneo_categorias tc', 'tc.categoria_id=i.categoria_id', 'INNER')
             ->get();
-        return $query->result();  
+        return $query->result();
     }
 
     public function eliminar_inscripcion($id_inscripcion)
@@ -327,6 +346,16 @@ class Torneo_model extends CI_Model {
         return false;
     }
 
+    public function actualizarPartidos($partido_id, $data)
+    {
+        $ok = $this->db->update('partidos', $data);
+        if ($ok) {
+            return $this->db->insert_id();
+        }
+
+        return false;
+    }
+
     public function obtenerPartidos($partido_id)
     {
         return $this->db
@@ -354,14 +383,11 @@ class Torneo_model extends CI_Model {
         return $this->db->insert('partido_sets', $dataSet);
     }
 
-    public function actualizarPartido($partido_id, $ganador_id)
+    public function actualizarPartido($partido_id, $data)
     {
         return $this->db
             ->where('id', $partido_id)
-            ->update('partidos', [
-                'estado' => 'finalizado',
-                'ganador_id' => $ganador_id
-            ]);
+            ->update('partidos', $data);
     }
 
     public function avanzarGanador($partido_id, $campoDestino, $ganador_id)
@@ -396,14 +422,14 @@ class Torneo_model extends CI_Model {
         $existe = $this->db
             ->where([
                 'partido_id' => $partido_id,
-                'nro_set' => $nro_set
+                'numero_set' => $nro_set
             ])
-            ->get('partidos_sets')
+            ->get('partido_sets')
             ->row();
 
         $data = [
             'partido_id' => $partido_id,
-            'nro_set' => $nro_set,
+            'numero_set' => $nro_set,
             'juegos_pareja1' => $j1,
             'juegos_pareja2' => $j2
         ];
@@ -412,11 +438,11 @@ class Torneo_model extends CI_Model {
         {
             $this->db
                 ->where('id', $existe->id)
-                ->update('partidos_sets', $data);
+                ->update('partido_sets', $data);
         }
         else
         {
-            $this->db->insert('partidos_sets', $data);
+            $this->db->insert('partido_sets', $data);
         }
     }
 
@@ -424,8 +450,8 @@ class Torneo_model extends CI_Model {
     {
         $sets = $this->db
             ->where('partido_id', $partido_id)
-            ->order_by('nro_set')
-            ->get('partidos_sets')
+            ->order_by('numero_set')
+            ->get('partido_sets')
             ->result();
 
         $partido = $this->db
@@ -457,8 +483,8 @@ class Torneo_model extends CI_Model {
     {
         return $this->db
             ->where('partido_id', $partido_id)
-            ->order_by('nro_set')
-            ->get('partidos_sets')
+            ->order_by('numero_set')
+            ->get('partido_sets')
             ->result();
     }
 
@@ -551,5 +577,254 @@ class Torneo_model extends CI_Model {
         return $agrupado;
     }
 
-}
+    public function eliminarResultadosAnteriores($partido_id)
+    {
+        $this->db
+            ->where('partido_id', $partido_id)
+            ->delete('resultados_partido');
+    }
 
+    public function insertarResultado(array $data)
+    {
+        /*
+            $data esperado:
+            [
+                'partido_id' => int,
+                'set1_p1'    => int,
+                'set1_p2'    => int,
+                'set2_p1'    => int,
+                'set2_p2'    => int,
+                'set3_p1'    => int|null,
+                'set3_p2'    => int|null,
+                'ganador_id' => int
+            ]
+        */
+        $this->db->insert('resultados_partido', $data);
+    }
+
+    public function obtenerPartidosPorZona($zona_id)
+    {
+        return $this->db
+            ->select('id, pareja1_id, pareja2_id, ganador_id, torneo_id, categoria_id')
+            ->from('partidos')
+            ->where('zona_id', $zona_id)
+            ->get()
+            ->result();
+    }
+
+    public function actualizarTablaZona($zona_id, $inscripcion_id, $datos)
+    {
+        /*
+            $datos esperado:
+            [
+                'pj'           => int,
+                'pg'           => int,
+                'pp'           => int,
+                'sets_favor'   => int,
+                'sets_contra'  => int,
+                'games_favor'  => int,
+                'games_contra' => int,
+                'diferencia_games'    => int
+            ]
+        */
+
+        $existe = $this->db
+            ->from('tabla_posiciones')
+            ->where('zona_id', $zona_id)
+            ->where('inscripcion_id', $inscripcion_id)
+            ->count_all_results();
+
+        if ($existe) {
+            $this->db
+                ->where('zona_id', $zona_id)
+                ->where('inscripcion_id', $inscripcion_id)
+                ->update('tabla_posiciones', $datos);
+        } else {
+            $datos['zona_id'] = $zona_id;
+            $datos['inscripcion_id'] = $inscripcion_id;
+            $this->db->insert('tabla_posiciones', $datos);
+        }
+    }
+
+    public function obtenerTablaZona($zona_id)
+    {
+        return $this->db
+            ->from('tabla_posiciones tp')
+            ->join('inscripciones i', 'i.id = tp.inscripcion_id')
+            ->join('participantes p1', 'p1.id = i.participante1_id')
+            ->join('participantes p2', 'p2.id = i.participante2_id')
+            ->select("tp.*, CONCAT(p1.nombre, ' ', p1.apellido, ' - ', p2.nombre, ' ', p2.apellido) as pareja_nombre")
+            ->where('tp.zona_id', $zona_id)
+            ->order_by('tp.pg', 'DESC')      // partidos ganados
+            ->order_by('tp.diferencia_games', 'DESC') // diferencia de games
+            ->get()
+            ->result();
+    }
+
+    public function buscarPartidosPorReferencia($ganador_id, $perdedor_id)
+    {
+        return $this->db
+            ->where('ganador_id', $ganador_id)
+            ->group_start()
+                ->where('pareja1_id', $perdedor_id)
+                ->or_where('pareja2_id', $perdedor_id)
+            ->group_end()
+            ->get('partidos')
+            ->result();
+    }
+
+    public function guardarSeed($data)
+    {
+        /*
+            $data esperado:
+            [
+                'codigo'         => '1A', '2B', etc
+                'inscripcion_id' => int
+            ]
+        */
+
+        $this->db->insert('seeds', $data);
+    }
+
+    public function buscarPartidosPorSeed($codigo)
+    {
+        return $this->db
+            ->from('partidos')
+            ->where('referencia1', $codigo)
+            ->or_where('referencia2', $codigo)
+            ->get()
+            ->result();
+    }
+
+    public function actualizarPartidoDatos($partido_id, $data)
+    {
+        /*
+            $data puede contener:
+            [
+                'pareja1_id' => int,
+                'pareja2_id' => int,
+                'ganador_id' => int,
+                'estado'     => 'pendiente'|'finalizado',
+                'referencia1'=> string,
+                'referencia2'=> string
+            ]d
+        */
+        $this->db->where('id', $partido_id)
+                ->update('partidos', $data);
+    }
+
+    public function partidosListosParaJugar()
+    {
+        return $this->db
+            ->select('*')
+            ->from('partidos')
+            ->where('estado', 'pendiente')
+            ->where('pareja1_id IS NOT NULL', null, false)
+            ->where('pareja2_id IS NOT NULL', null, false)
+            ->get()
+            ->result();
+    }
+
+    public function activarPartido($partido_id)
+    {
+        $data = [
+            'estado' => 'jugando',
+            'fecha' => date('Y-m-d H:i:s') // opcional, si querés registrar cuándo se activa
+        ];
+
+        $this->db->where('id', $partido_id)
+                ->update('partidos', $data);
+
+        return $this->db->affected_rows() > 0;
+    }
+
+    public function obtener_clasificados_playoff($torneo_id, $categoria_id, $clasifican = 2)
+    {
+        return $this->db
+            ->select('
+                tp.torneo_id,
+                tp.categoria_id,
+                tp.zona_id,
+                z.numero AS zona_numero,
+
+                tp.inscripcion_id,
+                tp.posicion,
+                tp.puntos,
+                tp.pg,
+                tp.pj,
+
+                p1.nombre || \' \' || p1.apellido || \' / \' ||
+                p2.nombre || \' \' || p2.apellido AS pareja_nombre
+            ')
+            ->from('tabla_posiciones tp')
+
+            ->join('zonas z', 'z.id = tp.zona_id')
+
+            ->join('inscripciones i', 'i.id = tp.inscripcion_id')
+
+            ->join('participantes p1', 'p1.id = i.participante1_id')
+            ->join('participantes p2', 'p2.id = i.participante2_id')
+
+            ->where('tp.torneo_id', $torneo_id)
+            ->where('tp.categoria_id', $categoria_id)
+            ->where('tp.posicion <=', $clasifican)
+
+            ->order_by('z.numero', 'ASC')
+            ->order_by('tp.posicion', 'ASC')
+            ->get()
+            ->result();
+    }
+
+    public function guardarTablaPosicion($data)
+    {
+        $this->db->where('zona_id', $data['zona_id']);
+        $this->db->where('inscripcion_id', $data['inscripcion_id']);
+
+        $existe = $this->db->get('tabla_posiciones')->row();
+
+        if ($existe)
+            $this->db->update('tabla_posiciones', $data);
+        else
+            $this->db->insert('tabla_posiciones', $data);
+    }
+
+    public function obtenerPartidosFinalizadosZona($zona_id)
+    {
+        return $this->db
+            ->select('
+                p.id,
+                p.zona_id,
+                p.pareja1_id,
+                p.pareja2_id,
+                p.ganador_id,
+
+                s.numero_set,
+                s.games_pareja1,
+                s.games_pareja2
+            ')
+            ->from('partidos p')
+            ->join('partido_sets s', 's.partido_id = p.id', 'left')
+            ->where('p.zona_id', $zona_id)
+            ->where('p.estado', 'finalizado')
+            ->order_by('p.id', 'ASC')
+            ->order_by('s.numero_set', 'ASC')
+            ->get()
+            ->result();
+    }
+
+    public function obtenerSetsPartido($partido_id)
+    {
+        return $this->db
+            ->select('
+                numero_set,
+                games_pareja1,
+                games_pareja2
+            ')
+            ->from('partido_sets')
+            ->where('partido_id', $partido_id)
+            ->order_by('numero_set', 'ASC')
+            ->get()
+            ->result();
+    }
+
+}

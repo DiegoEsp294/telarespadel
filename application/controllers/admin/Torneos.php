@@ -196,7 +196,7 @@ class Torneos extends CI_Controller {
             show_404();
         }
 
-        $this->Torneo_model->eliminar($id);
+        $this->Torneo_model->eliminarTorneoCompleto($id);
 
         redirect('admin/Torneos/torneos');
     }
@@ -296,7 +296,7 @@ class Torneos extends CI_Controller {
         $data['torneo'] = $this->Torneo_model->obtener_por_id($torneo_id);
 
         $playoff = $this->Torneo_model
-            ->obtenerFixturePlayoff($torneo_id, $categoria_id);
+            ->obtener_clasificados_playoff($torneo_id, $categoria_id);
         
         $data['playoff'] = $playoff;
 
@@ -312,6 +312,69 @@ class Torneos extends CI_Controller {
 
         $this->fixtureservice->generarFixture($torneo_id);
         redirect('admin/Torneos/torneos');
+    }
+
+    public function obtener_partido($partido_id){
+        $this->load->model('Torneo_model');
+
+        $partido = $this->Torneo_model->obtenerPartidos($partido_id);
+
+        echo json_encode($partido);
+    }
+
+    public function actualizar_partido(){
+        $this->load->model('Torneo_model');
+        $this->load->library('FixtureService');
+
+        // Datos del partido
+        $dia = $this->input->post('dia') ?? NULL;
+        $hora = $this->input->post('hora') ?? NULL;
+        $cancha = $this->input->post('cancha') ?? NULL;
+
+        $partido_id = $this->input->post('id');
+
+        // Actualizamos fecha, hora y cancha
+        $data = [
+            "fecha" => $dia,
+            "hora" => $hora,
+            "cancha" => $cancha
+        ];
+        $partido = $this->Torneo_model->actualizarPartido($partido_id, $data);
+
+        // Obtenemos los sets y validamos el formato
+        $sets_input = [
+            $this->input->post('set_1'),
+            $this->input->post('set_2'),
+            $this->input->post('set_3')
+        ];
+
+        $sets = [];
+        if($this->input->post('set_1') && $this->input->post('set_2')){
+            foreach($sets_input as $index => $set) {
+                if($set) {
+                    if(!preg_match('/^\d{1,2}-\d{1,2}$/', $set)) {
+                        echo json_encode([
+                            "error" => "Formato inválido para el set ".($index+1)
+                        ]);
+                        return;
+                    }
+                    $parts = explode('-', $set);
+                    $sets[] = [ (int)$parts[0], (int)$parts[1] ];
+                } else {
+                    $sets[] = [null, null];
+                }
+            }
+
+            // Llamamos a la función del modelo
+            $this->fixtureservice->cargarResultadoPartido(
+                $partido_id,
+                $sets[0][0], $sets[0][1],
+                $sets[1][0], $sets[1][1],
+                $sets[2][0], $sets[2][1]
+            );   
+        }
+
+        echo json_encode($partido);
     }
 
 }

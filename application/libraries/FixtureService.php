@@ -537,7 +537,6 @@ class FixtureService
         }
 
         $this->recalcularTablaZona($partido->zona_id);
-        $this->recalcularTablaZona($partido->zona_id);
 
         // ============================
         // 4. Determinar ganador
@@ -556,7 +555,7 @@ class FixtureService
         // 5. Cerrar partido
         // ============================
 
-        $this->CI->Torneo_model->actualizarPartido($partido_id, $ganador_id);
+        $this->CI->Torneo_model->actualizarPartido($partido_id, ["ganador_id" => $ganador_id, "estado" => "finalizado"]);
 
         // ============================
         // 6. Avanzar ganador (PLAYOFF)
@@ -598,6 +597,8 @@ class FixtureService
 
         $ganadorTag  = 'GANADOR_'.$partido_id;
         $perdedorTag = 'PERDEDOR_'.$partido_id;
+        $ganador_id = $partido->ganador_id;
+        $perdedor_id = $partido->pareja1_id + $partido->pareja2_id - $ganador_id;
 
         $perdedor_id =
             ($partido->ganador_id == $partido->pareja1_id)
@@ -605,7 +606,7 @@ class FixtureService
             : $partido->pareja1_id;
 
         $pendientes = $this->CI->Torneo_model
-            ->buscarPartidosPorReferencia($ganadorTag, $perdedorTag);
+            ->buscarPartidosPorReferencia($ganador_id, $perdedor_id);
 
         foreach ($pendientes as $p)
         {
@@ -623,7 +624,9 @@ class FixtureService
             if ($p->referencia2 === $perdedorTag)
                 $update['pareja2_id'] = $perdedor_id;
 
-            $this->CI->Torneo_model->actualizarPartidoDatos($p->id, $update);
+            if($update){
+                $this->CI->Torneo_model->actualizarPartidoDatos($p->id, $update);
+            }
         }
     }
 
@@ -656,7 +659,7 @@ class FixtureService
             'sets_contra'=>0,
             'games_favor'=>0,
             'games_contra'=>0,
-            'dif_games'=>0
+            'diferencia_games'=>0
         ];
     }
 
@@ -696,8 +699,8 @@ class FixtureService
         $p2['sets_favor'] += $setsP2;
         $p2['sets_contra'] += $setsP1;
 
-        $p1['dif_games'] = $p1['games_favor'] - $p1['games_contra'];
-        $p2['dif_games'] = $p2['games_favor'] - $p2['games_contra'];
+        $p1['diferencia_games'] = $p1['games_favor'] - $p1['games_contra'];
+        $p2['diferencia_games'] = $p2['games_favor'] - $p2['games_contra'];
     }
 
     private function verificarClasificadosZona($zona_id)
@@ -722,7 +725,9 @@ class FixtureService
 
         $this->CI->Torneo_model->guardarSeed([
             'codigo' => $codigo,
-            'inscripcion_id' => $inscripcion_id
+            'inscripcion_id' => $inscripcion_id,
+            'torneo_id' => $zona->torneo_id,
+            'categoria_id' => $zona->categoria_id
         ]);
 
         // intenta completar cruces
@@ -759,12 +764,21 @@ class FixtureService
             p.id as partido_id,
             p.fecha,
             p.cancha,
+            p.hora,
 
             p.pareja1_id,
             p.pareja2_id,
 
             CONCAT(p1a.apellido,' ',p1a.nombre,' - ',p1b.apellido,' ',p1b.nombre) as pareja1_nombre,
-            CONCAT(p2a.apellido,' ',p2a.nombre,' - ',p2b.apellido,' ',p2b.nombre) as pareja2_nombre
+            CONCAT(p2a.apellido,' ',p2a.nombre,' - ',p2b.apellido,' ',p2b.nombre) as pareja2_nombre,
+
+            s1.games_pareja1 as set1_p1,
+            s1.games_pareja2 as set1_p2,
+            s2.games_pareja1 as set2_p1,
+            s2.games_pareja2 as set2_p2,
+            s3.games_pareja1 as set3_p1,
+            s3.games_pareja2 as set3_p2
+
         ");
 
         $this->CI->db->from('partidos p');
@@ -781,9 +795,14 @@ class FixtureService
         $this->CI->db->join('participantes p2a','p2a.id = ins2.participante1_id','left');
         $this->CI->db->join('participantes p2b','p2b.id = ins2.participante2_id','left');
 
+        // sets
+        $this->CI->db->join('partido_sets s1', 's1.partido_id = p.id AND s1.numero_set = 1', 'left');
+        $this->CI->db->join('partido_sets s2', 's2.partido_id = p.id AND s2.numero_set = 2', 'left');
+        $this->CI->db->join('partido_sets s3', 's3.partido_id = p.id AND s3.numero_set = 3', 'left');
+
         $this->CI->db->where('p.torneo_id', $torneo_id);
         $this->CI->db->where('z.categoria_id', $categoria_id);
-        
+
         $this->CI->db->order_by('z.numero','ASC');
         $this->CI->db->order_by('p.id','ASC');
 
@@ -854,8 +873,18 @@ class FixtureService
             $zonas[$zona_id]['partidos'][] = [
                 'duelo' => "{$n1} VS {$n2}",
                 'dia'   => $this->formatearDia($row->fecha),
-                'hora'  => $this->formatearHora($row->fecha),
-                'cancha'=> $row->cancha
+                'fecha' => $row->fecha,
+                'hora'  => $this->formatearHora($row->hora),
+                'cancha'=> $row->cancha,
+                'partido_id' => $row->partido_id,
+                
+                // SETS
+                'set1_p1' => $row->set1_p1,
+                'set1_p2' => $row->set1_p2,
+                'set2_p1' => $row->set2_p1,
+                'set2_p2' => $row->set2_p2,
+                'set3_p1' => $row->set3_p1,
+                'set3_p2' => $row->set3_p2,
             ];
         }
 
@@ -872,13 +901,264 @@ class FixtureService
     {
         if (!$fecha) return '-';
 
-        return strtoupper(strftime('%A', strtotime($fecha)));
+        $dias = [
+            'Sunday' => 'DOMINGO',
+            'Monday' => 'LUNES',
+            'Tuesday' => 'MARTES',
+            'Wednesday' => 'MIÉRCOLES',
+            'Thursday' => 'JUEVES',
+            'Friday' => 'VIERNES',
+            'Saturday' => 'SÁBADO'
+        ];
+
+        $diaIngles = date('l', strtotime($fecha));
+
+        return $dias[$diaIngles] ?? '-';
     }
 
-    private function formatearHora($fecha)
+    private function formatearHora($hora)
     {
-        if (!$fecha) return '-';
+        if (!$hora) return '-';
 
-        return date('H\H\S', strtotime($fecha));
+        return date('H:i', strtotime($hora));
+    }
+
+    public function cargarResultadoPartido($partido_id, $set1_p1, $set1_p2, $set2_p1, $set2_p2, $set3_p1 = null, $set3_p2 = null)
+    {
+        $this->CI->db->trans_start();
+
+        // ============================
+        // 1. Obtener partido
+        // ============================
+        $partido = $this->CI->Torneo_model->obtenerPartidos($partido_id);
+        if (!$partido) {
+            throw new Exception('Partido inexistente');
+        }
+
+        $pareja1 = $partido->pareja1_id;
+        $pareja2 = $partido->pareja2_id;
+        $fase = $partido->fase;
+
+        // ============================
+        // 2. Borrar sets anteriores
+        // ============================
+        $this->CI->Torneo_model->eliminarSetsAnteriores($partido_id);
+
+        // ============================
+        // 3. Insertar sets nuevos
+        // ============================
+        $sets = [
+            ['p1' => $set1_p1, 'p2' => $set1_p2],
+            ['p1' => $set2_p1, 'p2' => $set2_p2]
+        ];
+        if ($set3_p1 !== null && $set3_p2 !== null) {
+            $sets[] = ['p1' => $set3_p1, 'p2' => $set3_p2];
+        }
+
+        $setsGanadosP1 = 0;
+        $setsGanadosP2 = 0;
+        $numeroSet = 1;
+
+        foreach ($sets as $set) {
+            $dataSet = [
+                'partido_id'    => $partido_id,
+                'numero_set'    => $numeroSet,
+                'games_pareja1' => $set['p1'],
+                'games_pareja2' => $set['p2'],
+            ];
+            $this->CI->Torneo_model->insertarSet($dataSet);
+
+            // contar sets ganados
+            if ($set['p1'] > $set['p2']) {
+                $setsGanadosP1++;
+            } else {
+                $setsGanadosP2++;
+            }
+
+            $numeroSet++;
+        }
+
+        // ============================
+        // 4. Determinar ganador
+        // ============================
+        if ($setsGanadosP1 == $setsGanadosP2) {
+            throw new Exception('No se puede empatar un partido');
+        }
+
+        $ganador_id = ($setsGanadosP1 > $setsGanadosP2) ? $pareja1 : $pareja2;
+
+        // ============================
+        // 5. Guardar resumen resultado
+        // ============================
+        $this->CI->Torneo_model->eliminarResultadosAnteriores($partido_id);
+
+        $this->CI->Torneo_model->insertarResultado([
+            'partido_id' => $partido_id,
+            'set1_p1'    => $set1_p1,
+            'set1_p2'    => $set1_p2,
+            'set2_p1'    => $set2_p1,
+            'set2_p2'    => $set2_p2,
+            'set3_p1'    => $set3_p1,
+            'set3_p2'    => $set3_p2,
+            'ganador_id' => $ganador_id
+        ]);
+
+        // ============================
+        // 6. Actualizar partido
+        // ============================
+        $this->CI->Torneo_model->actualizarPartido($partido_id, [
+            'estado'     => 'finalizado',
+            'ganador_id' => $ganador_id
+        ]);
+
+        // ============================
+        // 7. Actualizar tabla de posiciones si es fase zona
+        // ============================
+        if ($fase === 'zona') {
+            $this->recalcularTablaZona($partido->zona_id);
+        }
+
+        // ============================
+        // 8. Avanzar ganador en eliminación
+        // ============================
+        if ($partido->partido_siguiente_id) {
+            $campoDestino = ($partido->slot_siguiente == 1) ? 'pareja1_id' : 'pareja2_id';
+            $this->CI->Torneo_model->avanzarGanador(
+                $partido->partido_siguiente_id,
+                $campoDestino,
+                $ganador_id
+            );
+        }
+
+        // ============================
+        // 9. Resolver referencias APA
+        // ============================
+        $this->resolverReferencias($partido_id);
+
+        $this->CI->db->trans_complete();
+
+        return $this->CI->db->trans_status();
+    }
+
+    // private function recalcularTablaZona($zona_id)
+    // {
+    //     // Obtener todos los partidos de la zona
+    //     $partidos = $this->CI->Torneo_model->obtenerPartidosPorZona($zona_id);
+
+    //     // Inicializar tabla de posiciones
+    //     $tabla = [];
+
+    //     foreach ($partidos as $partido) {
+    //         if (!$partido->ganador_id) continue;
+
+    //         // Inicializar filas si no existen
+    //         if (!isset($tabla[$partido->pareja1_id])) $tabla[$partido->pareja1_id] = $this->filaBase();
+    //         if (!isset($tabla[$partido->pareja2_id])) $tabla[$partido->pareja2_id] = $this->filaBase();
+
+    //         $tabla[$partido->pareja1_id]['torneo_id'] = $partido->torneo_id;
+    //         $tabla[$partido->pareja1_id]['categoria_id'] = $partido->categoria_id;
+    //         $tabla[$partido->pareja2_id]['torneo_id'] = $partido->torneo_id;
+    //         $tabla[$partido->pareja2_id]['categoria_id'] = $partido->categoria_id;
+
+    //         // Obtener sets del partido
+    //         $sets = $this->CI->Torneo_model->obtenerSets($partido->id);
+
+    //         // Actualizar estadísticas
+    //         $this->procesarSets($tabla[$partido->pareja1_id], $tabla[$partido->pareja2_id], $sets);
+    //     }
+
+    //     // Guardar tabla actualizada en la BD
+    //     foreach ($tabla as $inscripcion_id => $fila) {
+    //         $this->CI->Torneo_model->actualizarTablaZona($zona_id, $inscripcion_id, $fila);
+    //     }
+
+    //     // Registrar seeds (1° y 2°)
+    //     $this->verificarClasificadosZona($zona_id);
+    // }
+
+    private function recalcularTablaZona($zona_id)
+    {
+        // 1️⃣ obtener todos los partidos finalizados de la zona
+        $partidos = $this->CI->Torneo_model->obtenerPartidosFinalizadosZona($zona_id);
+
+        // 2️⃣ inicializar tabla
+        $tabla = [];
+
+        foreach ($partidos as $p)
+        {
+            if (!isset($tabla[$p->pareja1_id]))
+                $tabla[$p->pareja1_id] = $this->filaBase();
+
+            if (!isset($tabla[$p->pareja2_id]))
+                $tabla[$p->pareja2_id] = $this->filaBase();
+
+            $sets = $this->CI->Torneo_model->obtenerSetsPartido($p->id);
+
+            $this->procesarSets(
+                $tabla[$p->pareja1_id],
+                $tabla[$p->pareja2_id],
+                $sets
+            );
+        }
+
+        /*
+        ============================
+        3️⃣ ORDENAR TABLA (CLAVE)
+        ============================
+        */
+
+        uasort($tabla, function($a, $b) {
+
+            // PG
+            if ($a['pg'] != $b['pg'])
+                return $b['pg'] <=> $a['pg'];
+
+            // diferencia sets
+            $dsA = $a['sets_favor'] - $a['sets_contra'];
+            $dsB = $b['sets_favor'] - $b['sets_contra'];
+
+            if ($dsA != $dsB)
+                return $dsB <=> $dsA;
+
+            // diferencia games
+            if ($a['diferencia_games'] != $b['diferencia_games'])
+                return $b['diferencia_games'] <=> $a['diferencia_games'];
+
+            // games favor
+            return $b['games_favor'] <=> $a['games_favor'];
+        });
+
+        /*
+        ============================
+        4️⃣ GUARDAR POSICIONES
+        ============================
+        */
+
+        $posicion = 1;
+        $zona = $this->CI->Torneo_model->obtenerZona($zona_id);
+
+        foreach ($tabla as $inscripcion_id => $stats)
+        {
+            $this->CI->Torneo_model->guardarTablaPosicion([
+                'zona_id'        => $zona_id,
+                'inscripcion_id' => $inscripcion_id,
+                'torneo_id' => $zona->torneo_id,
+                'categoria_id' => $zona->categoria_id,
+                'pj' => $stats['pj'],
+                'pg' => $stats['pg'],
+                'pp' => $stats['pp'],
+                'sets_favor' => $stats['sets_favor'],
+                'sets_contra' => $stats['sets_contra'],
+                'games_favor' => $stats['games_favor'],
+                'games_contra' => $stats['games_contra'],
+                'diferencia_games' => $stats['diferencia_games'],
+                'posicion' => $posicion
+            ]);
+
+            $posicion++;
+        }
+
+        // 👇 MUY IMPORTANTE
+        $this->verificarClasificadosZona($zona_id);
     }
 }

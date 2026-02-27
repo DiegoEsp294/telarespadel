@@ -1884,3 +1884,233 @@ body {
 .select-categoria {
     min-width: 200px;
 }
+
+.bracket {
+    display: flex;
+    gap: 40px;
+    overflow-x: auto;
+    padding: 20px 10px;
+}
+
+.bracket-round {
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.round-title {
+    text-align: center;
+    font-weight: bold;
+    color: var(--color-azul);
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.match {
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    position: relative;
+    transition: .2s ease;
+}
+
+.match:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0,0,0,.12);
+}
+
+.team {
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: var(--color-gris-claro);
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-gris-oscuro);
+}
+
+.team:last-child {
+    margin-bottom: 0;
+}
+
+.team.winner {
+    background: linear-gradient(
+        135deg,
+        var(--color-azul),
+        #004d80
+    );
+    color: white;
+}
+
+.match-meta {
+    text-align: center;
+    font-size: 12px;
+    margin-top: 8px;
+    color: #777;
+    font-weight: 500;
+}
+
+.match-data{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:10px;
+    font-size:13px;
+}
+
+.editable{
+    background:var(--color-gris-claro);
+    padding:6px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:.2s;
+    min-width:70px;
+    text-align:center;
+}
+
+.editable:hover{
+    background:rgba(255,102,0,.15);
+    color:var(--color-azul);
+    font-weight:600;
+}
+
+.edit-input{
+    width:80px;
+    padding:5px;
+    border-radius:5px;
+    border:1px solid var(--color-naranja);
+    text-align:center;
+}
+
+/* ================================ */
+/*            DUELOS                */
+/* ================================ */
+
+.duelos-box{
+    margin-top:20px;
+    border-radius:10px;
+    overflow:hidden;
+    background:white;
+    box-shadow:0 4px 12px rgba(0,0,0,.06);
+}
+
+/* HEADER */
+.duelos-header{
+    display:grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    background:var(--color-azul);
+    color:white;
+    font-weight:600;
+    font-size:14px;
+    padding:14px 18px;
+}
+
+.duelos-header div{
+    text-align:left;
+}
+
+/* FILAS */
+.duelo-row{
+    display:grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    padding:14px 18px;
+    border-bottom:1px solid var(--color-gris);
+    cursor:pointer;
+    transition:all .2s ease;
+    align-items:center;
+    font-size:14px;
+}
+
+/* hover tipo app moderna */
+.duelo-row:hover{
+    background:rgba(255,102,0,0.06);
+    transform:translateX(3px);
+}
+
+/* última fila sin borde */
+.duelo-row:last-child{
+    border-bottom:none;
+}
+
+/* columnas específicas */
+.duelo-row .hora{
+    font-weight:600;
+    color:var(--color-azul);
+}
+
+.duelo-row .cancha{
+    font-weight:600;
+    color:var(--color-naranja);
+}
+
+/* ================================ */
+/*           RESPONSIVE             */
+/* ================================ */
+
+@media(max-width:600px){
+
+    .duelos-header{
+        display:none; /* ocultamos encabezado */
+    }
+
+    .duelo-row{
+        grid-template-columns:1fr;
+        gap:6px;
+        padding:16px;
+        border-bottom:1px solid #eee;
+    }
+
+    .duelo-row div{
+        display:flex;
+        justify-content:space-between;
+        font-size:13px;
+    }
+
+    .duelo-row div::before{
+        font-weight:600;
+        color:#777;
+    }
+
+    .duelo-row div:nth-child(1)::before{ content:"Duelo"; }
+    .duelo-row div:nth-child(2)::before{ content:"Día"; }
+    .duelo-row div:nth-child(3)::before{ content:"Hora"; }
+    .duelo-row div:nth-child(4)::before{ content:"Cancha"; }
+    .duelo-row div:nth-child(5)::before{ content:"Set"; }
+}
+
+.duelo-row:active{
+    transform:scale(.98);
+}
+
+.sets {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-top: 2px;
+    font-size: 0.9em;
+}
+
+.duelo-row .sets{
+    text-align:center;
+}
+
+.match-extra{
+    display:flex;
+    justify-content:space-between;
+    margin-top:8px;
+    font-size:13px;
+    color:#666;
+}
+
+.match-card.finalizado{
+    border-left:4px solid #27ae60;
+}
+
+.match-card.pendiente{
+    border-left:4px solid #f39c12;
+}
+
+.match-card.jugando{
+    border-left:4px solid #2980b9;
+}

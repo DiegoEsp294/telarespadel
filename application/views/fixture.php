@@ -2,11 +2,6 @@
     <div class="">
 
         <div class="container">
-
-            <!-- =============================
-                SELECTOR CATEGORIA
-            ============================= -->
-
             <form method="get">
                 <select name="categoria_id" class="select-categoria"
                         onchange="this.form.submit()">
@@ -85,14 +80,29 @@
                                     <div>DUELO</div>
                                     <div>DIA</div>
                                     <div>HORA</div>
+                                    <div>CANCHA</div>
+                                    <div>SETS</div>
+
                                 </div>
 
                                 <?php foreach($zona['partidos'] as $partido): ?>
 
-                                    <div class="duelo-row">
+                                    <div class="duelo-row"
+                                        data-partido-id="<?= $partido['partido_id'] ?>">
+
                                         <div><?= $partido['duelo'] ?></div>
                                         <div><?= strtoupper($partido['dia']) ?></div>
                                         <div class="hora"><?= $partido['hora'] ?></div>
+                                        <div class="cancha"><?= $partido['cancha'] ?></div>
+                                        <div class="sets">
+                                            <?php 
+                                            $sets = [];?>
+                                            <?= $partido['set1_p1'] ?? '-' ?>-<?= $partido['set1_p2'] ?? '-' ?>
+                                            <?= $partido['set2_p1'] ?? '-' ?>-<?= $partido['set2_p2'] ?? '-' ?>
+                                            <?= $partido['set3_p1'] ?? '-' ?>-<?= $partido['set3_p2'] ?? '-' ?>
+                                            <?php  echo implode(', ', $sets); 
+                                            ?>
+                                        </div>
                                     </div>
 
                                 <?php endforeach; ?>
@@ -111,33 +121,76 @@
                     PLAYOFF
             ============================= -->
 
-                <div id="tab-playoff" class="fixture-tab-content" style="display:none;">
+            <div id="tab-playoff" class="fixture-tab-content" style="display:none;">
+                <h3>Playoff</h3>
 
-                    <?php foreach($playoff as $ronda => $partidos): ?>
+                <?php for ($i = 0; $i < count($playoff); $i += 2): ?>
 
-                        <h3><?= $ronda ?></h3>
+                    <?php
+                        $pareja1 = $playoff[$i];
+                        $pareja2 = $playoff[$i + 1] ?? null;
+                    ?>
 
-                        <?php foreach($partidos as $partido): ?>
+                    <div class="match-card">
 
-                            <div class="match-card <?= $partido->estado ?>">
+                        <div class="match-info">
 
-                                <div class="match-info">
-                                    <div class="pareja"><?= $partido->pareja1 ?></div>
-                                    <div class="vs">VS</div>
-                                    <div class="pareja"><?= $partido->pareja2 ?></div>
-                                </div>
-
+                            <div class="pareja">
+                                <?= $pareja1->pareja_nombre ?>
+                                <small>
+                                    (<?= $pareja1->posicion ?>° Zona <?= $pareja1->zona_numero ?>)
+                                </small>
                             </div>
 
-                        <?php endforeach; ?>
+                            <div class="vs">VS</div>
 
-                    <?php endforeach; ?>
+                            <div class="pareja">
+                                <?= $pareja2
+                                    ? $pareja2->pareja_nombre .
+                                    " <small>({$pareja2->posicion}° Zona {$pareja2->zona_numero})</small>"
+                                    : "Libre"
+                                ?>
+                            </div>
 
-                </div>
+                        </div>
 
+                    </div>
+
+                <?php endfor; ?>
+            </div>
         </div>
     </div>
 </div>
+
+
+<script>
+document.getElementById('formPartido')
+.addEventListener('submit', function(e){
+
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch("<?= base_url('admin/partidos/actualizar') ?>", {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(resp => {
+
+        if(resp.ok)
+        {
+            cerrarModal();
+
+            // opción simple
+            location.reload();
+
+            // después podemos hacerlo realtime sin reload
+        }
+    });
+
+});
+</script>
 
 
 <script>

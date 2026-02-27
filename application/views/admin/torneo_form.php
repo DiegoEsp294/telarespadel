@@ -109,7 +109,7 @@
 
     <?php endif; ?>
 
-    <?php if($torneo): ?>
+    <?php if(isset($torneo)): ?>
         <a href="<?php echo site_url('admin/torneos/generar_fixture/'.$torneo->id); ?>" 
         class="btn-create">
             Generar fixture
