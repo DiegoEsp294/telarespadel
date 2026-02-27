@@ -827,4 +827,9 @@ class Torneo_model extends CI_Model {
             ->result();
     }
 
+    public function ObtenerResultados($torneo_id)
+    {
+        
+    }
+
 }

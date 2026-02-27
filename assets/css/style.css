@@ -31,12 +31,13 @@ body {
     background-color: var(--color-blanco);
 }
 
-.container{
-    max-width: 1200px;
-    width: 95%;
-    margin: auto;
+.container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 12px;
+    box-sizing: border-box;
 }
-
 .container-nav {
     max-width: 1200px;
     margin: 0 auto;
@@ -808,7 +809,6 @@ body {
 
 .torneo-image {
     width: 100%;
-    height: 200px;
     overflow: hidden;
     border-radius: 10px 10px 0 0;
 }
@@ -816,7 +816,6 @@ body {
 .torneo-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* recorte inteligente */
     display: block;
     transition: transform 0.3s ease;
 }
@@ -1678,13 +1677,6 @@ body {
 
 /* DUELOS */
 
-.duelos-header,
-.duelo-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    margin-top: 6px;
-}
-
 .duelos-header div {
     background: #e79b22;
     font-weight: bold;
@@ -1711,7 +1703,7 @@ body {
 .fixture-container{
     display: grid;
     grid-template-columns: 1fr; /* SOLO UNA */
-    gap: 60px;
+    gap: 20px;
     margin-top: 25px;
     justify-items: center; /* centra la card */
 }
@@ -1744,7 +1736,7 @@ body {
    MOBILE
 =================================*/
 
-@media (max-width: 600px)
+/* @media (max-width: 600px)
 {
     .zona-card{
         border-radius: 6px;
@@ -1762,7 +1754,7 @@ body {
     .duelo-row{
         grid-template-columns: 1fr 1fr 1fr;
     }
-}
+} */
 
 .parejas-header,
 .pareja-row{
@@ -1771,12 +1763,6 @@ body {
     align-items: center;
 }
 
-.duelos-header,
-.duelo-row{
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    text-align: center;
-}
 
 /* ======================================
    FIXTURE — MOBILE COMPACT (365x667)
@@ -1786,7 +1772,7 @@ body {
 
     /* contenedor */
     .fixture-container{
-        gap:20px;
+        gap:18px;
         padding:0;
     }
 
@@ -1799,18 +1785,18 @@ body {
 
     /* HEADER */
     .zona-header h1{
-        font-size:14px;
+        font-size:12px;
         letter-spacing:1px;
     }
 
     .zona-header h2{
-        font-size:10px;
+        font-size:8px;
         margin-bottom:10px;
     }
 
     /* TITULO GRUPO */
     .grupo-title{
-        font-size:10px;
+        font-size:8px;
         padding:6px;
     }
 
@@ -1988,33 +1974,21 @@ body {
 /*            DUELOS                */
 /* ================================ */
 
-.duelos-box{
+/* .duelos-box{
     margin-top:20px;
     border-radius:10px;
     overflow:hidden;
     background:white;
     box-shadow:0 4px 12px rgba(0,0,0,.06);
-}
+} */
 
 /* HEADER */
-.duelos-header{
-    display:grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    background:var(--color-azul);
-    color:white;
-    font-weight:600;
-    font-size:14px;
-    padding:14px 18px;
-}
 
-.duelos-header div{
-    text-align:left;
-}
 
 /* FILAS */
 .duelo-row{
     display:grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
     padding:14px 18px;
     border-bottom:1px solid var(--color-gris);
     cursor:pointer;
@@ -2051,33 +2025,7 @@ body {
 
 @media(max-width:600px){
 
-    .duelos-header{
-        display:none; /* ocultamos encabezado */
-    }
 
-    .duelo-row{
-        grid-template-columns:1fr;
-        gap:6px;
-        padding:16px;
-        border-bottom:1px solid #eee;
-    }
-
-    .duelo-row div{
-        display:flex;
-        justify-content:space-between;
-        font-size:13px;
-    }
-
-    .duelo-row div::before{
-        font-weight:600;
-        color:#777;
-    }
-
-    .duelo-row div:nth-child(1)::before{ content:"Duelo"; }
-    .duelo-row div:nth-child(2)::before{ content:"Día"; }
-    .duelo-row div:nth-child(3)::before{ content:"Hora"; }
-    .duelo-row div:nth-child(4)::before{ content:"Cancha"; }
-    .duelo-row div:nth-child(5)::before{ content:"Set"; }
 }
 
 .duelo-row:active{
@@ -2091,9 +2039,9 @@ body {
     font-size: 0.9em;
 }
 
-.duelo-row .sets{
+/* .duelo-row .sets{
     text-align:center;
-}
+} */
 
 .match-extra{
     display:flex;
@@ -2113,4 +2061,277 @@ body {
 
 .match-card.jugando{
     border-left:4px solid #2980b9;
+}
+
+.duelos-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 0.8fr 0.6fr;
+    align-items: center;
+    gap: 8px;
+}
+
+.duelos-header {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 0.8fr 0.6fr;
+    background: #f39c12;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    padding: 12px 10px;
+}
+
+.duelo-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 0.8fr 0.6fr;
+    align-items: center;
+    background: #3f5f8a;
+    color: white;
+    padding: 10px;
+}
+
+.duelo-row div {
+    text-align: center;
+}
+
+.duelo-row .cancha {
+    font-weight: bold;
+    color: orange;
+}
+
+/* ================================
+        RESULTADOS TORNEO
+================================ */
+
+.resultados-wrapper{
+    display:flex;
+    flex-direction:column;
+    gap:25px;
+}
+
+/* Card igual a tu estilo */
+.resultados-card{
+    background:white;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+    overflow:hidden;
+}
+
+/* Header azul institucional */
+.resultados-header{
+    background:linear-gradient(135deg,var(--color-azul) 0%, #004d80 100%);
+    color:white;
+    padding:18px 22px;
+}
+
+.resultados-header h3{
+    margin:0;
+}
+
+/* Body */
+.resultados-body{
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+/* Partido */
+.resultado-item{
+    border:1px solid var(--color-gris);
+    border-radius:8px;
+    padding:14px;
+    transition:.2s ease;
+    background:#fff;
+}
+
+.resultado-item:hover{
+    box-shadow:0 4px 10px rgba(0,0,0,.08);
+    transform:translateY(-2px);
+}
+
+/* meta info */
+.resultado-meta{
+    font-size:13px;
+    color:#777;
+    display:flex;
+    gap:15px;
+    margin-bottom:8px;
+}
+
+/* layout parejas */
+.resultado-match{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:15px;
+}
+
+.resultado-match .pareja{
+    font-weight:600;
+    color:var(--color-azul);
+}
+
+/* sets */
+.sets{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+}
+
+.sets span{
+    background:var(--color-gris-claro);
+    padding:6px 10px;
+    border-radius:6px;
+    font-weight:700;
+    color:var(--color-azul);
+}
+
+/* pendiente */
+.estado-pendiente{
+    background:rgba(255,102,0,.15);
+    color:var(--color-naranja);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+img,
+select,
+input,
+button {
+    max-width: 100%;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+    body {
+        font-size: 14px;
+    }
+
+    .container {
+        padding: 0 10px;
+    }
+
+    .card,
+    .box,
+    .panel {
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    h1 { font-size: 20px; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 16px; }
+
+    button,
+    .btn {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    select,
+    input {
+        height: 40px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+.resultados-wrapper{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+}
+
+.resultados{
+    min-width:520px; 
+}
+
+.partido > *{
+    min-width:0;
+}
+@media (max-width: 768px) {
+    .resultados-wrapper {
+        display: grid;
+        grid-template-columns: 1fr; /* todo apilado en 1 columna */
+        gap: 10px;
+    }
+
+    .resultado-item {
+        font-size: 12px; /* achica textos */
+        padding: 8px;
+    }
+
+    .resultado-row {
+        display: flex;
+        flex-direction: column; /* apilar contenido en lugar de mantenerlo horizontal */
+        gap: 6px;
+    }
+}
+
+/* Contenedor de cada partido */
+.resultado-match {
+    display: flex;
+    flex-direction: column;   /* apila las parejas verticalmente */
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+/* Cada bloque de pareja */
+.pareja-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+/*
+
+/* Contenedor de sets */
+.sets {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* Cada span de set tendrá un color distinto según su posición */
+.sets span:nth-child(1) {
+    background-color: #d0e8ff; /* Azul muy claro */
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.sets span:nth-child(2) {
+    background-color: #d0ffd8; /* Verde muy claro */
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.sets span:nth-child(3) {
+    background-color: #fff0d0; /* Amarillo muy claro */
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Estado pendiente */
+.estado-pendiente {
+    font-style: italic;
+    color: gray;
+    background-color: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
 }

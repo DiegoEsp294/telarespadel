@@ -1,18 +1,17 @@
 <div class="">
     <div class="">
 
-        <div class="container">
-            <form method="get">
+        <div >
+            <form method="get" style="width: 100%;">
                 <select name="categoria_id" class="select-categoria"
-                        onchange="this.form.submit()">
-
+                        onchange="this.form.submit()"
+                        style="width: 100%; padding: 8px 12px; box-sizing: border-box;">
                     <?php foreach($categorias as $cat): ?>
                         <option value="<?= $cat->id ?>"
                             <?= $categoria_id == $cat->id ? 'selected':'' ?>>
                             <?= $cat->nombre ?>
                         </option>
                     <?php endforeach; ?>
-
                 </select>
             </form>
 
@@ -23,8 +22,9 @@
             ============================= -->
 
             <div class="fixture-tabs">
-                <button class="tab active" onclick="showTab('zonas')">Zonas</button>
-                <button class="tab" onclick="showTab('playoff')">Playoff</button>
+                <button class="tab active" onclick="showTab(event,'zonas')">Zonas</button>
+                <button class="tab" onclick="showTab(event,'resultados')">Resultados</button>
+                <!-- <button class="tab" onclick="showTab('playoff')">Playoff</button> -->
             </div>
 
             <!-- =============================
@@ -33,7 +33,7 @@
 
             <div id="tab-zonas" class="fixture-tab-content">
 
-                <div class="fixture-container">
+                <div class="">
 
                     <?php foreach($zonas as $zona): ?>
 
@@ -60,7 +60,7 @@
                                 <?php foreach($zona['parejas'] as $pareja): ?>
 
                                     <div class="pareja-row">
-                                        <div class="numero">
+                                        <div class="nombre">
                                             <?= $pareja['numero'] ?>
                                         </div>
 
@@ -81,7 +81,7 @@
                                     <div>DIA</div>
                                     <div>HORA</div>
                                     <div>CANCHA</div>
-                                    <div>SETS</div>
+                                    <!-- <div>SETS</div> -->
 
                                 </div>
 
@@ -94,7 +94,7 @@
                                         <div><?= strtoupper($partido['dia']) ?></div>
                                         <div class="hora"><?= $partido['hora'] ?></div>
                                         <div class="cancha"><?= $partido['cancha'] ?></div>
-                                        <div class="sets">
+                                        <!-- <div class="sets">
                                             <?php 
                                             $sets = [];?>
                                             <?= $partido['set1_p1'] ?? '-' ?>-<?= $partido['set1_p2'] ?? '-' ?>
@@ -102,7 +102,7 @@
                                             <?= $partido['set3_p1'] ?? '-' ?>-<?= $partido['set3_p2'] ?? '-' ?>
                                             <?php  echo implode(', ', $sets); 
                                             ?>
-                                        </div>
+                                        </div> -->
                                     </div>
 
                                 <?php endforeach; ?>
@@ -117,6 +117,99 @@
 
             </div>
 
+            <div id="tab-resultados" class="fixture-tab-content">
+
+                <div class="resultados-wrapper container">
+                    <div class="">
+                        <?php foreach($zonas as $zona): ?>
+
+                            <div class="resultados-card">
+
+                                <div class="resultados-header">
+                                    <h3>Grupo <?= $zona['grupo'] ?></h3>
+                                </div>
+
+                                <?php
+                                $parejas_map = [];
+                                foreach($zona['parejas'] as $p){
+                                    $parejas_map[$p['numero']] = strtoupper($p['nombre']);
+                                }
+                                ?>
+
+                                <div class="resultados-body">
+
+                                    <?php foreach($zona['partidos'] as $partido): ?>
+
+                                        <?php
+                                        list($p1,$p2) = explode(' VS ', $partido['duelo']);
+
+                                        $nombre1 = $parejas_map[$p1] ?? '';
+                                        $nombre2 = $parejas_map[$p2] ?? '';
+
+                                        $jugado = $partido['set1_p1'] !== null;
+                                        ?>
+
+                                        <div class="resultado-item">
+
+                                            <div class="resultado-meta">
+                                                <span><?= $partido['dia'] ?></span>
+                                                <span><?= $partido['hora'] ?></span>
+                                                <span>Cancha <?= $partido['cancha'] ?? '-' ?></span>
+                                            </div>
+
+                                            <div class="resultado-match">
+
+                                                <!-- Pareja 1 -->
+                                                <div class="pareja-block">
+                                                    <div class="pareja-nombre"><?= $nombre1 ?></div>
+                                                    <div class="sets">
+                                                        <?php if($jugado): ?>
+                                                            <span><?= $partido['set1_p1'] ?>-<?= $partido['set1_p2'] ?></span>
+                                                            <?php if($partido['set2_p1'] !== null): ?>
+                                                                <span><?= $partido['set2_p1'] ?>-<?= $partido['set2_p2'] ?></span>
+                                                            <?php endif; ?>
+                                                            <?php if($partido['set3_p1'] !== null): ?>
+                                                                <span><?= $partido['set3_p1'] ?>-<?= $partido['set3_p2'] ?></span>
+                                                            <?php endif; ?>
+                                                        <?php else: ?>
+                                                            <span class="estado-pendiente">Pendiente</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Pareja 2 -->
+                                                <div class="pareja-block">
+                                                    <div class="pareja-nombre"><?= $nombre2 ?></div>
+                                                    <!-- <div class="sets">
+                                                        <?php if($jugado): ?>
+                                                            <span><?= $partido['set1_p2'] ?>-<?= $partido['set1_p1'] ?></span>
+                                                            <?php if($partido['set2_p1'] !== null): ?>
+                                                                <span><?= $partido['set2_p2'] ?>-<?= $partido['set2_p1'] ?></span>
+                                                            <?php endif; ?>
+                                                            <?php if($partido['set3_p1'] !== null): ?>
+                                                                <span><?= $partido['set3_p2'] ?>-<?= $partido['set3_p1'] ?></span>
+                                                            <?php endif; ?>
+                                                        <?php else: ?>
+                                                            <span class="estado-pendiente">Pendiente</span>
+                                                        <?php endif; ?>
+                                                    </div> -->
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    <?php endforeach; ?>
+
+                                </div>
+
+                            </div>
+
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+            </div>
             <!-- =============================
                     PLAYOFF
             ============================= -->
@@ -194,16 +287,20 @@ document.getElementById('formPartido')
 
 
 <script>
-function showTab(tab)
+function showTab(e, tab)
 {
+    // ocultar todos
     document.querySelectorAll('.fixture-tab-content')
-        .forEach(el => el.style.display='none');
+        .forEach(el => el.style.display = 'none');
 
-    document.getElementById('tab-'+tab).style.display='block';
+    // mostrar seleccionado
+    document.getElementById('tab-' + tab).style.display = 'block';
 
+    // quitar active
     document.querySelectorAll('.tab')
-        .forEach(t=>t.classList.remove('active'));
+        .forEach(t => t.classList.remove('active'));
 
-    event.target.classList.add('active');
+    // activar botón clickeado
+    e.currentTarget.classList.add('active');
 }
 </script>

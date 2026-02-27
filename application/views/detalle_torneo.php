@@ -280,7 +280,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 <?php
     $mensaje_wpp = urlencode(
-        "Hola! Quiero consultar por el torneo '{$torneo->nombre}'. ¿Me podés pasar info?"
+        "Hola! Quiero consultar por el torneo '{$torneo->nombre}'. ¿Me podés pasar más información?"
     );
 
     $link_wpp = "https://wa.me/".$torneo->telefono_organizador."?text=".$mensaje_wpp;
@@ -306,14 +306,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             <h1><?php echo $torneo->nombre; ?></h1>
             
             <div class="info-row">
-                <div style="margin-top:25px;">
+                <!-- <div style="margin-top:25px;">
                     <a href="<?php echo $link_wpp; ?>" 
                     target="_blank"
                     class="btn-enviar"
                     style="display:inline-block; width:auto; padding:12px 25px;">
                         <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
                     </a>
-                </div>
+                </div> -->
+                <hr>
                 <div class="info-item">
                     <i class="fas fa-calendar"></i>
                     <div>
@@ -435,7 +436,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             <p>Contactá al organizador o asegurá tu lugar ahora.</p>
 
             <a href="<?php echo $link_wpp; ?>" target="_blank" class="btn-enviar">
-                <i class="fab fa-whatsapp"></i> Consultar disponibilidad
+                <i class="fab fa-whatsapp"></i> Inscribirme
             </a>
         </div>
 

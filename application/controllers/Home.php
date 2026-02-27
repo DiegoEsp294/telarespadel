@@ -78,8 +78,10 @@ class Home extends CI_Controller {
         $data['zonas'] = $this->fixtureservice->obtenerFixtureCompleto($id, $categoria_id);
         $playoff = $this->Torneo_model
             ->obtener_clasificados_playoff($id, $categoria_id);
-        
+
         $data['playoff'] = $playoff;
+
+        // $data['resultados'] = $this->Torneo_model->ObtenerResultados($id_torneo);
 
         $data['fixture'] = $data;
 
