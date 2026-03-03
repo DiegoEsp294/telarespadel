@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($club_nombre) ? $club_nombre : 'Telares Padel'; ?></title>
+    <link rel="icon" type="image/png" href="<?= base_url('logo_inicio.png') ?>">
+    <link rel="shortcut icon" type="image/png" href="<?= base_url('logo_inicio.png') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/style.css?v='.time()); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -208,7 +210,7 @@
     <nav class="navbar">
         <div class="container-nav">
             <div class="logo-section">
-                <img src="<?php echo base_url('logo.png'); ?>" alt="Telares Padel" class="logo">
+                <img src="<?php echo base_url('logo_inicio.png'); ?>" alt="Telares Padel" class="logo">
                 <div class="club-title">
                     <h1>TELARES PADEL</h1>
                 </div>
