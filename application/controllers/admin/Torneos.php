@@ -64,14 +64,23 @@ class Torneos extends CI_Controller {
 
         $categorias = $this->input->post('categorias') ?? [];
 
+        $imagenBase64 = null;
+        if (!empty($_FILES['imagen']['tmp_name'])) {
+            $imagenBase64 = base64_encode(file_get_contents($_FILES['imagen']['tmp_name']));
+        }
+
         $data = [
-            'nombre' => $this->input->post('nombre'),
-            'fecha_inicio' => $this->input->post('fecha_inicio'),
-            'fecha_fin' => $this->input->post('fecha_fin'),
-            'estado' => 'proxima',
-            'categoria' => $this->input->post('categoria'),
-            'nombre_organizador' => $this->input->post('organizador'),
+            'nombre'               => $this->input->post('nombre'),
+            'fecha_inicio'         => $this->input->post('fecha_inicio'),
+            'fecha_fin'            => $this->input->post('fecha_fin') ?: null,
+            'estado'               => 'proxima',
+            'categoria'            => $this->input->post('categoria'),
+            'nombre_organizador'   => $this->input->post('organizador'),
             'telefono_organizador' => $this->input->post('organizador_telefono'),
+            'precio_inscripcion'   => $this->input->post('precio_inscripcion') ?: 0,
+            'premios'              => $this->input->post('premios') ?: null,
+            'fecha_cierre_inscripcion' => $this->input->post('fecha_cierre_inscripcion') ?: null,
+            'imagen'               => $imagenBase64,
         ];
 
         log_message('debug', 'Creando torneo con datos: ' . json_encode($data));
@@ -159,15 +168,18 @@ class Torneos extends CI_Controller {
         }
 
         $data = [
-            'nombre' => $this->input->post('nombre'),
-            'fecha_inicio' => $this->input->post('fecha_inicio'),
-            'fecha_fin' => $this->input->post('fecha_fin'),
-            'estado' => $this->input->post('estado'),
-            'descripcion' => $this->input->post('descripcion'),
-            'categoria' => $this->input->post('categoria'),
-            'imagen' => $imagenBase64,
-            'nombre_organizador' => $this->input->post('organizador'),
+            'nombre'               => $this->input->post('nombre'),
+            'fecha_inicio'         => $this->input->post('fecha_inicio'),
+            'fecha_fin'            => $this->input->post('fecha_fin') ?: null,
+            'estado'               => $this->input->post('estado'),
+            'descripcion'          => $this->input->post('descripcion'),
+            'categoria'            => $this->input->post('categoria'),
+            'imagen'               => $imagenBase64,
+            'nombre_organizador'   => $this->input->post('organizador'),
             'telefono_organizador' => $this->input->post('organizador_telefono'),
+            'precio_inscripcion'   => $this->input->post('precio_inscripcion') ?: 0,
+            'premios'              => $this->input->post('premios') ?: null,
+            'fecha_cierre_inscripcion' => $this->input->post('fecha_cierre_inscripcion') ?: null,
         ];
 
         log_message('debug', 'Actualizando torneo ID: ' . $id . ' con datos: ' . json_encode($data));
@@ -279,7 +291,7 @@ class Torneos extends CI_Controller {
         $categoria_id = $this->input->get('categoria_id');
 
         $categorias = $this->Torneo_model
-            ->obtenerCategorias($torneo_id);
+            ->obtenerCategoriasPorTorneo($torneo_id);
 
         // si no viene por GET, usamos la primera
         if (!$categoria_id && !empty($categorias)) {
@@ -295,10 +307,7 @@ class Torneos extends CI_Controller {
         // info del torneo (categoria, etc)
         $data['torneo'] = $this->Torneo_model->obtener_por_id($torneo_id);
 
-        $playoff = $this->Torneo_model
-            ->obtener_clasificados_playoff($torneo_id, $categoria_id);
-        
-        $data['playoff'] = $playoff;
+        $data['playoff'] = $this->Torneo_model->obtenerPlayoffBracket($torneo_id, $categoria_id);
 
         $this->load->view('header');
         $this->load->view('admin/torneo_fixture', $data);
@@ -318,6 +327,27 @@ class Torneos extends CI_Controller {
         $this->load->model('Torneo_model');
 
         $partido = $this->Torneo_model->obtenerPartidos($partido_id);
+
+        if (!$partido) {
+            echo json_encode(null);
+            return;
+        }
+
+        // Agregar los sets ya cargados para pre-poblar el modal
+        $sets = $this->db
+            ->where('partido_id', $partido_id)
+            ->order_by('numero_set', 'ASC')
+            ->get('partido_sets')
+            ->result();
+
+        $partido->set_1 = null;
+        $partido->set_2 = null;
+        $partido->set_3 = null;
+
+        foreach ($sets as $s) {
+            $key = 'set_' . $s->numero_set;
+            $partido->$key = $s->games_pareja1 . '-' . $s->games_pareja2;
+        }
 
         echo json_encode($partido);
     }

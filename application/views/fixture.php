@@ -1,7 +1,9 @@
 <div class="">
     <div class="">
+        <hr>
 
-        <div >
+        <div class="container">
+            <label>Seleccionar categoría:</label>
             <form method="get" style="width: 100%;">
                 <select name="categoria_id" class="select-categoria"
                         onchange="this.form.submit()"
@@ -15,8 +17,7 @@
                 </select>
             </form>
 
-            <hr>
-
+            <br>
             <!-- =============================
                     TABS
             ============================= -->
@@ -24,7 +25,7 @@
             <div class="fixture-tabs">
                 <button class="tab active" onclick="showTab(event,'zonas')">Zonas</button>
                 <button class="tab" onclick="showTab(event,'resultados')">Resultados</button>
-                <!-- <button class="tab" onclick="showTab('playoff')">Playoff</button> -->
+                <button class="tab" onclick="showTab(event,'playoff')">Cruces</button>
             </div>
 
             <!-- =============================
@@ -46,7 +47,7 @@
 
                             <!-- GRUPO -->
                             <div class="grupo-title">
-                                GRUPO <?= $zona['grupo'] ?>
+                                ZONA <?= chr(64 + $zona['grupo']) ?>
                             </div>
 
                             <!-- PAREJAS -->
@@ -117,7 +118,7 @@
 
             </div>
 
-            <div id="tab-resultados" class="fixture-tab-content">
+            <div id="tab-resultados" class="fixture-tab-content" style="display:none;>
 
                 <div class="resultados-wrapper container">
                     <div class="">
@@ -126,7 +127,7 @@
                             <div class="resultados-card">
 
                                 <div class="resultados-header">
-                                    <h3>Grupo <?= $zona['grupo'] ?></h3>
+                                    <h3>Zona <?= chr(64 + $zona['grupo']) ?></h3>
                                 </div>
 
                                 <?php
@@ -215,41 +216,79 @@
             ============================= -->
 
             <div id="tab-playoff" class="fixture-tab-content" style="display:none;">
-                <h3>Playoff</h3>
 
-                <?php for ($i = 0; $i < count($playoff); $i += 2): ?>
+                <?php if (empty($playoff)): ?>
+                    <p class="bracket-empty">No hay cruces generados aún.</p>
+                <?php else: ?>
 
-                    <?php
-                        $pareja1 = $playoff[$i];
-                        $pareja2 = $playoff[$i + 1] ?? null;
-                    ?>
+                    <div class="bracket-wrapper">
 
-                    <div class="match-card">
+                        <?php foreach ($playoff as $ronda => $rondaData): ?>
 
-                        <div class="match-info">
+                            <div class="bracket-round">
 
-                            <div class="pareja">
-                                <?= $pareja1->pareja_nombre ?>
-                                <small>
-                                    (<?= $pareja1->posicion ?>° Zona <?= $pareja1->zona_numero ?>)
-                                </small>
+                                <div class="round-label"><?= htmlspecialchars($rondaData['nombre']) ?></div>
+
+                                <div class="round-matches">
+
+                                    <?php foreach ($rondaData['partidos'] as $partido): ?>
+
+                                        <?php
+                                            $p1_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja1_id;
+                                            $p2_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja2_id;
+
+                                            $p1_name = $partido->pareja1_nombre ?: ($partido->referencia1 ? '['.$partido->referencia1.']' : 'Por definir');
+                                            $p2_name = $partido->pareja2_nombre ?: ($partido->referencia2 ? '['.$partido->referencia2.']' : 'Por definir');
+
+                                            $p1_tbd = !$partido->pareja1_id;
+                                            $p2_tbd = !$partido->pareja2_id;
+                                        ?>
+
+                                        <?php
+                                            $jugado_playoff = $partido->set1_p1 !== null;
+                                        ?>
+                                        <div class="match-wrapper">
+                                            <div class="match-card-bracket">
+
+                                                <div class="match-team <?= $p1_winner ? 'winner' : ($p1_tbd ? 'tbd' : '') ?>">
+                                                    <span class="team-name"><?= htmlspecialchars($p1_name) ?></span>
+                                                    <?php if ($jugado_playoff): ?>
+                                                        <span class="team-score">
+                                                            <?= $partido->set1_p1 ?>-<?= $partido->set1_p2 ?>
+                                                            <?php if ($partido->set2_p1 !== null): ?> / <?= $partido->set2_p1 ?>-<?= $partido->set2_p2 ?><?php endif; ?>
+                                                            <?php if ($partido->set3_p1 !== null): ?> / <?= $partido->set3_p1 ?>-<?= $partido->set3_p2 ?><?php endif; ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <div class="match-divider"></div>
+
+                                                <div class="match-team <?= $p2_winner ? 'winner' : ($p2_tbd ? 'tbd' : '') ?>">
+                                                    <span class="team-name"><?= htmlspecialchars($p2_name) ?></span>
+                                                    <?php if ($jugado_playoff): ?>
+                                                        <span class="team-score">
+                                                            <?= $partido->set1_p2 ?>-<?= $partido->set1_p1 ?>
+                                                            <?php if ($partido->set2_p1 !== null): ?> / <?= $partido->set2_p2 ?>-<?= $partido->set2_p1 ?><?php endif; ?>
+                                                            <?php if ($partido->set3_p1 !== null): ?> / <?= $partido->set3_p2 ?>-<?= $partido->set3_p1 ?><?php endif; ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                    <?php endforeach; ?>
+
+                                </div>
+
                             </div>
 
-                            <div class="vs">VS</div>
-
-                            <div class="pareja">
-                                <?= $pareja2
-                                    ? $pareja2->pareja_nombre .
-                                    " <small>({$pareja2->posicion}° Zona {$pareja2->zona_numero})</small>"
-                                    : "Libre"
-                                ?>
-                            </div>
-
-                        </div>
+                        <?php endforeach; ?>
 
                     </div>
 
-                <?php endfor; ?>
+                <?php endif; ?>
+
             </div>
         </div>
     </div>

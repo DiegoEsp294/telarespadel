@@ -59,7 +59,7 @@ class Torneo_model extends CI_Model {
             ->from('inscripciones i')
             ->join('categorias c', 'c.id = i.categoria_id', 'INNER')
             ->where('i.torneo_id', $torneo_id)
-            ->where('i.estado', 'confirmada')
+            // ->where('i.estado', 'confirmada')
             ->group_by(['i.categoria_id', 'c.nombre'])
             ->get();
 
@@ -217,7 +217,7 @@ class Torneo_model extends CI_Model {
 
     public function obtener_inscripciones($id_torneo){
         $query = $this->db
-            ->where('tc.torneo_id', $id_torneo)
+            ->where('i.torneo_id', $id_torneo)
             ->select('
                 i.*,
                 p1.nombre as nombre1, p2.nombre as nombre2,
@@ -229,7 +229,6 @@ class Torneo_model extends CI_Model {
             ->join('participantes p1','p1.id=i.participante1_id','LEFT')
             ->join('participantes p2','p2.id=i.participante2_id','LEFT')
             ->join('categorias c', 'i.categoria_id=c.id', 'LEFT')
-            ->join('torneo_categorias tc', 'tc.categoria_id=i.categoria_id', 'INNER')
             ->get();
         return $query->result();
     }
@@ -612,34 +611,37 @@ class Torneo_model extends CI_Model {
             ->result();
     }
 
-    public function actualizarTablaZona($zona_id, $inscripcion_id, $datos)
+    public function actualizarTablaZona($torneo_id, $categoria_id, $zona_id, $inscripcion_id, $datos)
     {
-        /*
-            $datos esperado:
-            [
-                'pj'           => int,
-                'pg'           => int,
-                'pp'           => int,
-                'sets_favor'   => int,
-                'sets_contra'  => int,
-                'games_favor'  => int,
-                'games_contra' => int,
-                'diferencia_games'    => int
-            ]
-        */
-
         $existe = $this->db
             ->from('tabla_posiciones')
+            ->where('torneo_id', $torneo_id)
+            ->where('categoria_id', $categoria_id)
             ->where('zona_id', $zona_id)
             ->where('inscripcion_id', $inscripcion_id)
             ->count_all_results();
 
         if ($existe) {
-            $this->db
+
+            $camposActualizar = [
+                'pj'           => $datos['pj'],
+                'pg'           => $datos['pg'],
+                'pp'           => $datos['pp'],
+                'sets_favor'   => $datos['sets_favor'],
+                'sets_contra'  => $datos['sets_contra'],
+                'games_favor'  => $datos['games_favor'],
+                'games_contra' => $datos['games_contra'],
+                'diferencia_games' => $datos['diferencia_games'],
+                'posicion'     => $datos['posicion'] ?? null,
+            ];
+            $this->db->where('torneo_id', $torneo_id)
+                ->where('categoria_id', $categoria_id)
                 ->where('zona_id', $zona_id)
                 ->where('inscripcion_id', $inscripcion_id)
-                ->update('tabla_posiciones', $datos);
+                ->update('tabla_posiciones', $camposActualizar);
         } else {
+            $datos['torneo_id'] = $torneo_id;
+            $datos['categoria_id'] = $categoria_id;
             $datos['zona_id'] = $zona_id;
             $datos['inscripcion_id'] = $inscripcion_id;
             $this->db->insert('tabla_posiciones', $datos);
@@ -661,15 +663,17 @@ class Torneo_model extends CI_Model {
             ->result();
     }
 
-    public function buscarPartidosPorReferencia($ganador_id, $perdedor_id)
+    public function buscarPartidosPorReferencia($ganadorTag, $perdedorTag)
     {
         return $this->db
-            ->where('ganador_id', $ganador_id)
+            ->from('partidos')
             ->group_start()
-                ->where('pareja1_id', $perdedor_id)
-                ->or_where('pareja2_id', $perdedor_id)
+                ->where('referencia1', $ganadorTag)
+                ->or_where('referencia2', $ganadorTag)
+                ->or_where('referencia1', $perdedorTag)
+                ->or_where('referencia2', $perdedorTag)
             ->group_end()
-            ->get('partidos')
+            ->get()
             ->result();
     }
 
@@ -679,11 +683,26 @@ class Torneo_model extends CI_Model {
             $data esperado:
             [
                 'codigo'         => '1A', '2B', etc
-                'inscripcion_id' => int
+                'inscripcion_id' => int,
+                'torneo_id'      => int,
+                'categoria_id'   => int
             ]
         */
 
-        $this->db->insert('seeds', $data);
+        $existe = $this->db
+            ->where('torneo_id',   $data['torneo_id'])
+            ->where('categoria_id',$data['categoria_id'])
+            ->where('codigo',      $data['codigo'])
+            ->get('seeds')
+            ->row();
+
+        if ($existe) {
+            $this->db
+                ->where('id', $existe->id)
+                ->update('seeds', ['inscripcion_id' => $data['inscripcion_id']]);
+        } else {
+            $this->db->insert('seeds', $data);
+        }
     }
 
     public function buscarPartidosPorSeed($codigo)
@@ -782,10 +801,22 @@ class Torneo_model extends CI_Model {
 
         $existe = $this->db->get('tabla_posiciones')->row();
 
-        if ($existe)
-            $this->db->update('tabla_posiciones', $data);
-        else
+        if ($existe){
+            $camposActualizar = [
+                'pj'           => $data['pj'],
+                'pg'           => $data['pg'],
+                'pp'           => $data['pp'],
+                'sets_favor'   => $data['sets_favor'],
+                'sets_contra'  => $data['sets_contra'],
+                'games_favor'  => $data['games_favor'],
+                'games_contra' => $data['games_contra'],
+                'diferencia_games' => $data['diferencia_games'],
+                'posicion'     => $data['posicion'] ?? null
+            ];
+            $this->db->update('tabla_posiciones', $camposActualizar);
+        } else {
             $this->db->insert('tabla_posiciones', $data);
+        }
     }
 
     public function obtenerPartidosFinalizadosZona($zona_id)
@@ -829,7 +860,69 @@ class Torneo_model extends CI_Model {
 
     public function ObtenerResultados($torneo_id)
     {
-        
+
+    }
+
+    public function obtenerPlayoffBracket($torneo_id, $categoria_id)
+    {
+        $partidos = $this->db->query("
+            SELECT
+                p.id,
+                p.ronda,
+                p.estado,
+                p.pareja1_id,
+                p.pareja2_id,
+                p.ganador_id,
+                p.referencia1,
+                p.referencia2,
+                COALESCE(
+                    CONCAT(p1a.apellido, ' ', p1a.nombre, ' / ', p1b.apellido, ' ', p1b.nombre),
+                    p.referencia1
+                ) AS pareja1_nombre,
+                COALESCE(
+                    CONCAT(p2a.apellido, ' ', p2a.nombre, ' / ', p2b.apellido, ' ', p2b.nombre),
+                    p.referencia2
+                ) AS pareja2_nombre,
+                s1.games_pareja1 AS set1_p1, s1.games_pareja2 AS set1_p2,
+                s2.games_pareja1 AS set2_p1, s2.games_pareja2 AS set2_p2,
+                s3.games_pareja1 AS set3_p1, s3.games_pareja2 AS set3_p2
+            FROM partidos p
+            LEFT JOIN inscripciones i1  ON i1.id  = p.pareja1_id
+            LEFT JOIN participantes p1a ON p1a.id = i1.participante1_id
+            LEFT JOIN participantes p1b ON p1b.id = i1.participante2_id
+            LEFT JOIN inscripciones i2  ON i2.id  = p.pareja2_id
+            LEFT JOIN participantes p2a ON p2a.id = i2.participante1_id
+            LEFT JOIN participantes p2b ON p2b.id = i2.participante2_id
+            LEFT JOIN partido_sets s1 ON s1.partido_id = p.id AND s1.numero_set = 1
+            LEFT JOIN partido_sets s2 ON s2.partido_id = p.id AND s2.numero_set = 2
+            LEFT JOIN partido_sets s3 ON s3.partido_id = p.id AND s3.numero_set = 3
+            WHERE p.torneo_id    = ?
+              AND p.categoria_id = ?
+              AND p.zona_id      IS NULL
+              AND p.fase         = 'playoff'
+            ORDER BY p.ronda ASC, p.id ASC
+        ", [$torneo_id, $categoria_id])->result();
+
+        $nombres = [
+            1 => 'Reclasificación',
+            2 => 'Cuartos',
+            3 => 'Semifinal',
+            4 => 'Final',
+        ];
+
+        $bracket = [];
+        foreach ($partidos as $p) {
+            $r = $p->ronda;
+            if (!isset($bracket[$r])) {
+                $bracket[$r] = [
+                    'nombre'   => $nombres[$r] ?? "Ronda $r",
+                    'partidos' => [],
+                ];
+            }
+            $bracket[$r]['partidos'][] = $p;
+        }
+
+        return $bracket;
     }
 
 }

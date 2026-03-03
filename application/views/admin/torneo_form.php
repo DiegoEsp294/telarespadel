@@ -9,6 +9,13 @@
     <a href="<?= base_url('admin/torneos/torneos') ?>" class="btn-back">
         ← Volver al listado
     </a>
+
+    <?php if(isset($torneo)): ?>
+        <a href="<?= site_url('admin/torneos/generar_fixture/'.$torneo->id) ?>"
+           class="btn-generar-fixture">
+            ⚙ Generar fixture
+        </a>
+    <?php endif; ?>
 </div>
 
 <form method="post"
@@ -28,7 +35,12 @@
            required>
 
     <input type="date" name="fecha_fin"
+           placeholder="Fecha fin"
            value="<?= $torneo->fecha_fin ?? '' ?>">
+
+    <input type="date" name="fecha_cierre_inscripcion"
+           placeholder="Fecha de cierre de inscripciones"
+           value="<?= $torneo->fecha_cierre_inscripcion ?? '' ?>">
 
     <input type="text"
            name="categoria"
@@ -44,14 +56,25 @@
 
     <input type="text"
            name="organizador_telefono"
-           placeholder="Telefono del organizador"
+           placeholder="Teléfono del organizador"
            value="<?= $torneo->telefono_organizador ?? '' ?>"
            required>
 
+    <input type="number"
+           name="precio_inscripcion"
+           placeholder="Precio de inscripción ($)"
+           min="0"
+           value="<?= $torneo->precio_inscripcion ?? '' ?>">
+
+    <textarea name="premios"
+              placeholder="Premios del torneo"
+              rows="3"
+              style="resize:vertical;"><?= $torneo->premios ?? '' ?></textarea>
+
     <?php if(isset($torneo)): ?>
         <select name="estado">
-            <option value="proxima" <?= $torneo->estado=='proxima'?'selected':'' ?>>Próxima</option>
-            <option value="en_curso" <?= $torneo->estado=='en_curso'?'selected':'' ?>>En curso</option>
+            <option value="proxima"    <?= $torneo->estado=='proxima'   ?'selected':'' ?>>Próxima</option>
+            <option value="en_curso"   <?= $torneo->estado=='en_curso'  ?'selected':'' ?>>En curso</option>
             <option value="finalizado" <?= $torneo->estado=='finalizado'?'selected':'' ?>>Finalizado</option>
         </select>
     <?php endif; ?>
@@ -62,12 +85,8 @@
 
     <?php if(isset($torneo) && !empty($torneo->imagen)): ?>
         <p>Imagen actual:</p>
-
-        <img 
-            src="data:image/jpeg;base64,<?= $torneo->imagen ?>"
-            style="max-width:200px;"
-        >
-
+        <img src="data:image/jpeg;base64,<?= $torneo->imagen ?>"
+             style="max-width:200px;">
     <?php endif; ?>
 
     <hr>
@@ -107,13 +126,6 @@
 
     <div id="listaInscripciones" class="inscripciones-lista"></div>
 
-    <?php endif; ?>
-
-    <?php if(isset($torneo)): ?>
-        <a href="<?php echo site_url('admin/torneos/generar_fixture/'.$torneo->id); ?>" 
-        class="btn-create">
-            Generar fixture
-        </a>
     <?php endif; ?>
 
     <button class="btn-create">

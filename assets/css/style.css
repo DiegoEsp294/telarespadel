@@ -35,7 +35,7 @@ body {
     width: 100%;
     max-width: 900px;
     margin: 0 auto;
-    padding: 0 12px;
+    padding: 0 5px;
     box-sizing: border-box;
 }
 .container-nav {
@@ -1337,6 +1337,25 @@ body {
     font-weight:600;
 }
 
+/* Botón generar fixture */
+.btn-generar-fixture {
+    background: #1a7a4a;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-generar-fixture:hover {
+    background: #15603b;
+    color: #fff;
+}
+
 /* ---------- GRID CATEGORIAS ---------- */
 
 .categorias-grid{
@@ -2214,7 +2233,7 @@ button {
     }
 
     .container {
-        padding: 0 10px;
+        padding: 0 5px;
     }
 
     .card,
@@ -2334,4 +2353,181 @@ button {
     background-color: #f0f0f0;
     padding: 2px 6px;
     border-radius: 4px;
+}
+
+/* =============================================
+   BRACKET DE CRUCES / PLAYOFF
+   ============================================= */
+
+.bracket-empty {
+    text-align: center;
+    color: var(--color-gris);
+    padding: 40px 0;
+    font-style: italic;
+}
+
+/* --- Desktop: rounds side by side --- */
+.bracket-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0;
+    overflow-x: auto;
+    padding: 24px 8px 32px;
+}
+
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+    flex-shrink: 0;
+}
+
+.round-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-azul);
+    background: #e8eef5;
+    border: 1px solid #c0ccda;
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin-bottom: 16px;
+    white-space: nowrap;
+}
+
+.round-matches {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 100%;
+    flex: 1;
+    gap: 24px;
+    padding: 0 8px;
+}
+
+.match-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+/* Connecting line going right from each match (desktop only) */
+.match-wrapper::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    width: 8px;
+    height: 1px;
+    background: #bbb;
+}
+
+.bracket-round:last-child .match-wrapper::after {
+    display: none;
+}
+
+.match-card-bracket {
+    width: 100%;
+    border: 1px solid #d0d8e2;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.match-team {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 12px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-texto);
+    background: #fff;
+    transition: background 0.15s;
+}
+
+.match-team .team-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.match-team .team-score {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-gris-oscuro);
+    white-space: nowrap;
+}
+
+.match-team.winner {
+    background: var(--color-naranja);
+    color: #fff;
+    font-weight: 700;
+}
+
+.match-team.winner .team-score {
+    color: rgba(255,255,255,0.85);
+}
+
+/* Admin: bracket cards are clickable */
+.match-card-bracket.admin-clickable {
+    cursor: pointer;
+}
+
+.match-card-bracket.admin-clickable:hover {
+    border-color: var(--color-naranja);
+    box-shadow: 0 2px 8px rgba(255,102,0,0.18);
+}
+
+/* --- Mobile: rounds stacked vertically --- */
+@media (max-width: 640px) {
+    .bracket-wrapper {
+        flex-direction: column;
+        gap: 8px;
+        overflow-x: visible;
+        padding: 16px 0 24px;
+    }
+
+    .bracket-round {
+        width: 100%;
+        min-width: unset;
+        flex-shrink: unset;
+        margin-bottom: 8px;
+    }
+
+    .round-matches {
+        gap: 12px;
+        padding: 0;
+    }
+
+    .match-wrapper::after {
+        display: none;
+    }
+
+    .match-team {
+        flex-wrap: wrap;
+    }
+
+    .match-team .team-name {
+        white-space: normal;
+        word-break: break-word;
+    }
+}
+
+.match-team.tbd {
+    color: #aaa;
+    font-style: italic;
+}
+
+.match-divider {
+    height: 1px;
+    background: #d0d8e2;
+    margin: 0;
 }

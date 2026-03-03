@@ -41,7 +41,7 @@
             margin: 0;
         }
         
-        .nav-auth-item a, 
+        .nav-auth-item a,
         .nav-auth-item button {
             text-decoration: none;
             color: #0d0c0c;
@@ -52,6 +52,7 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
+            white-space: nowrap;
         }
         
         .nav-auth-item .btn-login {
