@@ -77,10 +77,10 @@ $data['club_nombre'] = 'Telares Padel';          // Nombre del club
 $data['club_descripcion'] = '...';               // Descripción
 $data['club_info'] = array(
     'ubicacion' => 'Tu localidad, [Provincia]',  // Tu ubicación
-    'telefono' => '+54 (XXX) XXXX-XXXX',        // Tu teléfono
+    'telefono' => '+54 9 3856 45-8000',        // Tu teléfono
     'email' => 'info@telarespadel.com',         // Tu email
     'facebook' => 'https://facebook.com/...',   // Tu Facebook
-    'instagram' => '@telarespadel'               // Tu Instagram
+    'instagram' => 'https://www.instagram.com/telares_padel?igsh=MTUzOWprbHVrcTkxcw=='               // Tu Instagram
 );
 ```
 

@@ -64,14 +64,12 @@
 
                     <div class="contact-item">
                         <i class="fas fa-clock"></i>
-                        <p>Lun - Dom: 08:00 - 22:00</p>
+                        <p>Lun - Dom: 08:00 - 23:00</p>
                     </div>
 
                     <div class="social-links">
-                        <a href="<?php echo $club_info['instagram'] ?? '#'; ?>" target="_blank" title="Instagram">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="https://wa.me/549XXXXXXXXXX" target="_blank" title="WhatsApp">
+                        <a href="https://instagram.com/<?php echo isset($club_info['instagram']) ? str_replace('@', '', $club_info['instagram']) : 'telarespadel'; ?>" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://wa.me/5493856458000" target="_blank" title="WhatsApp">
                             <i class="fab fa-whatsapp"></i>
                         </a>
                     </div>

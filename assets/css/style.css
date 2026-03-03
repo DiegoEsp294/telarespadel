@@ -765,6 +765,27 @@ body {
     font-size: 13px;
 }
 
+.footer-dev {
+    margin-top: 6px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.footer-dev strong {
+    color: rgba(255, 255, 255, 0.55);
+    font-weight: 600;
+}
+
+.footer-dev a {
+    color: rgba(255, 102, 0, 0.55);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-dev a:hover {
+    color: var(--color-naranja);
+}
+
 /* ================================ */
 /*       RESPONSIVE DESIGN          */
 /* ================================ */

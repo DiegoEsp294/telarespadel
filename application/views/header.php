@@ -225,7 +225,6 @@
                 <li><a href="<?php echo base_url(); ?>" class="nav-link active">Inicio</a></li>
                 <li><a href="#torneos" class="nav-link">Torneos</a></li>
                 <li><a href="#nosotros" class="nav-link">Nosotros</a></li>
-                <li><a href="#contacto" class="nav-link">Contacto</a></li>
                 
                 <!-- Separador -->
                 <li class="nav-separator"></li>

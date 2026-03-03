@@ -30,10 +30,10 @@ class Configuracion_model extends CI_Model {
             // Retornar valores por defecto si no existe configuración
             return array(
                 'ubicacion' => 'Los Telares, Santiago del Estero',
-                'telefono' => '3855555555',
+                'telefono' => '+54 3856 458000',
                 'email' => 'telarespadel@gmail.com',
                 'facebook' => 'telarespadel',
-                'instagram' => '@telarespadel'
+                'instagram' => 'https://www.instagram.com/telares_padel?igsh=MTUzOWprbHVrcTkxcw=='
             );
         }
     }

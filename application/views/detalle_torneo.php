@@ -311,7 +311,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                        target="_blank"
                        class="btn-share btn-share-wpp"
                        title="Compartir por WhatsApp">
-                        <i class="fab fa-whatsapp"></i> WhatsApp
+                        <i class="fab fa-whatsapp"></i> Compartir
                     </a>
                     <button onclick="copiarLink('<?php echo base_url('home/torneo/'.$torneo->id); ?>', this)"
                             class="btn-share btn-share-copy"

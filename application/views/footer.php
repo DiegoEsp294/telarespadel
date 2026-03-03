@@ -12,7 +12,6 @@
                         <li><a href="<?php echo base_url(); ?>">Inicio</a></li>
                         <li><a href="#torneos">Torneos</a></li>
                         <li><a href="#nosotros">Nosotros</a></li>
-                        <li><a href="#contacto">Contacto</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -23,14 +22,16 @@
                 <div class="footer-section">
                     <h4>Síguenos</h4>
                     <div class="footer-social">
-                        <a href="https://facebook.com/<?php echo isset($club_info['facebook']) ? $club_info['facebook'] : 'telarespadel'; ?>" target="_blank" title="Facebook"><i class="fab fa-facebook"></i></a>
                         <a href="https://instagram.com/<?php echo isset($club_info['instagram']) ? str_replace('@', '', $club_info['instagram']) : 'telarespadel'; ?>" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="https://whatsapp.com" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                     </div>
                 </div>
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2026 Telares Padel. Todos los derechos reservados.</p>
+                <p class="footer-dev">
+                    Desarrollado por <strong>Diego Espíndola</strong> &mdash;
+                    <a href="mailto:diegoesp63@gmail.com" title="Contactar al desarrollador">¿Querés algo similar?</a>
+                </p>
             </div>
         </div>
     </footer>
