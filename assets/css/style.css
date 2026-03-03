@@ -131,23 +131,29 @@ body {
 /* ================================ */
 
 .hero {
-    background: linear-gradient(135deg, var(--color-azul) 0%, #004d80 100%);
+    background-image: url('../images/portada-telarespadel.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: var(--color-blanco);
-    padding: 100px 20px;
+    padding: 130px 20px;
     text-align: center;
     position: relative;
     overflow: hidden;
 }
 
+/* Overlay oscuro para que el texto sea legible */
 .hero::before {
     content: '';
     position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><pattern id="dots" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse"><circle cx="30" cy="30" r="2" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="1200" height="600" fill="url(%23dots)"/></svg>');
-    opacity: 0.5;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 20, 50, 0.65) 0%,
+        rgba(0, 20, 50, 0.55) 60%,
+        rgba(0, 20, 50, 0.70) 100%
+    );
+    z-index: 1;
 }
 
 .hero-content {
@@ -161,13 +167,16 @@ body {
     font-size: 48px;
     margin-bottom: 20px;
     font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7), 0 1px 3px rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.01em;
 }
 
 .hero p {
     font-size: 24px;
     margin-bottom: 40px;
     color: var(--color-naranja);
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
 
 .cta-buttons {
@@ -490,6 +499,62 @@ body {
     text-align: center;
 }
 
+.torneo-share-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.btn-share {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    white-space: nowrap;
+}
+
+.btn-share:hover {
+    transform: translateY(-1px);
+}
+
+.btn-share-wpp {
+    background: #25d366;
+    color: #fff;
+}
+
+.btn-share-wpp:hover {
+    background: #1ebe5d;
+    color: #fff;
+}
+
+.btn-share-copy {
+    background: #e8eef5;
+    color: var(--color-azul);
+}
+
+.btn-share-copy:hover {
+    background: #d0dcea;
+}
+
+/* Variante para la vista de detalle (fondo azul oscuro) */
+.torneo-share-detalle .btn-share-copy {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+}
+
+.torneo-share-detalle .btn-share-copy:hover {
+    background: rgba(255,255,255,0.25);
+}
+
 .no-torneos {
     grid-column: 1 / -1;
     text-align: center;
@@ -709,8 +774,13 @@ body {
         flex-direction: column;
     }
 
+    .hero {
+        padding: 90px 16px;
+        background-position: center top;
+    }
+
     .hero h2 {
-        font-size: 32px;
+        font-size: 30px;
     }
 
     .hero p {

@@ -170,6 +170,20 @@
                                 <a href="<?php echo base_url('home/torneo/'.$torneo->id); ?>" class="btn-info">
                                     Más Información
                                 </a>
+
+                                <div class="torneo-share-row">
+                                    <a href="https://wa.me/?text=<?php echo urlencode('Mirá este torneo de pádel: '.base_url('home/torneo/'.$torneo->id)); ?>"
+                                       target="_blank"
+                                       class="btn-share btn-share-wpp"
+                                       title="Compartir por WhatsApp">
+                                        <i class="fab fa-whatsapp"></i> Compartir
+                                    </a>
+                                    <button onclick="copiarLink('<?php echo base_url('home/torneo/'.$torneo->id); ?>', this)"
+                                            class="btn-share btn-share-copy"
+                                            title="Copiar link">
+                                        <i class="fas fa-link"></i> Copiar link
+                                    </button>
+                                </div>
                             </div>
 
                         </div>
@@ -221,3 +235,17 @@
             </div>
         </div>
     </section>
+
+<script>
+function copiarLink(url, btn) {
+    navigator.clipboard.writeText(url).then(function() {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+        btn.style.background = '#1a7a4a';
+        setTimeout(function() {
+            btn.innerHTML = original;
+            btn.style.background = '';
+        }, 2000);
+    });
+}
+</script>

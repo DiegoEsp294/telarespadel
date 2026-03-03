@@ -303,8 +303,24 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
         <!-- Encabezado del Torneo -->
         <div class="torneo-info-header">
-            <h1><?php echo $torneo->nombre; ?></h1>
-            
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                <h1 style="margin:0;"><?php echo $torneo->nombre; ?></h1>
+
+                <div class="torneo-share-row torneo-share-detalle">
+                    <a href="https://wa.me/?text=<?php echo urlencode('Mirá este torneo de pádel: '.base_url('home/torneo/'.$torneo->id)); ?>"
+                       target="_blank"
+                       class="btn-share btn-share-wpp"
+                       title="Compartir por WhatsApp">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </a>
+                    <button onclick="copiarLink('<?php echo base_url('home/torneo/'.$torneo->id); ?>', this)"
+                            class="btn-share btn-share-copy"
+                            title="Copiar link">
+                        <i class="fas fa-link"></i> Copiar link
+                    </button>
+                </div>
+            </div>
+
             <div class="info-row">
                 <!-- <div style="margin-top:25px;">
                     <a href="<?php echo $link_wpp; ?>" 
@@ -453,3 +469,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         </div>
     </div>
 </section>
+
+<script>
+function copiarLink(url, btn) {
+    navigator.clipboard.writeText(url).then(function() {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+        btn.style.background = '#1a7a4a';
+        setTimeout(function() {
+            btn.innerHTML = original;
+            btn.style.background = '';
+        }, 2000);
+    });
+}
+</script>
