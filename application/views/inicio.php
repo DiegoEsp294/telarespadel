@@ -1,20 +1,19 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <h2>Bienvenidos a Telares Padel</h2>
+            <span class="hero-badge">Club de Pádel · Santiago del Estero</span>
+            <h2>Telares<br>Padel</h2>
+            <p class="hero-tagline">Torneos de todos los niveles · Los Telares</p>
             <div class="cta-buttons">
-                <a href="#torneos" class="btn btn-primary">Ver Torneos</a>
-                
-                <?php 
-                // Mostrar botón de administración solo para admin (1), organizador (2) y moderador (3)
-                if ($usuario_logueado && in_array($usuario_rol, array(1, 2, 3))): 
-                ?>
-                    <a href="<?php echo base_url('admin/Torneos/torneos'); ?>" class="btn btn-primary">
-                        <i class="fas fa-cog"></i> Panel de Administración
+                <a href="#torneos" class="btn" style="color: white; background-color: var(--color-naranja);">Ver Torneos</a>
+                <?php if ($usuario_logueado && in_array($usuario_rol, array(1, 2, 3))): ?>
+                    <a class="btn" style="color: white; background-color: var(--color-naranja);" href="<?php echo base_url('admin/Torneos/torneos'); ?>" >
+                        Panel Admin
                     </a>
                 <?php endif; ?>
             </div>
         </div>
+        <div class="hero-scroll-hint">↓</div>
     </section>
 
     <!-- Sección de Información del Club -->

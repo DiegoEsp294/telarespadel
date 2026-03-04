@@ -11,9 +11,9 @@
     </a>
 
     <?php if(isset($torneo)): ?>
-        <a href="<?= site_url('admin/torneos/generar_fixture/'.$torneo->id) ?>"
+        <a href="<?= site_url('admin/torneos/fixture/'.$torneo->id) ?>"
            class="btn-generar-fixture">
-            ⚙ Generar fixture
+            ⚙ Configurar Fixture
         </a>
     <?php endif; ?>
 </div>
@@ -25,53 +25,61 @@
           : base_url('admin/torneos/guardar') ?>"
       class="admin-form">
 
+    <label>Nombre del torneo</label>
     <input type="text" name="nombre"
-           placeholder="Nombre del torneo"
+           placeholder="Ej: Torneo Aniversario 2026"
            value="<?= $torneo->nombre ?? '' ?>"
            required>
 
+    <label>Fecha de inicio</label>
     <input type="date" name="fecha_inicio"
            value="<?= $torneo->fecha_inicio ?? '' ?>"
            required>
 
+    <label>Fecha de fin</label>
     <input type="date" name="fecha_fin"
-           placeholder="Fecha fin"
            value="<?= $torneo->fecha_fin ?? '' ?>">
 
+    <label>Fecha de cierre de inscripciones</label>
     <input type="date" name="fecha_cierre_inscripcion"
-           placeholder="Fecha de cierre de inscripciones"
            value="<?= $torneo->fecha_cierre_inscripcion ?? '' ?>">
 
+    <label>Categorías <span style="font-weight:400;color:#888;">(Ej: 7ma Masculina, 8va Femenina)</span></label>
     <input type="text"
            name="categoria"
-           placeholder="Categorias Ej: 7ma Masculina, 8va Femenina"
+           placeholder="Ej: 7ma Masculina, 8va Femenina"
            value="<?= $torneo->categoria ?? '' ?>"
            required>
 
+    <label>Nombre del organizador</label>
     <input type="text"
            name="organizador"
-           placeholder="Nombre del organizador"
+           placeholder="Ej: Club Telares Padel"
            value="<?= $torneo->nombre_organizador ?? '' ?>"
            required>
 
-    <input type="text"
+    <label>Teléfono del organizador <span style="font-weight:400;color:#888;">(solo números)</span></label>
+    <input type="tel"
            name="organizador_telefono"
-           placeholder="Teléfono del organizador"
+           placeholder="Ej: 5491112345678"
            value="<?= $torneo->telefono_organizador ?? '' ?>"
            required>
 
+    <label>Precio de inscripción <span style="font-weight:400;color:#888;">(por pareja, en $)</span></label>
     <input type="number"
            name="precio_inscripcion"
-           placeholder="Precio de inscripción ($)"
+           placeholder="Ej: 5000"
            min="0"
            value="<?= $torneo->precio_inscripcion ?? '' ?>">
 
+    <label>Premios</label>
     <textarea name="premios"
-              placeholder="Premios del torneo"
+              placeholder="Ej: 1° puesto: trofeo + bolsón de productos&#10;2° puesto: medalla"
               rows="3"
               style="resize:vertical;"><?= $torneo->premios ?? '' ?></textarea>
 
     <?php if(isset($torneo)): ?>
+        <label>Estado del torneo</label>
         <select name="estado">
             <option value="proxima"    <?= $torneo->estado=='proxima'   ?'selected':'' ?>>Próxima</option>
             <option value="en_curso"   <?= $torneo->estado=='en_curso'  ?'selected':'' ?>>En curso</option>

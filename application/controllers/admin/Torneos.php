@@ -69,6 +69,8 @@ class Torneos extends CI_Controller {
             $imagenBase64 = base64_encode(file_get_contents($_FILES['imagen']['tmp_name']));
         }
 
+        $telOrg = preg_replace('/[^0-9]/', '', $this->input->post('organizador_telefono'));
+
         $data = [
             'nombre'               => $this->input->post('nombre'),
             'fecha_inicio'         => $this->input->post('fecha_inicio'),
@@ -76,7 +78,7 @@ class Torneos extends CI_Controller {
             'estado'               => 'proxima',
             'categoria'            => $this->input->post('categoria'),
             'nombre_organizador'   => $this->input->post('organizador'),
-            'telefono_organizador' => $this->input->post('organizador_telefono'),
+            'telefono_organizador' => $telOrg ?: null,
             'precio_inscripcion'   => $this->input->post('precio_inscripcion') ?: 0,
             'premios'              => $this->input->post('premios') ?: null,
             'fecha_cierre_inscripcion' => $this->input->post('fecha_cierre_inscripcion') ?: null,
@@ -167,6 +169,8 @@ class Torneos extends CI_Controller {
             $imagenBase64 = base64_encode($fileData);
         }
 
+        $telOrg = preg_replace('/[^0-9]/', '', $this->input->post('organizador_telefono'));
+
         $data = [
             'nombre'               => $this->input->post('nombre'),
             'fecha_inicio'         => $this->input->post('fecha_inicio'),
@@ -176,7 +180,7 @@ class Torneos extends CI_Controller {
             'categoria'            => $this->input->post('categoria'),
             'imagen'               => $imagenBase64,
             'nombre_organizador'   => $this->input->post('organizador'),
-            'telefono_organizador' => $this->input->post('organizador_telefono'),
+            'telefono_organizador' => $telOrg ?: null,
             'precio_inscripcion'   => $this->input->post('precio_inscripcion') ?: 0,
             'premios'              => $this->input->post('premios') ?: null,
             'fecha_cierre_inscripcion' => $this->input->post('fecha_cierre_inscripcion') ?: null,
@@ -304,23 +308,72 @@ class Torneos extends CI_Controller {
         // traer todo el fixture armado
         $data['zonas'] = $this->fixtureservice->obtenerFixtureCompleto($torneo_id, $categoria_id);
 
-        // info del torneo (categoria, etc)
+        // info del torneo
         $data['torneo'] = $this->Torneo_model->obtener_por_id($torneo_id);
 
         $data['playoff'] = $this->Torneo_model->obtenerPlayoffBracket($torneo_id, $categoria_id);
+
+        // datos para la pestaña de configuración de zonas
+        $data['inscripciones_zona'] = $this->Torneo_model->obtenerInscripcionesConZona($torneo_id, $categoria_id);
+        $data['zonas_db']           = $this->Torneo_model->obtenerZonasPorCategoria($torneo_id, $categoria_id);
 
         $this->load->view('header');
         $this->load->view('admin/torneo_fixture', $data);
         $this->load->view('footer');
     }
 
-    public function generar_fixture($torneo_id)
+    public function guardar_zonas($torneo_id)
+    {
+        $this->load->model('Torneo_model');
+
+        $categoria_id = (int)$this->input->post('categoria_id');
+        $num_zonas    = (int)$this->input->post('num_zonas');
+        $asignaciones = $this->input->post('zona') ?: [];
+
+        // 1. Limpiar zonas y partidos existentes de esta categoría
+        $this->Torneo_model->limpiarFixtureCategoria($torneo_id, $categoria_id);
+
+        // 2. Crear las zonas
+        $zona_ids = [];
+        for ($i = 1; $i <= $num_zonas; $i++) {
+            $zona_id = $this->Torneo_model->insertarZona([
+                'torneo_id'    => $torneo_id,
+                'categoria_id' => $categoria_id,
+                'nombre'       => chr(64 + $i),
+                'numero'       => $i,
+            ]);
+            $zona_ids[$i] = $zona_id;
+        }
+
+        // 3. Asignar parejas a zonas
+        foreach ($asignaciones as $inscripcion_id => $zona_numero) {
+            $zona_numero = (int)$zona_numero;
+            if ($zona_numero < 1 || !isset($zona_ids[$zona_numero])) continue;
+            $this->Torneo_model->insertarZonaParejas([
+                'zona_id'        => $zona_ids[$zona_numero],
+                'inscripcion_id' => (int)$inscripcion_id,
+            ]);
+        }
+
+        redirect('admin/Torneos/fixture/' . $torneo_id . '?categoria_id=' . $categoria_id);
+    }
+
+    public function generar_partidos($torneo_id)
     {
         $this->load->library('FixtureService');
         $this->load->model('Torneo_model');
 
-        $this->fixtureservice->generarFixture($torneo_id);
-        redirect('admin/Torneos/torneos');
+        $categoria_id = (int)$this->input->post('categoria_id');
+
+        $this->fixtureservice->generarPartidosDesdeCofiguracion($torneo_id, $categoria_id);
+
+        redirect('admin/Torneos/fixture/' . $torneo_id . '?categoria_id=' . $categoria_id);
+    }
+
+    public function generar_fixture($torneo_id)
+    {
+        // Redirige a la página de configuración manual de fixture
+        redirect('admin/Torneos/fixture/' . $torneo_id);
     }
 
     public function obtener_partido($partido_id){

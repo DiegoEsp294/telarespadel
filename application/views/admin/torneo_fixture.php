@@ -28,16 +28,99 @@
             ============================= -->
 
             <div class="fixture-tabs">
-                <button class="tab active" onclick="showTab(event,'zonas')">Zonas</button>
+                <button class="tab active" onclick="showTab(event,'config')">Configuración</button>
+                <button class="tab" onclick="showTab(event,'zonas')">Zonas</button>
                 <button class="tab" onclick="showTab(event,'resultados')">Resultados</button>
                 <button class="tab" onclick="showTab(event,'playoff')">Cruces</button>
+            </div>
+
+            <!-- =============================
+                    CONFIGURACIÓN DE ZONAS
+            ============================= -->
+
+            <div id="tab-config" class="fixture-tab-content">
+
+                <div class="config-card">
+
+                    <h3>Asignación de Zonas</h3>
+                    <p class="config-hint">Seleccioná la cantidad de zonas y asigná cada pareja a su zona. Luego guardá y generá los partidos.</p>
+
+                    <form method="post" action="<?= base_url('admin/Torneos/guardar_zonas/'.$torneo->id) ?>">
+                        <input type="hidden" name="categoria_id" value="<?= $categoria_id ?>">
+
+                        <div class="config-num-zonas">
+                            <label>Número de Zonas</label>
+                            <select name="num_zonas" id="num_zonas" onchange="actualizarSelectsZona(this.value)">
+                                <?php
+                                $nZonasActual = !empty($zonas_db) ? count($zonas_db) : 2;
+                                foreach ([2,3,4,5,6,8] as $opcion): ?>
+                                    <option value="<?= $opcion ?>" <?= $nZonasActual == $opcion ? 'selected' : '' ?>>
+                                        <?= $opcion ?> Zonas
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <?php if (!empty($inscripciones_zona)): ?>
+
+                            <table class="config-tabla">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Pareja</th>
+                                        <th>Zona</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($inscripciones_zona as $idx => $insc): ?>
+                                    <tr>
+                                        <td><?= $idx + 1 ?></td>
+                                        <td><?= htmlspecialchars($insc->pareja_nombre) ?></td>
+                                        <td>
+                                            <select name="zona[<?= $insc->id ?>]" class="zona-select">
+                                                <option value="">-- Sin asignar --</option>
+                                                <?php for ($z = 1; $z <= $nZonasActual; $z++): ?>
+                                                    <option value="<?= $z ?>" <?= $insc->zona_numero == $z ? 'selected' : '' ?>>
+                                                        Zona <?= chr(64 + $z) ?>
+                                                    </option>
+                                                <?php endfor; ?>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+
+                        <?php else: ?>
+                            <p class="config-hint">No hay inscriptos en esta categoría aún.</p>
+                        <?php endif; ?>
+
+                        <div class="config-actions">
+                            <button type="submit" class="btn-guardar-config">Guardar Configuración</button>
+                        </div>
+
+                    </form>
+
+                    <?php if (!empty($zonas_db)): ?>
+                    <form method="post"
+                          action="<?= base_url('admin/Torneos/generar_partidos/'.$torneo->id) ?>"
+                          onsubmit="return confirm('¿Generar partidos? Se eliminarán los partidos actuales.')">
+                        <input type="hidden" name="categoria_id" value="<?= $categoria_id ?>">
+                        <div class="config-actions" style="margin-top:10px;">
+                            <button type="submit" class="btn-generar-partidos">⚙ Generar Partidos</button>
+                        </div>
+                    </form>
+                    <?php endif; ?>
+
+                </div>
+
             </div>
 
             <!-- =============================
                     ZONAS
             ============================= -->
 
-            <div id="tab-zonas" class="fixture-tab-content">
+            <div id="tab-zonas" class="fixture-tab-content" style="display:none;">
 
                 <div class="fixture-container">
 
@@ -398,5 +481,24 @@ function showTab(e, tab)
         .forEach(t => t.classList.remove('active'));
 
     e.currentTarget.classList.add('active');
+}
+
+function actualizarSelectsZona(numZonas)
+{
+    numZonas = parseInt(numZonas);
+
+    document.querySelectorAll('.zona-select').forEach(function(select) {
+        var valorActual = parseInt(select.value) || 0;
+        select.innerHTML = '<option value="">-- Sin asignar --</option>';
+
+        for (var i = 1; i <= numZonas; i++) {
+            var letra = String.fromCharCode(64 + i);
+            var opt   = document.createElement('option');
+            opt.value       = i;
+            opt.textContent = 'Zona ' + letra;
+            if (valorActual === i) opt.selected = true;
+            select.appendChild(opt);
+        }
+    });
 }
 </script>

@@ -401,20 +401,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     <h2>Información del Torneo</h2>
                     <p class="descripcion"><?php echo nl2br($torneo->descripcion); ?></p>
 
-                    <!-- Estadísticas -->
-
-                    <!-- Inscriptos por Categoría -->
-                    <?php if (!empty($inscriptos_por_categoria)): ?>
-                        <h3>Inscriptos por Categoría</h3>
-                        <div class="">
-                            <?php foreach ($inscriptos_por_categoria as $cat): ?>
-                                <div class="stat-box">
-                                    <div class="numero"><?php echo $cat->cantidad; ?></div>
-                                    <div class="label"><?php echo $cat->categoria; ?></div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
 
 
                     <div class="info-extra">

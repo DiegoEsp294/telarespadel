@@ -306,6 +306,79 @@ class Torneo_model extends CI_Model {
         return $this->db->trans_status();
     }
 
+    public function limpiarFixtureCategoria($torneo_id, $categoria_id)
+    {
+        $this->db->trans_start();
+
+        $zonas = $this->db
+            ->select('id')
+            ->where(['torneo_id' => $torneo_id, 'categoria_id' => $categoria_id])
+            ->get('zonas')
+            ->result();
+
+        if (!empty($zonas)) {
+            $zona_ids = array_map('intval', array_column($zonas, 'id'));
+            $in = implode(',', $zona_ids);
+
+            $this->db->query("DELETE FROM partido_sets WHERE partido_id IN (SELECT id FROM partidos WHERE zona_id IN ($in))");
+            $this->db->query("DELETE FROM resultados_partido WHERE partido_id IN (SELECT id FROM partidos WHERE zona_id IN ($in))");
+            $this->db->where_in('zona_id', $zona_ids)->delete('partidos');
+            $this->db->where_in('zona_id', $zona_ids)->delete('tabla_posiciones');
+            $this->db->where_in('zona_id', $zona_ids)->delete('zona_parejas');
+            $this->db->where('torneo_id', $torneo_id)->where('categoria_id', $categoria_id)->delete('zonas');
+        }
+
+        $this->db->query("
+            DELETE FROM partido_sets WHERE partido_id IN (
+                SELECT id FROM partidos WHERE torneo_id = ? AND categoria_id = ? AND zona_id IS NULL
+            )
+        ", [$torneo_id, $categoria_id]);
+
+        $this->db->query("
+            DELETE FROM resultados_partido WHERE partido_id IN (
+                SELECT id FROM partidos WHERE torneo_id = ? AND categoria_id = ? AND zona_id IS NULL
+            )
+        ", [$torneo_id, $categoria_id]);
+
+        $this->db->where('torneo_id', $torneo_id)
+            ->where('categoria_id', $categoria_id)
+            ->where('zona_id IS NULL', null, false)
+            ->delete('partidos');
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    public function obtenerZonasPorCategoria($torneo_id, $categoria_id)
+    {
+        return $this->db
+            ->where('torneo_id', $torneo_id)
+            ->where('categoria_id', $categoria_id)
+            ->order_by('numero', 'ASC')
+            ->get('zonas')
+            ->result();
+    }
+
+    public function obtenerInscripcionesConZona($torneo_id, $categoria_id)
+    {
+        return $this->db->query("
+            SELECT
+                i.id,
+                CONCAT(p1.apellido, ' ', p1.nombre, ' / ', p2.apellido, ' ', p2.nombre) AS pareja_nombre,
+                z.id   AS zona_id,
+                z.numero AS zona_numero
+            FROM inscripciones i
+            LEFT JOIN participantes p1 ON p1.id = i.participante1_id
+            LEFT JOIN participantes p2 ON p2.id = i.participante2_id
+            LEFT JOIN zona_parejas zp ON zp.inscripcion_id = i.id
+                AND zp.zona_id IN (SELECT id FROM zonas WHERE torneo_id = ? AND categoria_id = ?)
+            LEFT JOIN zonas z ON z.id = zp.zona_id
+            WHERE i.torneo_id  = ?
+              AND i.categoria_id = ?
+            ORDER BY i.id ASC
+        ", [$torneo_id, $categoria_id, $torneo_id, $categoria_id])->result();
+    }
+
     public function obtenerCategoriasFixture($torneo_id)
     {
         return $this->db

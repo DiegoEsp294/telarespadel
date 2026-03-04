@@ -1275,4 +1275,96 @@ class FixtureService
 
         $this->verificarClasificadosZona($zona_id);
     }
+
+    /* ======================================
+       GENERACIÓN MANUAL DESDE CONFIGURACIÓN
+    ====================================== */
+
+    public function generarPartidosDesdeCofiguracion($torneo_id, $categoria_id)
+    {
+        $this->CI->db->trans_start();
+
+        $this->_torneo_id    = $torneo_id;
+        $this->_categoria_id = $categoria_id;
+
+        // 1. Borrar partidos existentes (conserva zonas y zona_parejas)
+        $this->limpiarSoloMatchesCategoria($torneo_id, $categoria_id);
+
+        // 2. Leer zonas y sus parejas asignadas
+        $zonas_db = $this->CI->Torneo_model->obtenerZonasPorCategoria($torneo_id, $categoria_id);
+
+        if (empty($zonas_db)) {
+            $this->CI->db->trans_complete();
+            return false;
+        }
+
+        // 3. Generar round-robin por zona
+        foreach ($zonas_db as $zona)
+        {
+            $parejas = $this->CI->db
+                ->select('i.*')
+                ->from('zona_parejas zp')
+                ->join('inscripciones i', 'i.id = zp.inscripcion_id')
+                ->where('zp.zona_id', $zona->id)
+                ->get()
+                ->result();
+
+            if (count($parejas) < 2) continue;
+
+            $this->generarRoundRobinZona($zona->id, $parejas);
+        }
+
+        // 4. Generar estructura de playoffs según cantidad de zonas
+        $num_zonas = count($zonas_db);
+        try {
+            $config = $this->determinarConfigPorZonas($num_zonas);
+            $this->generarPlayoffsAPA($torneo_id, $categoria_id, $config);
+        } catch (Exception $e) {
+            log_message('error', 'generarPartidosDesdeCofiguracion: ' . $e->getMessage());
+        }
+
+        $this->CI->db->trans_complete();
+        return $this->CI->db->trans_status();
+    }
+
+    private function determinarConfigPorZonas($num_zonas)
+    {
+        $mapa = [
+            2 => ['zonas' => 2, 'fase' => 'semifinal'],
+            3 => ['zonas' => 3, 'fase' => 'mixto_3zonas'],
+            4 => ['zonas' => 4, 'fase' => 'cuartos_4zonas'],
+            5 => ['zonas' => 5, 'fase' => 'apa_5zonas'],
+            6 => ['zonas' => 6, 'fase' => 'octavos_6zonas'],
+            8 => ['zonas' => 8, 'fase' => 'octavos_8zonas'],
+        ];
+
+        if (!isset($mapa[$num_zonas])) {
+            throw new Exception("Número de zonas no soportado: $num_zonas");
+        }
+
+        return $mapa[$num_zonas];
+    }
+
+    private function limpiarSoloMatchesCategoria($torneo_id, $categoria_id)
+    {
+        $this->CI->db->query("
+            DELETE FROM partido_sets WHERE partido_id IN (
+                SELECT id FROM partidos WHERE torneo_id = ? AND categoria_id = ?
+            )
+        ", [$torneo_id, $categoria_id]);
+
+        $this->CI->db->query("
+            DELETE FROM resultados_partido WHERE partido_id IN (
+                SELECT id FROM partidos WHERE torneo_id = ? AND categoria_id = ?
+            )
+        ", [$torneo_id, $categoria_id]);
+
+        $this->CI->db->where('torneo_id', $torneo_id)
+            ->where('categoria_id', $categoria_id)
+            ->delete('tabla_posiciones');
+
+        $this->CI->db->where('torneo_id', $torneo_id)
+            ->where('categoria_id', $categoria_id)
+            ->delete('partidos');
+    }
 }
