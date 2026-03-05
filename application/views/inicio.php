@@ -58,7 +58,7 @@
 
                     <div class="contact-item">
                         <i class="fas fa-phone"></i>
-                        <p><?php echo $club_info['telefono'] ?? '+54 (XXX) XXXX-XXXX'; ?></p>
+                        <p><?php echo ($club_info['telefono'] ? $club_info['telefono']." - 3413068291" : '+54 (XXX) XXXX-XXXX'); ?></p>
                     </div>
 
                     <div class="contact-item">
@@ -68,9 +68,13 @@
 
                     <div class="social-links">
                         <a href="https://instagram.com/<?php echo isset($club_info['instagram']) ? str_replace('@', '', $club_info['instagram']) : 'telarespadel'; ?>" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="https://wa.me/5493856458000" target="_blank" title="WhatsApp">
-                            <i class="fab fa-whatsapp"></i>
+                        <a href="https://wa.me/5493856458000" target="_blank" title="WhatsApp" style="display:inline-flex; flex-direction:column; align-items:center; gap:2px;">
+                            <i class="fab fa-whatsapp"></i> Juani
                         </a>
+                        <a href="https://wa.me/5493413068291" target="_blank" title="WhatsApp" style="display:inline-flex; flex-direction:column; align-items:center; gap:2px;">
+                            <i class="fab fa-whatsapp"></i> Ramiro
+                        </a>
+
                     </div>
                 </div>
 

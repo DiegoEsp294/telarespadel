@@ -17,7 +17,9 @@
                 <div class="footer-section">
                     <h4>Ubicación</h4>
                     <p><?php echo isset($club_info['ubicacion']) ? $club_info['ubicacion'] : 'Los Telares, Santiago del Estero'; ?></p>
-                    <p>Tel: <?php echo isset($club_info['telefono']) ? $club_info['telefono'] : '+54 (XXX) XXXX-XXXX'; ?></p>
+                    <p>Tel Juani: <?php echo isset($club_info['telefono']) ? $club_info['telefono'] : '+54 (XXX) XXXX-XXXX'; ?></p>
+                    <p>Tel Ramiro: 3413068291</p>
+
                 </div>
                 <div class="footer-section">
                     <h4>Síguenos</h4>
