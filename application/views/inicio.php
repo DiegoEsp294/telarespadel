@@ -63,7 +63,7 @@
 
                     <div class="contact-item">
                         <i class="fas fa-clock"></i>
-                        <p>Lun - Dom: 08:00 - 23:00</p>
+                        <p>Lun - Dom: 08:00 - 12:00 hs</p>
                     </div>
 
                     <div class="social-links">
