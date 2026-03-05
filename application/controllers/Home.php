@@ -75,12 +75,12 @@ class Home extends CI_Controller {
         $data['categoria_id'] = $categoria_id;
 
         // traer todo el fixture armado
-        $data['zonas'] = $this->fixtureservice->obtenerFixtureCompleto($id, $categoria_id);
-        $data['playoff'] = $this->Torneo_model->obtenerPlayoffBracket($id, $categoria_id);
+        $data['zonas'] = []; //$this->fixtureservice->obtenerFixtureCompleto($id, $categoria_id);
+        $data['playoff'] = []; //$this->Torneo_model->obtenerPlayoffBracket($id, $categoria_id);
 
         // $data['resultados'] = $this->Torneo_model->ObtenerResultados($id_torneo);
 
-        $data['fixture'] = $data;
+        $data['fixture'] = [];//$data;
 
         // Cargar vista
         $this->load->view('header', array('club_nombre' => 'Telares Padel'));
