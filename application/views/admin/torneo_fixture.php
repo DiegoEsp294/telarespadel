@@ -263,7 +263,7 @@
                                     <div>DIA</div>
                                     <div>HORA</div>
                                     <div>CANCHA</div>
-                                    <div>SETS</div>
+                                    <!-- <div>SETS</div> -->
                                 </div>
 
                                 <?php $rondaActual = null; foreach($zona['partidos'] as $partido): ?>
@@ -284,11 +284,11 @@
                                         <div><?= strtoupper($partido['dia']) ?></div>
                                         <div class="hora"><?= $partido['hora'] ?></div>
                                         <div class="cancha"><?= $partido['cancha'] ?></div>
-                                        <div class="sets">
+                                        <!-- <div class="sets">
                                             <?= $partido['set1_p1'] ?? '-' ?>-<?= $partido['set1_p2'] ?? '-' ?>
                                             <?= $partido['set2_p1'] ?? '-' ?>-<?= $partido['set2_p2'] ?? '-' ?>
                                             <?= $partido['set3_p1'] ?? '-' ?>-<?= $partido['set3_p2'] ?? '-' ?>
-                                        </div>
+                                        </div> -->
                                     </div>
 
                                 <?php endforeach; ?>

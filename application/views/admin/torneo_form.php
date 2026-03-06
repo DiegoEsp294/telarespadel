@@ -91,11 +91,11 @@
     <h3>Visibilidad</h3>
 
     <?php
-    $chk_visible       = $torneo->visible == "t" ? true : false;
-    $chk_inscripciones = $torneo->inscripciones_visibles == "t" ? true : false;
-    $chk_fixture       = $torneo->fixture_visible == "t" ? true : false;
-    $chk_zona          = $torneo->zona_visible == "t" ? true : false;
-    $chk_resultados    = $torneo->resultados_visibles == "t" ? true : false;
+    $chk_visible       = isset($torneo->visible) && $torneo->visible == "t" ? true : false;
+    $chk_inscripciones = isset($torneo->inscripciones_visibles) && $torneo->inscripciones_visibles == "t" ? true : false;
+    $chk_fixture       = isset($torneo->fixture_visible) && $torneo->fixture_visible == "t" ? true : false;
+    $chk_zona          = isset($torneo->zona_visible) && $torneo->zona_visible == "t" ? true : false;
+    $chk_resultados    = isset($torneo->resultados_visibles) && $torneo->resultados_visibles == "t" ? true : false;
     ?>
 
     <label class="toggle-label">

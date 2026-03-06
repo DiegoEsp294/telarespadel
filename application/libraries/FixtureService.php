@@ -407,26 +407,35 @@ class FixtureService
             /*
             =====================================================
             18–20 PAREJAS — 6 zonas
-            Reclasificación: 2F vs 2C | 2A vs 1F | 2E vs 2D
-            Cuartos: 1A vs GR1 | 1E vs 2B | 1D vs GR2 | 1B vs GR3
+            Octavos:  2F vs 2C | 1E vs 2B | 2A vs 1F | 2E vs 2D
+            Cuartos:  1A vs G(R1) | G(R2) vs 1D | 1C vs G(R3) | G(R4) vs 1B
+            Semis:    G(Q1) vs G(Q2) | G(Q3) vs G(Q4)
             =====================================================
             */
             case 'octavos_6zonas':
 
-                [$r1, $r2, $r3] = $this->cruzar([
+                [$r1, $r2, $r3, $r4] = $this->cruzar([
                     ['2F','2C'],
+                    ['1E','2B'],
                     ['2A','1F'],
                     ['2E','2D'],
                 ], 1);
 
+                // Q1: 1A vs G(R1)
                 $q1 = $this->crearPartidoPlayoff('1A', null, 2);
-                [$q2]  = $this->cruzar([['1E','2B']], 2);
-                $q3 = $this->crearPartidoPlayoff('1D', null, 2);
-                $q4 = $this->crearPartidoPlayoff('1B', null, 2);
-
                 $this->CI->Torneo_model->actualizarPartido($r1, ['partido_siguiente_id' => $q1, 'slot_siguiente' => 2]);
-                $this->CI->Torneo_model->actualizarPartido($r2, ['partido_siguiente_id' => $q3, 'slot_siguiente' => 2]);
-                $this->CI->Torneo_model->actualizarPartido($r3, ['partido_siguiente_id' => $q4, 'slot_siguiente' => 2]);
+
+                // Q2: G(R2) vs 1D
+                $q2 = $this->crearPartidoPlayoff(null, '1D', 2);
+                $this->CI->Torneo_model->actualizarPartido($r2, ['partido_siguiente_id' => $q2, 'slot_siguiente' => 1]);
+
+                // Q3: 1C vs G(R3)
+                $q3 = $this->crearPartidoPlayoff('1C', null, 2);
+                $this->CI->Torneo_model->actualizarPartido($r3, ['partido_siguiente_id' => $q3, 'slot_siguiente' => 2]);
+
+                // Q4: G(R4) vs 1B
+                $q4 = $this->crearPartidoPlayoff(null, '1B', 2);
+                $this->CI->Torneo_model->actualizarPartido($r4, ['partido_siguiente_id' => $q4, 'slot_siguiente' => 1]);
 
                 $sf1 = $this->crearPartidoPlayoff(null, null, 3);
                 $sf2 = $this->crearPartidoPlayoff(null, null, 3);
@@ -919,79 +928,100 @@ class FixtureService
 
         $zonas = [];
 
+        // Agrupar filas por zona
+        $filasPorZona = [];
         foreach ($query as $row)
         {
-            $zona_id = $row->zona_id;
+            $filasPorZona[$row->zona_id][] = $row;
+        }
 
-            // crear zona si no existe
-            if (!isset($zonas[$zona_id]))
-            {
-                $zonas[$zona_id] = [
-                    'grupo' => $row->grupo,
-                    'parejas' => [],
-                    'partidos' => [],
-                    '_mapParejas' => [] // interno para numerar
-                ];
-            }
+        foreach ($filasPorZona as $zona_id => $filas)
+        {
+            $zonas[$zona_id] = [
+                'grupo'       => $filas[0]->grupo,
+                'parejas'     => [],
+                'partidos'    => [],
+                '_mapParejas' => []
+            ];
 
             /*
             ============================
             REGISTRAR PAREJAS (numeradas)
+            Paso 1: todas las pareja1 primero
+            Paso 2: todas las pareja2 que aún no tengan número
+            Esto garantiza que en zonas de 4 (bracket) quede 1 VS 3 y 2 VS 4
             ============================
             */
 
-            if ($row->pareja1_id && !isset($zonas[$zona_id]['_mapParejas'][$row->pareja1_id]))
+            foreach ($filas as $row)
             {
-                $numero = count($zonas[$zona_id]['parejas']) + 1;
-
-                $zonas[$zona_id]['_mapParejas'][$row->pareja1_id] = $numero;
-
-                $zonas[$zona_id]['parejas'][] = [
-                    'numero' => $numero,
-                    'nombre' => strtoupper($row->pareja1_nombre)
-                ];
+                if ($row->pareja1_id && !isset($zonas[$zona_id]['_mapParejas'][$row->pareja1_id]))
+                {
+                    $numero = count($zonas[$zona_id]['parejas']) + 1;
+                    $zonas[$zona_id]['_mapParejas'][$row->pareja1_id] = $numero;
+                    $zonas[$zona_id]['parejas'][] = [
+                        'numero' => $numero,
+                        'nombre' => strtoupper($row->pareja1_nombre)
+                    ];
+                }
             }
 
-            if ($row->pareja2_id && !isset($zonas[$zona_id]['_mapParejas'][$row->pareja2_id]))
+            foreach ($filas as $row)
             {
-                $numero = count($zonas[$zona_id]['parejas']) + 1;
-
-                $zonas[$zona_id]['_mapParejas'][$row->pareja2_id] = $numero;
-
-                $zonas[$zona_id]['parejas'][] = [
-                    'numero' => $numero,
-                    'nombre' => strtoupper($row->pareja2_nombre)
-                ];
+                if ($row->pareja2_id && !isset($zonas[$zona_id]['_mapParejas'][$row->pareja2_id]))
+                {
+                    $numero = count($zonas[$zona_id]['parejas']) + 1;
+                    $zonas[$zona_id]['_mapParejas'][$row->pareja2_id] = $numero;
+                    $zonas[$zona_id]['parejas'][] = [
+                        'numero' => $numero,
+                        'nombre' => strtoupper($row->pareja2_nombre)
+                    ];
+                }
             }
 
             /*
             ============================
             PARTIDOS (DUELOS)
+            Cuando ambas parejas son null (no decididas aún),
+            se muestran etiquetas G/P en lugar de ?
             ============================
             */
 
-            $n1 = ($row->pareja1_id && isset($zonas[$zona_id]['_mapParejas'][$row->pareja1_id]))
-                ? $zonas[$zona_id]['_mapParejas'][$row->pareja1_id] : '?';
-            $n2 = ($row->pareja2_id && isset($zonas[$zona_id]['_mapParejas'][$row->pareja2_id]))
-                ? $zonas[$zona_id]['_mapParejas'][$row->pareja2_id] : '?';
+            $contadorNulos = 0;
+            foreach ($filas as $row)
+            {
+                if (!$row->pareja1_id && !$row->pareja2_id)
+                {
+                    $contadorNulos++;
+                    $duelo = $contadorNulos === 1 ? 'G1 VS P2' : 'G2 VS P1';
+                }
+                else
+                {
+                    $n1 = ($row->pareja1_id && isset($zonas[$zona_id]['_mapParejas'][$row->pareja1_id]))
+                        ? $zonas[$zona_id]['_mapParejas'][$row->pareja1_id] : '?';
+                    $n2 = ($row->pareja2_id && isset($zonas[$zona_id]['_mapParejas'][$row->pareja2_id]))
+                        ? $zonas[$zona_id]['_mapParejas'][$row->pareja2_id] : '?';
+                    $duelo = "{$n1} VS {$n2}";
+                }
 
-            $zonas[$zona_id]['partidos'][] = [
-                'duelo'      => "{$n1} VS {$n2}",
-                'ronda'      => $row->ronda,
-                'dia'        => $this->formatearDia($row->fecha),
-                'fecha'      => $row->fecha,
-                'hora'       => $this->formatearHora($row->hora),
-                'cancha'     => $row->cancha,
-                'partido_id' => $row->partido_id,
+                $zonas[$zona_id]['partidos'][] = [
+                    'duelo'      => $duelo,
+                    'ronda'      => $row->ronda,
+                    'dia'        => $this->formatearDia($row->fecha),
+                    'fecha'      => $row->fecha,
+                    'hora'       => $this->formatearHora($row->hora),
+                    'cancha'     => $row->cancha,
+                    'partido_id' => $row->partido_id,
 
-                // SETS
-                'set1_p1' => $row->set1_p1,
-                'set1_p2' => $row->set1_p2,
-                'set2_p1' => $row->set2_p1,
-                'set2_p2' => $row->set2_p2,
-                'set3_p1' => $row->set3_p1,
-                'set3_p2' => $row->set3_p2,
-            ];
+                    // SETS
+                    'set1_p1' => $row->set1_p1,
+                    'set1_p2' => $row->set1_p2,
+                    'set2_p1' => $row->set2_p1,
+                    'set2_p2' => $row->set2_p2,
+                    'set3_p1' => $row->set3_p1,
+                    'set3_p2' => $row->set3_p2,
+                ];
+            }
         }
 
         // limpiar mapa interno
