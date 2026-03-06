@@ -29,6 +29,7 @@
 
             <div class="fixture-tabs">
                 <button class="tab active" onclick="showTab(event,'config')">Configuración</button>
+                <button class="tab" onclick="showTab(event,'inscriptos')">Inscriptos</button>
                 <button class="tab" onclick="showTab(event,'zonas')">Zonas</button>
                 <button class="tab" onclick="showTab(event,'resultados')">Resultados</button>
                 <button class="tab" onclick="showTab(event,'playoff')">Cruces</button>
@@ -117,6 +118,98 @@
             </div>
 
             <!-- =============================
+                    INSCRIPTOS
+            ============================= -->
+
+            <div id="tab-inscriptos" class="fixture-tab-content" style="display:none;">
+
+                <div class="config-card">
+
+                    <h3>Inscriptos</h3>
+                    <p class="config-hint">Hacé clic en <strong>Editar</strong> para modificar el nombre de una pareja.</p>
+
+                    <?php if (!empty($inscriptos)): ?>
+
+                        <table class="config-tabla">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Jugador 1</th>
+                                    <th>Jugador 2</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($inscriptos as $idx => $insc): ?>
+                                <tr>
+                                    <td><?= $idx + 1 ?></td>
+                                    <td><?= htmlspecialchars($insc->apellido1 . ' ' . $insc->nombre1) ?></td>
+                                    <td><?= htmlspecialchars($insc->apellido2 . ' ' . $insc->nombre2) ?></td>
+                                    <td>
+                                        <button class="btn-editar-insc" type="button"
+                                            onclick="abrirModalInscripto(
+                                                <?= $insc->id ?>,
+                                                '<?= addslashes($insc->nombre1) ?>','<?= addslashes($insc->apellido1) ?>','<?= addslashes($insc->telefono1) ?>',
+                                                '<?= addslashes($insc->nombre2) ?>','<?= addslashes($insc->apellido2) ?>','<?= addslashes($insc->telefono2) ?>'
+                                            )">Editar</button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+
+                    <?php else: ?>
+                        <p class="config-hint">No hay inscriptos en esta categoría aún.</p>
+                    <?php endif; ?>
+
+                </div>
+
+            </div>
+
+            <!-- Modal editar inscripto -->
+            <div id="modalInscripto" class="modal-overlay" style="display:none;">
+                <div class="modal-box">
+                    <h3 class="modal-title">Editar Pareja</h3>
+                    <form id="formEditarInscripto">
+                        <input type="hidden" id="ei_id" name="inscripcion_id">
+
+                        <p class="modal-section-label">Jugador 1</p>
+                        <div class="modal-row-2">
+                            <div>
+                                <label>Apellido</label>
+                                <input type="text" id="ei_apellido1" name="apellido1" required>
+                            </div>
+                            <div>
+                                <label>Nombre</label>
+                                <input type="text" id="ei_nombre1" name="nombre1" required>
+                            </div>
+                        </div>
+                        <label>Teléfono</label>
+                        <input type="text" id="ei_telefono1" name="telefono1">
+
+                        <p class="modal-section-label">Jugador 2</p>
+                        <div class="modal-row-2">
+                            <div>
+                                <label>Apellido</label>
+                                <input type="text" id="ei_apellido2" name="apellido2" required>
+                            </div>
+                            <div>
+                                <label>Nombre</label>
+                                <input type="text" id="ei_nombre2" name="nombre2" required>
+                            </div>
+                        </div>
+                        <label>Teléfono</label>
+                        <input type="text" id="ei_telefono2" name="telefono2">
+
+                        <div class="modal-actions">
+                            <button type="submit" class="btn-guardar-config">Guardar</button>
+                            <button type="button" class="btn-cancelar" onclick="cerrarModalInscripto()">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- =============================
                     ZONAS
             ============================= -->
 
@@ -173,7 +266,14 @@
                                     <div>SETS</div>
                                 </div>
 
-                                <?php foreach($zona['partidos'] as $partido): ?>
+                                <?php $rondaActual = null; foreach($zona['partidos'] as $partido): ?>
+
+                                    <?php if ($partido['ronda'] && $partido['ronda'] != $rondaActual): ?>
+                                        <?php $rondaActual = $partido['ronda']; ?>
+                                        <!-- <div class="ronda-label">
+                                            <?= $partido['ronda'] == 1 ? 'RONDA 1' : 'CRUCES' ?>
+                                        </div> -->
+                                    <?php endif; ?>
 
                                     <div class="duelo-row"
                                         data-partido-id="<?= $partido['partido_id'] ?>"
@@ -296,74 +396,81 @@
                     <p class="bracket-empty">No hay cruces generados aún.</p>
                 <?php else: ?>
 
-                    <div class="bracket-wrapper">
+                <?php
+                $rondas     = array_values($playoff);
+                $total_cols = count($rondas);
+                ?>
 
-                        <?php foreach ($playoff as $ronda => $rondaData): ?>
+                <div class="playoff-grid">
+                <?php foreach ($rondas as $r_idx => $rondaData):
+                    $es_ultima = ($r_idx === $total_cols - 1);
+                    $groups    = array_chunk($rondaData['partidos'], 2);
+                ?>
+                    <div class="pg-col">
+                        <div class="pg-col-header"><?= htmlspecialchars($rondaData['nombre']) ?></div>
 
-                            <div class="bracket-round">
+                        <?php foreach ($groups as $group):
+                            $single = (count($group) === 1);
+                        ?>
+                        <div class="pg-pair <?= $single ? 'pg-single' : '' ?> <?= $es_ultima ? 'pg-last' : '' ?>">
 
-                                <div class="round-label"><?= htmlspecialchars($rondaData['nombre']) ?></div>
+                            <?php foreach ($group as $p):
+                                $p1w    = $p->ganador_id && $p->ganador_id == $p->pareja1_id;
+                                $p2w    = $p->ganador_id && $p->ganador_id == $p->pareja2_id;
+                                $p1n    = $p->pareja1_nombre ?: ($p->referencia1 ?: '?');
+                                $p2n    = $p->pareja2_nombre ?: ($p->referencia2 ?: '?');
+                                $jugado = $p->set1_p1 !== null;
+                                $footer = '';
+                                if (!empty($p->cancha)) $footer .= 'C'.$p->cancha;
+                                if (!empty($p->fecha))  $footer .= ($footer?' ':'').date('d/m/Y', strtotime($p->fecha));
+                            ?>
+                            <div class="pg-slot">
+                                <div class="pg-match admin-clickable"
+                                     data-partido-id="<?= $p->id ?>"
+                                     onclick="abrirModalPartido(this)"
+                                     title="Cargar resultado">
+                                    <div class="pg-match-id"><?= $p->id ?></div>
 
-                                <div class="round-matches">
-
-                                    <?php foreach ($rondaData['partidos'] as $partido): ?>
-
-                                        <?php
-                                            $p1_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja1_id;
-                                            $p2_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja2_id;
-
-                                            $p1_name = $partido->pareja1_nombre ?: ($partido->referencia1 ? '['.$partido->referencia1.']' : 'Por definir');
-                                            $p2_name = $partido->pareja2_nombre ?: ($partido->referencia2 ? '['.$partido->referencia2.']' : 'Por definir');
-
-                                            $p1_tbd = !$partido->pareja1_id;
-                                            $p2_tbd = !$partido->pareja2_id;
-                                        ?>
-
-                                        <?php
-                                            $jugado_playoff = $partido->set1_p1 !== null;
-                                        ?>
-                                        <div class="match-wrapper">
-                                            <div class="match-card-bracket admin-clickable"
-                                                data-partido-id="<?= $partido->id ?>"
-                                                onclick="abrirModalPartido(this)"
-                                                title="Cargar resultado">
-
-                                                <div class="match-team <?= $p1_winner ? 'winner' : ($p1_tbd ? 'tbd' : '') ?>">
-                                                    <span class="team-name"><?= htmlspecialchars($p1_name) ?></span>
-                                                    <?php if ($jugado_playoff): ?>
-                                                        <span class="team-score">
-                                                            <?= $partido->set1_p1 ?>-<?= $partido->set1_p2 ?>
-                                                            <?php if ($partido->set2_p1 !== null): ?> / <?= $partido->set2_p1 ?>-<?= $partido->set2_p2 ?><?php endif; ?>
-                                                            <?php if ($partido->set3_p1 !== null): ?> / <?= $partido->set3_p1 ?>-<?= $partido->set3_p2 ?><?php endif; ?>
-                                                        </span>
-                                                    <?php endif; ?>
-                                                </div>
-
-                                                <div class="match-divider"></div>
-
-                                                <div class="match-team <?= $p2_winner ? 'winner' : ($p2_tbd ? 'tbd' : '') ?>">
-                                                    <span class="team-name"><?= htmlspecialchars($p2_name) ?></span>
-                                                    <?php if ($jugado_playoff): ?>
-                                                        <span class="team-score">
-                                                            <?= $partido->set1_p2 ?>-<?= $partido->set1_p1 ?>
-                                                            <?php if ($partido->set2_p1 !== null): ?> / <?= $partido->set2_p2 ?>-<?= $partido->set2_p1 ?><?php endif; ?>
-                                                            <?php if ($partido->set3_p1 !== null): ?> / <?= $partido->set3_p2 ?>-<?= $partido->set3_p1 ?><?php endif; ?>
-                                                        </span>
-                                                    <?php endif; ?>
-                                                </div>
-
-                                            </div>
+                                    <div class="pg-team <?= $p1w ? 'pg-winner' : '' ?>">
+                                        <span class="pg-seed"><?= htmlspecialchars($p->referencia1 ?: '-') ?></span>
+                                        <span class="pg-name"><?= htmlspecialchars($p1n) ?></span>
+                                        <div class="pg-scores">
+                                            <?php if ($jugado): ?>
+                                                <span class="pg-score-cell"><?= $p->set1_p1 ?></span>
+                                                <?php if ($p->set2_p1 !== null): ?><span class="pg-score-cell"><?= $p->set2_p1 ?></span><?php endif; ?>
+                                            <?php else: ?>
+                                                <span class="pg-score-cell"></span><span class="pg-score-cell"></span>
+                                            <?php endif; ?>
                                         </div>
+                                    </div>
 
-                                    <?php endforeach; ?>
+                                    <div class="pg-divider"></div>
 
+                                    <div class="pg-team <?= $p2w ? 'pg-winner' : '' ?>">
+                                        <span class="pg-seed"><?= htmlspecialchars($p->referencia2 ?: '-') ?></span>
+                                        <span class="pg-name"><?= htmlspecialchars($p2n) ?></span>
+                                        <div class="pg-scores">
+                                            <?php if ($jugado): ?>
+                                                <span class="pg-score-cell"><?= $p->set1_p2 ?></span>
+                                                <?php if ($p->set2_p1 !== null): ?><span class="pg-score-cell"><?= $p->set2_p2 ?></span><?php endif; ?>
+                                            <?php else: ?>
+                                                <span class="pg-score-cell"></span><span class="pg-score-cell"></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+
+                                    <?php if ($footer): ?>
+                                    <div class="pg-footer"><?= htmlspecialchars($footer) ?></div>
+                                    <?php endif; ?>
                                 </div>
-
                             </div>
+                            <?php endforeach; ?>
 
+                        </div>
                         <?php endforeach; ?>
-
                     </div>
+                <?php endforeach; ?>
+                </div>
 
                 <?php endif; ?>
 
@@ -482,6 +589,42 @@ function showTab(e, tab)
 
     e.currentTarget.classList.add('active');
 }
+
+function abrirModalInscripto(id, n1, ap1, tel1, n2, ap2, tel2)
+{
+    document.getElementById('ei_id').value       = id;
+    document.getElementById('ei_nombre1').value  = n1;
+    document.getElementById('ei_apellido1').value = ap1;
+    document.getElementById('ei_telefono1').value = tel1;
+    document.getElementById('ei_nombre2').value  = n2;
+    document.getElementById('ei_apellido2').value = ap2;
+    document.getElementById('ei_telefono2').value = tel2;
+    document.getElementById('modalInscripto').style.display = 'flex';
+}
+
+function cerrarModalInscripto()
+{
+    document.getElementById('modalInscripto').style.display = 'none';
+}
+
+document.getElementById('formEditarInscripto')
+.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fd = new FormData(this);
+    fetch("<?= base_url('admin/torneos/editar_inscripcion') ?>", {
+        method: 'POST',
+        body: fd
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.ok) {
+            cerrarModalInscripto();
+            location.reload();
+        } else {
+            alert('Error al guardar: ' + (resp.error ?? ''));
+        }
+    });
+});
 
 function actualizarSelectsZona(numZonas)
 {

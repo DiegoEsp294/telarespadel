@@ -432,6 +432,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
         </div>
 
+        <?php if($es_admin || $torneo->inscripciones_visibles): ?>
         <div class="card" style="text-align:center;">
             <h2>¿Querés participar?</h2>
 
@@ -441,11 +442,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 <i class="fab fa-whatsapp"></i> Inscribirme
             </a>
         </div>
+        <?php endif; ?>
 
-        
-        <?php 
-            $this->load->view('fixture', $fixture); 
+        <?php if($es_admin || $torneo->fixture_visible): ?>
+        <?php
+            $this->load->view('fixture', $fixture);
         ?>
+        <?php endif; ?>
 
         <!-- Botón Volver -->
         <div style="margin-top: 30px; text-align: center;">

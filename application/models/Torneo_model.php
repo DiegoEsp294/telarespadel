@@ -14,9 +14,9 @@ class Torneo_model extends CI_Model {
         return $query->result();
     }
 
-    public function obtener_proximos()
+    public function obtener_proximos($solo_visibles = TRUE)
     {
-        $query = $this->db
+        $this->db
             ->select("
                 torneos.*,
                 STRING_AGG(c.nombre, ', ' ORDER BY c.nombre) AS categorias_label
@@ -26,10 +26,13 @@ class Torneo_model extends CI_Model {
             ->join('categorias c', 'c.id = tc.categoria_id', 'INNER')
             ->where('torneos.estado !=', 'finalizado')
             ->group_by('torneos.id')
-            ->order_by('torneos.fecha_inicio', 'ASC')
-            ->get();
+            ->order_by('torneos.fecha_inicio', 'ASC');
 
-        return $query->result();
+        if ($solo_visibles) {
+            $this->db->where('torneos.visible', TRUE);
+        }
+
+        return $this->db->get()->result();
     }
 
     public function obtener_por_id($id)
@@ -238,6 +241,41 @@ class Torneo_model extends CI_Model {
         return $this->db
             ->where('id', $id_inscripcion)
             ->delete('inscripciones');
+    }
+
+    public function obtener_inscripcion($id)
+    {
+        return $this->db
+            ->select('i.*, i.participante1_id, i.participante2_id,
+                p1.nombre as nombre1, p1.apellido as apellido1, p1.telefono as telefono1,
+                p2.nombre as nombre2, p2.apellido as apellido2, p2.telefono as telefono2')
+            ->from('inscripciones i')
+            ->join('participantes p1', 'p1.id = i.participante1_id', 'LEFT')
+            ->join('participantes p2', 'p2.id = i.participante2_id', 'LEFT')
+            ->where('i.id', $id)
+            ->get()
+            ->row();
+    }
+
+    public function actualizar_participante($id, $data)
+    {
+        return $this->db->where('id', $id)->update('participantes', $data);
+    }
+
+    public function obtener_inscripciones_por_categoria($torneo_id, $categoria_id)
+    {
+        return $this->db
+            ->select('i.id, i.participante1_id, i.participante2_id, i.estado,
+                p1.nombre as nombre1, p1.apellido as apellido1, p1.telefono as telefono1,
+                p2.nombre as nombre2, p2.apellido as apellido2, p2.telefono as telefono2')
+            ->from('inscripciones i')
+            ->join('participantes p1', 'p1.id = i.participante1_id', 'LEFT')
+            ->join('participantes p2', 'p2.id = i.participante2_id', 'LEFT')
+            ->where('i.torneo_id', $torneo_id)
+            ->where('i.categoria_id', $categoria_id)
+            ->order_by('i.id', 'ASC')
+            ->get()
+            ->result();
     }
 
     public function obtenerParejas($torneo_id, $categoria_id)
@@ -886,7 +924,7 @@ class Torneo_model extends CI_Model {
                 'diferencia_games' => $data['diferencia_games'],
                 'posicion'     => $data['posicion'] ?? null
             ];
-            $this->db->update('tabla_posiciones', $camposActualizar);
+            $this->db->where('id', $existe->id)->update('tabla_posiciones', $camposActualizar);
         } else {
             $this->db->insert('tabla_posiciones', $data);
         }
@@ -895,23 +933,11 @@ class Torneo_model extends CI_Model {
     public function obtenerPartidosFinalizadosZona($zona_id)
     {
         return $this->db
-            ->select('
-                p.id,
-                p.zona_id,
-                p.pareja1_id,
-                p.pareja2_id,
-                p.ganador_id,
-
-                s.numero_set,
-                s.games_pareja1,
-                s.games_pareja2
-            ')
+            ->select('p.id, p.zona_id, p.pareja1_id, p.pareja2_id, p.ganador_id')
             ->from('partidos p')
-            ->join('partido_sets s', 's.partido_id = p.id', 'left')
             ->where('p.zona_id', $zona_id)
             ->where('p.estado', 'finalizado')
             ->order_by('p.id', 'ASC')
-            ->order_by('s.numero_set', 'ASC')
             ->get()
             ->result();
     }
@@ -948,6 +974,9 @@ class Torneo_model extends CI_Model {
                 p.ganador_id,
                 p.referencia1,
                 p.referencia2,
+                p.cancha,
+                p.hora,
+                p.fecha,
                 COALESCE(
                     CONCAT(p1a.apellido, ' ', p1a.nombre, ' / ', p1b.apellido, ' ', p1b.nombre),
                     p.referencia1

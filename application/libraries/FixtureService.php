@@ -201,6 +201,73 @@ class FixtureService
         }
     }
 
+    /* ======================================
+       ZONA APA 4 PAREJAS
+       Ronda 1: 1v3  y  2v4
+       Ronda 2: G(M1)vP(M2)  y  G(M2)vP(M1)
+       1°=ganador cruce1, 2°=ganador cruce2
+    ====================================== */
+
+    private function generarZonaAPA4($zona_id, $parejas)
+    {
+        $tid = $parejas[0]->torneo_id;
+        $cid = $parejas[0]->categoria_id;
+
+        // Ronda 1
+        $m1 = $this->CI->Torneo_model->insertarPartidos([
+            'torneo_id'    => $tid,
+            'zona_id'      => $zona_id,
+            'categoria_id' => $cid,
+            'pareja1_id'   => $parejas[0]->id,  // P1
+            'pareja2_id'   => $parejas[2]->id,  // P3
+            'estado'       => 'pendiente',
+            'ronda'        => 1,
+        ]);
+
+        $m2 = $this->CI->Torneo_model->insertarPartidos([
+            'torneo_id'    => $tid,
+            'zona_id'      => $zona_id,
+            'categoria_id' => $cid,
+            'pareja1_id'   => $parejas[1]->id,  // P2
+            'pareja2_id'   => $parejas[3]->id,  // P4
+            'estado'       => 'pendiente',
+            'ronda'        => 1,
+        ]);
+
+        // Ronda 2 (cruces, sin parejas por ahora)
+        $m3 = $this->CI->Torneo_model->insertarPartidos([
+            'torneo_id'    => $tid,
+            'zona_id'      => $zona_id,
+            'categoria_id' => $cid,
+            'estado'       => 'pendiente',
+            'ronda'        => 2,
+        ]);
+
+        $m4 = $this->CI->Torneo_model->insertarPartidos([
+            'torneo_id'    => $tid,
+            'zona_id'      => $zona_id,
+            'categoria_id' => $cid,
+            'estado'       => 'pendiente',
+            'ronda'        => 2,
+        ]);
+
+        // M1: ganador → M3(slot 1), perdedor → M4(slot 2)
+        $this->CI->Torneo_model->actualizarPartido($m1, [
+            'partido_siguiente_id'            => $m3,
+            'slot_siguiente'                  => 1,
+            'partido_siguiente_perdedor_id'   => $m4,
+            'slot_siguiente_perdedor'         => 2,
+        ]);
+
+        // M2: ganador → M4(slot 1), perdedor → M3(slot 2)
+        $this->CI->Torneo_model->actualizarPartido($m2, [
+            'partido_siguiente_id'            => $m4,
+            'slot_siguiente'                  => 1,
+            'partido_siguiente_perdedor_id'   => $m3,
+            'slot_siguiente_perdedor'         => 2,
+        ]);
+    }
+
     private function generarPlayoffsAPA($torneo_id, $categoria_id, $config)
     {
         $this->_torneo_id    = $torneo_id;
@@ -466,86 +533,6 @@ class FixtureService
         // Lógica integrada en cada case de generarPlayoffsAPA
     }
 
-    private function generarZonaAPA4($zona_id, $parejas)
-    {
-        if (count($parejas) != 4) {
-            throw new Exception('Zona APA4 requiere exactamente 4 parejas');
-        }
-
-        // mezclar para sorteo aleatorio
-        // usort($parejas, fn($a,$b)=> $a->seed <=> $b->seed);
-
-        $A = $parejas[0];
-        $B = $parejas[1];
-        $C = $parejas[2];
-        $D = $parejas[3];
-
-        /*
-        =========================
-        PARTIDOS INICIALES
-        =========================
-        */
-
-        $p1 = $this->crearPartido($zona_id, $A, $B, 1);
-        $p2 = $this->crearPartido($zona_id, $C, $D, 1);
-
-        /*
-        =========================
-        CRUCES APA
-        =========================
-
-        Ganador P1 vs Perdedor P2
-        Ganador P2 vs Perdedor P1
-
-        (se resuelven luego al cargar resultados)
-        */
-
-        $this->crearPartidoCondicional(
-            $zona_id,
-            'GANADOR_'.$p1,
-            'PERDEDOR_'.$p2,
-            2
-        );
-
-        $this->crearPartidoCondicional(
-            $zona_id,
-            'GANADOR_'.$p2,
-            'PERDEDOR_'.$p1,
-            2
-        );
-    }
-
-    private function crearPartido($zona_id, $p1, $p2, $ronda)
-    {
-        $data = [
-            'zona_id' => $zona_id,
-            'torneo_id' => $p1->torneo_id,
-            'categoria_id' => $p1->categoria_id,
-            'pareja1_id' => $p1->id,
-            'pareja2_id' => $p2->id,
-            'ronda' => $ronda,
-            'estado' => 'pendiente'
-        ];
-
-        return $this->CI->Torneo_model->insertarPartidos($data);
-    }
-
-    private function crearPartidoCondicional($zona_id, $p1, $p2, $ronda)
-    {
-        $zona = $this->CI->Torneo_model->obtenerZona($zona_id);
-
-        $data = [
-            'torneo_id' => $zona->torneo_id,
-            'categoria_id' => $zona->categoria_id,
-            'zona_id' => $zona_id,
-            'referencia1' => $p1,
-            'referencia2' => $p2,
-            'ronda' => $ronda,
-            'estado' => 'pendiente'
-        ];
-
-        $this->CI->Torneo_model->insertarPartidos($data);
-    }
 
     public function generarRoundRobin(array $jugadores)
     {
@@ -880,6 +867,7 @@ class FixtureService
             p.fecha,
             p.cancha,
             p.hora,
+            p.ronda,
 
             p.pareja1_id,
             p.pareja2_id,
@@ -982,17 +970,20 @@ class FixtureService
             ============================
             */
 
-            $n1 = $zonas[$zona_id]['_mapParejas'][$row->pareja1_id] ?? '?';
-            $n2 = $zonas[$zona_id]['_mapParejas'][$row->pareja2_id] ?? '?';
+            $n1 = ($row->pareja1_id && isset($zonas[$zona_id]['_mapParejas'][$row->pareja1_id]))
+                ? $zonas[$zona_id]['_mapParejas'][$row->pareja1_id] : '?';
+            $n2 = ($row->pareja2_id && isset($zonas[$zona_id]['_mapParejas'][$row->pareja2_id]))
+                ? $zonas[$zona_id]['_mapParejas'][$row->pareja2_id] : '?';
 
             $zonas[$zona_id]['partidos'][] = [
-                'duelo' => "{$n1} VS {$n2}",
-                'dia'   => $this->formatearDia($row->fecha),
-                'fecha' => $row->fecha,
-                'hora'  => $this->formatearHora($row->hora),
-                'cancha'=> $row->cancha,
+                'duelo'      => "{$n1} VS {$n2}",
+                'ronda'      => $row->ronda,
+                'dia'        => $this->formatearDia($row->fecha),
+                'fecha'      => $row->fecha,
+                'hora'       => $this->formatearHora($row->hora),
+                'cancha'     => $row->cancha,
                 'partido_id' => $row->partido_id,
-                
+
                 // SETS
                 'set1_p1' => $row->set1_p1,
                 'set1_p2' => $row->set1_p2,
@@ -1146,6 +1137,19 @@ class FixtureService
         }
 
         // ============================
+        // 8b. Avanzar perdedor (zona APA 4 parejas)
+        // ============================
+        if (!empty($partido->partido_siguiente_perdedor_id)) {
+            $perdedor_id  = ($ganador_id == $pareja1) ? $pareja2 : $pareja1;
+            $campoDestino = ($partido->slot_siguiente_perdedor == 1) ? 'pareja1_id' : 'pareja2_id';
+            $this->CI->Torneo_model->avanzarGanador(
+                $partido->partido_siguiente_perdedor_id,
+                $campoDestino,
+                $perdedor_id
+            );
+        }
+
+        // ============================
         // 9. Resolver referencias APA
         // ============================
         $this->resolverReferencias($partido_id);
@@ -1193,6 +1197,16 @@ class FixtureService
 
     private function recalcularTablaZona($zona_id)
     {
+        // Zonas de 4 parejas usan el formato APA (cruces), no round-robin
+        $num_parejas = $this->CI->db
+            ->where('zona_id', $zona_id)
+            ->count_all_results('zona_parejas');
+
+        if ($num_parejas == 4) {
+            $this->recalcularTablaZonaAPA4($zona_id);
+            return;
+        }
+
         // 1️⃣ obtener todos los partidos finalizados de la zona
         $partidos = $this->CI->Torneo_model->obtenerPartidosFinalizadosZona($zona_id);
 
@@ -1277,6 +1291,83 @@ class FixtureService
     }
 
     /* ======================================
+       RECALCULO TABLA — ZONA APA 4 PAREJAS
+    ====================================== */
+
+    private function recalcularTablaZonaAPA4($zona_id)
+    {
+        // 1. Inicializar stats para las 4 parejas de la zona
+        $zona_parejas = $this->CI->db
+            ->select('inscripcion_id')
+            ->from('zona_parejas')
+            ->where('zona_id', $zona_id)
+            ->get()
+            ->result();
+
+        $tabla = [];
+        foreach ($zona_parejas as $zp) {
+            $tabla[$zp->inscripcion_id] = $this->filaBase();
+        }
+
+        // 2. Acumular stats de todos los partidos finalizados (ronda 1 y 2)
+        $partidos = $this->CI->Torneo_model->obtenerPartidosFinalizadosZona($zona_id);
+        foreach ($partidos as $p) {
+            if (!isset($tabla[$p->pareja1_id])) $tabla[$p->pareja1_id] = $this->filaBase();
+            if (!isset($tabla[$p->pareja2_id])) $tabla[$p->pareja2_id] = $this->filaBase();
+            $sets = $this->CI->Torneo_model->obtenerSetsPartido($p->id);
+            $this->procesarSets($tabla[$p->pareja1_id], $tabla[$p->pareja2_id], $sets);
+        }
+
+        // 3. Determinar posiciones según resultados de ronda 2
+        $posiciones = [];
+
+        $cruces = $this->CI->db
+            ->select('id, pareja1_id, pareja2_id, ganador_id')
+            ->from('partidos')
+            ->where('zona_id', $zona_id)
+            ->where('ronda', 2)
+            ->where('estado', 'finalizado')
+            ->order_by('id', 'ASC')
+            ->get()
+            ->result();
+
+        $idx = 0;
+        foreach ($cruces as $c) {
+            $perdedor = ($c->ganador_id == $c->pareja1_id) ? $c->pareja2_id : $c->pareja1_id;
+            if ($idx === 0) {
+                $posiciones[$c->ganador_id] = 1;
+                $posiciones[$perdedor]      = 3;
+            } else {
+                $posiciones[$c->ganador_id] = 2;
+                $posiciones[$perdedor]      = 4;
+            }
+            $idx++;
+        }
+
+        // 4. Guardar tabla
+        $zona = $this->CI->Torneo_model->obtenerZona($zona_id);
+        foreach ($tabla as $inscripcion_id => $stats) {
+            $this->CI->Torneo_model->guardarTablaPosicion([
+                'zona_id'          => $zona_id,
+                'inscripcion_id'   => $inscripcion_id,
+                'torneo_id'        => $zona->torneo_id,
+                'categoria_id'     => $zona->categoria_id,
+                'pj'               => $stats['pj'],
+                'pg'               => $stats['pg'],
+                'pp'               => $stats['pp'],
+                'sets_favor'       => $stats['sets_favor'],
+                'sets_contra'      => $stats['sets_contra'],
+                'games_favor'      => $stats['games_favor'],
+                'games_contra'     => $stats['games_contra'],
+                'diferencia_games' => $stats['diferencia_games'],
+                'posicion'         => $posiciones[$inscripcion_id] ?? null,
+            ]);
+        }
+
+        $this->verificarClasificadosZona($zona_id);
+    }
+
+    /* ======================================
        GENERACIÓN MANUAL DESDE CONFIGURACIÓN
     ====================================== */
 
@@ -1298,7 +1389,7 @@ class FixtureService
             return false;
         }
 
-        // 3. Generar round-robin por zona
+        // 3. Generar partidos por zona según cantidad de parejas
         foreach ($zonas_db as $zona)
         {
             $parejas = $this->CI->db
@@ -1309,9 +1400,14 @@ class FixtureService
                 ->get()
                 ->result();
 
-            if (count($parejas) < 2) continue;
+            $n = count($parejas);
+            if ($n < 2) continue;
 
-            $this->generarRoundRobinZona($zona->id, $parejas);
+            if ($n == 4) {
+                $this->generarZonaAPA4($zona->id, $parejas);
+            } else {
+                $this->generarRoundRobinZona($zona->id, $parejas);
+            }
         }
 
         // 4. Generar estructura de playoffs según cantidad de zonas

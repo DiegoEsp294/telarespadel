@@ -87,6 +87,44 @@
         </select>
     <?php endif; ?>
 
+    <hr>
+    <h3>Visibilidad</h3>
+
+    <?php
+    $chk_visible       = $torneo->visible == "t" ? true : false;
+    $chk_inscripciones = $torneo->inscripciones_visibles == "t" ? true : false;
+    $chk_fixture       = $torneo->fixture_visible == "t" ? true : false;
+    $chk_zona          = $torneo->zona_visible == "t" ? true : false;
+    $chk_resultados    = $torneo->resultados_visibles == "t" ? true : false;
+    ?>
+
+    <label class="toggle-label">
+        <input type="checkbox" name="visible" value="1" <?= $chk_visible ? 'checked' : '' ?>>
+        <span>Torneo visible para usuarios</span>
+        <small style="color:#888;display:block;margin-top:2px;">Si está desactivado, solo el admin puede ver este torneo</small>
+    </label>
+
+    <label class="toggle-label">
+        <input type="checkbox" name="inscripciones_visibles" value="1" <?= $chk_inscripciones ? 'checked' : '' ?>>
+        <span>Inscripciones visibles para usuarios</span>
+    </label>
+
+    <label class="toggle-label">
+        <input type="checkbox" name="fixture_visible" value="1" <?= $chk_fixture ? 'checked' : '' ?>>
+        <span>Fixture/Cruces visible para usuarios</span>
+    </label>
+
+    <label class="toggle-label">
+        <input type="checkbox" name="zona_visible" value="1" <?= $chk_zona ? 'checked' : '' ?>>
+        <span>Zonas visibles para usuarios</span>
+    </label>
+
+    <label class="toggle-label">
+        <input type="checkbox" name="resultados_visibles" value="1" <?= $chk_resultados ? 'checked' : '' ?>>
+        <span>Resultados visibles para usuarios</span>
+    </label>
+
+    <hr>
     <label>Flyer del torneo</label>
 
     <input type="file" name="imagen" accept="image/*">

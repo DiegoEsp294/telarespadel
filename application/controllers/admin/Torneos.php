@@ -83,6 +83,11 @@ class Torneos extends CI_Controller {
             'premios'              => $this->input->post('premios') ?: null,
             'fecha_cierre_inscripcion' => $this->input->post('fecha_cierre_inscripcion') ?: null,
             'imagen'               => $imagenBase64,
+            'visible'                  => $this->input->post('visible') ? TRUE : FALSE,
+            'inscripciones_visibles'   => $this->input->post('inscripciones_visibles') ? TRUE : FALSE,
+            'fixture_visible'          => $this->input->post('fixture_visible') ? TRUE : FALSE,
+            'zona_visible'          => $this->input->post('zona_visible') ? TRUE : FALSE,
+            'resultados_visibles'      => $this->input->post('resultados_visibles') ? TRUE : FALSE,
         ];
 
         log_message('debug', 'Creando torneo con datos: ' . json_encode($data));
@@ -184,6 +189,11 @@ class Torneos extends CI_Controller {
             'precio_inscripcion'   => $this->input->post('precio_inscripcion') ?: 0,
             'premios'              => $this->input->post('premios') ?: null,
             'fecha_cierre_inscripcion' => $this->input->post('fecha_cierre_inscripcion') ?: null,
+            'visible'                  => $this->input->post('visible') ? TRUE : FALSE,
+            'inscripciones_visibles'   => $this->input->post('inscripciones_visibles') ? TRUE : FALSE,
+            'fixture_visible'          => $this->input->post('fixture_visible') ? TRUE : FALSE,
+            'zona_visible'          => $this->input->post('zona_visible') ? TRUE : FALSE,
+            'resultados_visibles'      => $this->input->post('resultados_visibles') ? TRUE : FALSE,
         ];
 
         log_message('debug', 'Actualizando torneo ID: ' . $id . ' con datos: ' . json_encode($data));
@@ -316,6 +326,7 @@ class Torneos extends CI_Controller {
         // datos para la pestaña de configuración de zonas
         $data['inscripciones_zona'] = $this->Torneo_model->obtenerInscripcionesConZona($torneo_id, $categoria_id);
         $data['zonas_db']           = $this->Torneo_model->obtenerZonasPorCategoria($torneo_id, $categoria_id);
+        $data['inscriptos']         = $this->Torneo_model->obtener_inscripciones_por_categoria($torneo_id, $categoria_id);
 
         $this->load->view('header');
         $this->load->view('admin/torneo_fixture', $data);
@@ -458,6 +469,33 @@ class Torneos extends CI_Controller {
         }
 
         echo json_encode($partido);
+    }
+
+    public function editar_inscripcion()
+    {
+        $this->load->model('Torneo_model');
+
+        $inscripcion_id = (int)$this->input->post('inscripcion_id');
+        $insc = $this->Torneo_model->obtener_inscripcion($inscripcion_id);
+
+        if (!$insc) {
+            echo json_encode(['ok' => false, 'error' => 'Inscripción no encontrada']);
+            return;
+        }
+
+        $this->Torneo_model->actualizar_participante($insc->participante1_id, [
+            'nombre'   => $this->input->post('nombre1'),
+            'apellido' => $this->input->post('apellido1'),
+            'telefono' => $this->input->post('telefono1'),
+        ]);
+
+        $this->Torneo_model->actualizar_participante($insc->participante2_id, [
+            'nombre'   => $this->input->post('nombre2'),
+            'apellido' => $this->input->post('apellido2'),
+            'telefono' => $this->input->post('telefono2'),
+        ]);
+
+        echo json_encode(['ok' => true]);
     }
 
 }

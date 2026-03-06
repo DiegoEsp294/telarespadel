@@ -22,8 +22,9 @@ class Home extends CI_Controller {
         $data['usuario_rol'] = $this->session->userdata('id_roles');
         $data['usuario_nombre'] = $this->session->userdata('usuario_nombre');
 
-        // Cargar torneos desde la base de datos
-        $data['torneos'] = $this->Torneo_model->obtener_proximos();
+        // Cargar torneos: admin ve todos, usuarios ven solo los visibles
+        $es_admin = ($this->session->userdata('id_roles') == 1);
+        $data['torneos'] = $this->Torneo_model->obtener_proximos(!$es_admin);
 
         // Si no hay torneos, mostrar array vacío
         if (empty($data['torneos'])) {
@@ -45,6 +46,13 @@ class Home extends CI_Controller {
         if (!$torneo) {
             redirect('/');
         }
+
+        // Si el torneo no es visible y el usuario no es admin, redirigir
+        $es_admin = ($this->session->userdata('id_roles') == 1);
+        if (!$torneo->visible && !$es_admin) {
+            redirect('/');
+        }
+        $data['es_admin'] = $es_admin;
 
         // Datos para la vista
         $data['torneo'] = $torneo;
@@ -75,12 +83,12 @@ class Home extends CI_Controller {
         $data['categoria_id'] = $categoria_id;
 
         // traer todo el fixture armado
-        $data['zonas'] = []; //$this->fixtureservice->obtenerFixtureCompleto($id, $categoria_id);
-        $data['playoff'] = []; //$this->Torneo_model->obtenerPlayoffBracket($id, $categoria_id);
+        $data['zonas'] = $this->fixtureservice->obtenerFixtureCompleto($id, $categoria_id);
+        $data['playoff'] = $this->Torneo_model->obtenerPlayoffBracket($id, $categoria_id);
 
         // $data['resultados'] = $this->Torneo_model->ObtenerResultados($id_torneo);
 
-        $data['fixture'] = [];//$data;
+        $data['fixture'] = $data;
 
         // Cargar vista
         $this->load->view('header', array('club_nombre' => 'Telares Padel'));
