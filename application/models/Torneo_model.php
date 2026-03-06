@@ -859,7 +859,6 @@ class Torneo_model extends CI_Model {
     {
         $data = [
             'estado' => 'jugando',
-            'fecha' => date('Y-m-d H:i:s') // opcional, si querés registrar cuándo se activa
         ];
 
         $this->db->where('id', $partido_id)
