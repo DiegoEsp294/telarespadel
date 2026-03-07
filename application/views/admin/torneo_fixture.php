@@ -310,80 +310,83 @@
 
             <div id="tab-resultados" class="fixture-tab-content" style="display:none;">
 
-                <div class="resultados-wrapper container">
-                    <div class="">
-                        <?php foreach($zonas as $zona): ?>
+                <?php foreach($zonas as $zona): ?>
 
-                            <div class="resultados-card">
+                    <?php
+                    $parejas_map = [];
+                    foreach($zona['parejas'] as $par){
+                        $parejas_map[$par['numero']] = $par['nombre'];
+                    }
+                    ?>
 
-                                <div class="resultados-header">
-                                    <h3>Zona <?= chr(64 + $zona['grupo']) ?></h3>
-                                </div>
+                    <div class="res-zona-bloque">
+                        <div class="res-zona-titulo">Zona <?= chr(64 + $zona['grupo']) ?></div>
 
+                        <div class="res-zona-partidos">
+                            <?php foreach($zona['partidos'] as $partido): ?>
                                 <?php
-                                $parejas_map = [];
-                                foreach($zona['parejas'] as $p){
-                                    $parejas_map[$p['numero']] = strtoupper($p['nombre']);
+                                list($n1, $n2) = explode(' VS ', $partido['duelo']);
+                                $nombre1 = $parejas_map[$n1] ?? '-';
+                                $nombre2 = $parejas_map[$n2] ?? '-';
+                                $jugado  = $partido['set1_p1'] !== null;
+
+                                $sets_p1 = 0; $sets_p2 = 0;
+                                if ($jugado) {
+                                    if ($partido['set1_p1'] > $partido['set1_p2']) $sets_p1++; else $sets_p2++;
+                                    if ($partido['set2_p1'] !== null) {
+                                        if ($partido['set2_p1'] > $partido['set2_p2']) $sets_p1++; else $sets_p2++;
+                                    }
+                                    if ($partido['set3_p1'] !== null) {
+                                        if ($partido['set3_p1'] > $partido['set3_p2']) $sets_p1++; else $sets_p2++;
+                                    }
                                 }
+                                $p1_win = $jugado && $sets_p1 > $sets_p2;
+                                $p2_win = $jugado && $sets_p2 > $sets_p1;
                                 ?>
 
-                                <div class="resultados-body">
+                                <div class="res-partido-card admin-clickable"
+                                     data-partido-id="<?= $partido['partido_id'] ?>"
+                                     onclick="abrirModalResultado(this)"
+                                     title="Editar resultado">
 
-                                    <?php foreach($zona['partidos'] as $partido): ?>
+                                    <?php if ($partido['hora'] || $partido['cancha']): ?>
+                                    <div class="res-partido-meta">
+                                        <?php if ($partido['hora']): ?><span><?= substr($partido['hora'], 0, 5) ?></span><?php endif; ?>
+                                        <?php if ($partido['cancha']): ?><span>Cancha <?= $partido['cancha'] ?></span><?php endif; ?>
+                                    </div>
+                                    <?php endif; ?>
 
-                                        <?php
-                                        list($p1,$p2) = explode(' VS ', $partido['duelo']);
-
-                                        $nombre1 = $parejas_map[$p1] ?? '';
-                                        $nombre2 = $parejas_map[$p2] ?? '';
-
-                                        $jugado = $partido['set1_p1'] !== null;
-                                        ?>
-
-                                        <div class="resultado-item">
-
-                                            <div class="resultado-meta">
-                                                <span><?= $partido['dia'] ?></span>
-                                                <span><?= $partido['hora'] ?></span>
-                                                <span>Cancha <?= $partido['cancha'] ?? '-' ?></span>
-                                            </div>
-
-                                            <div class="resultado-match">
-
-                                                <div class="pareja-block">
-                                                    <div class="pareja-nombre"><?= $nombre1 ?></div>
-                                                    <div class="sets">
-                                                        <?php if($jugado): ?>
-                                                            <span><?= $partido['set1_p1'] ?>-<?= $partido['set1_p2'] ?></span>
-                                                            <?php if($partido['set2_p1'] !== null): ?>
-                                                                <span><?= $partido['set2_p1'] ?>-<?= $partido['set2_p2'] ?></span>
-                                                            <?php endif; ?>
-                                                            <?php if($partido['set3_p1'] !== null): ?>
-                                                                <span><?= $partido['set3_p1'] ?>-<?= $partido['set3_p2'] ?></span>
-                                                            <?php endif; ?>
-                                                        <?php else: ?>
-                                                            <span class="estado-pendiente">Pendiente</span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </div>
-
-                                                <div class="pareja-block">
-                                                    <div class="pareja-nombre"><?= $nombre2 ?></div>
-                                                </div>
-
-                                            </div>
-
-                                        </div>
-
-                                    <?php endforeach; ?>
+                                    <div class="match-team <?= $p1_win ? 'winner' : '' ?>">
+                                        <span class="team-name"><?= htmlspecialchars($nombre1) ?></span>
+                                        <?php if ($jugado): ?>
+                                            <span class="team-score">
+                                                <?= $partido['set1_p1'] ?>-<?= $partido['set1_p2'] ?>
+                                                <?php if ($partido['set2_p1'] !== null): ?> / <?= $partido['set2_p1'] ?>-<?= $partido['set2_p2'] ?><?php endif; ?>
+                                                <?php if ($partido['set3_p1'] !== null): ?> / <?= $partido['set3_p1'] ?>-<?= $partido['set3_p2'] ?><?php endif; ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="team-score" style="color:#bbb;">Pendiente</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="match-divider"></div>
+                                    <div class="match-team <?= $p2_win ? 'winner' : '' ?>">
+                                        <span class="team-name"><?= htmlspecialchars($nombre2) ?></span>
+                                        <?php if ($jugado): ?>
+                                            <span class="team-score">
+                                                <?= $partido['set1_p2'] ?>-<?= $partido['set1_p1'] ?>
+                                                <?php if ($partido['set2_p1'] !== null): ?> / <?= $partido['set2_p2'] ?>-<?= $partido['set2_p1'] ?><?php endif; ?>
+                                                <?php if ($partido['set3_p1'] !== null): ?> / <?= $partido['set3_p2'] ?>-<?= $partido['set3_p1'] ?><?php endif; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
 
                                 </div>
 
-                            </div>
-
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                </div>
+
+                <?php endforeach; ?>
 
             </div>
 
@@ -439,8 +442,9 @@
                                             <?php if ($jugado): ?>
                                                 <span class="pg-score-cell"><?= $p->set1_p1 ?></span>
                                                 <?php if ($p->set2_p1 !== null): ?><span class="pg-score-cell"><?= $p->set2_p1 ?></span><?php endif; ?>
+                                                <?php if ($p->set3_p1 !== null): ?><span class="pg-score-cell"><?= $p->set3_p1 ?></span><?php endif; ?>
                                             <?php else: ?>
-                                                <span class="pg-score-cell"></span><span class="pg-score-cell"></span>
+                                                <span class="pg-score-cell"></span><span class="pg-score-cell"></span><span class="pg-score-cell"></span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -454,8 +458,9 @@
                                             <?php if ($jugado): ?>
                                                 <span class="pg-score-cell"><?= $p->set1_p2 ?></span>
                                                 <?php if ($p->set2_p1 !== null): ?><span class="pg-score-cell"><?= $p->set2_p2 ?></span><?php endif; ?>
+                                                <?php if ($p->set3_p1 !== null): ?><span class="pg-score-cell"><?= $p->set3_p2 ?></span><?php endif; ?>
                                             <?php else: ?>
-                                                <span class="pg-score-cell"></span><span class="pg-score-cell"></span>
+                                                <span class="pg-score-cell"></span><span class="pg-score-cell"></span><span class="pg-score-cell"></span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -739,7 +744,41 @@ function abrirModalPartido(el)
 
 function cerrarModal()
 {
+    // restaurar campos si estaban readonly
+    ['dia','hora','cancha'].forEach(id => {
+        document.getElementById(id).removeAttribute('readonly');
+        document.getElementById(id).style.background = '';
+        document.getElementById(id).style.color = '';
+    });
     document.getElementById('modalPartido').style.display = 'none';
+}
+
+function abrirModalResultado(el)
+{
+    const partidoId = el.dataset.partidoId;
+
+    fetch("<?= base_url('admin/torneos/obtener_partido') ?>/" + partidoId)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('partido_id').value = data.id;
+            document.getElementById('dia').value    = data.fecha  ? data.fecha.slice(0, 10) : '';
+            document.getElementById('hora').value   = data.hora   ? data.hora.slice(0, 5)   : '';
+            document.getElementById('cancha').value = data.cancha ?? '';
+            document.getElementById('set_1').value  = data.set_1  ?? '';
+            document.getElementById('set_2').value  = data.set_2  ?? '';
+            document.getElementById('set_3').value  = data.set_3  ?? '';
+
+            // fecha/hora/cancha solo lectura
+            ['dia','hora','cancha'].forEach(id => {
+                const f = document.getElementById(id);
+                f.setAttribute('readonly', 'readonly');
+                f.style.background    = '#f4f6f8';
+                f.style.color         = '#888';
+                f.style.pointerEvents = 'none';
+            });
+
+            document.getElementById('modalPartido').style.display = 'flex';
+        });
 }
 </script>
 

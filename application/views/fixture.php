@@ -45,9 +45,9 @@
 
                 <div class="">
                     <?php if($torneo->zona_visible == "t"): ?>
-                        <?php foreach($zonas as $zona): ?>
+                        <?php foreach($zonas as $idx => $zona): ?>
 
-                            <div class="zona-card">
+                            <div class="zona-card" id="zona-card-<?= $idx ?>">
 
                                 <!-- HEADER -->
                                 <div class="zona-header">
@@ -118,6 +118,9 @@
                                 </div>
 
                             </div>
+                            <div class="btn-descargar-wrap">
+                                <button class="btn-descargar" onclick="descargarImagen('zona-card-<?= $idx ?>', 'zona-<?= chr(64+$zona['grupo']) ?>.png')">Descargar imagen</button>
+                            </div>
 
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -127,101 +130,83 @@
 
             </div>
 
-            <div id="tab-resultados" class="fixture-tab-content" style="display:none;>
+            <div id="tab-resultados" class="fixture-tab-content" style="display:none;">
 
-                <div class="resultados-wrapper container">
-                    <div class="">
-                        <?php if($torneo->resultados_visibles == "t"): ?>
-                            <?php foreach($zonas as $zona): ?>
+                <?php if($torneo->resultados_visibles == "t"): ?>
+                    <?php foreach($zonas as $zona): ?>
 
-                                <div class="resultados-card">
+                        <?php
+                        $parejas_map = [];
+                        foreach($zona['parejas'] as $par){
+                            $parejas_map[$par['numero']] = $par['nombre'];
+                        }
+                        ?>
 
-                                    <div class="resultados-header">
-                                        <h3>Zona <?= chr(64 + $zona['grupo']) ?></h3>
-                                    </div>
+                        <div class="res-zona-bloque">
+                            <div class="res-zona-titulo">Zona <?= chr(64 + $zona['grupo']) ?></div>
 
+                            <div class="res-zona-partidos">
+                                <?php foreach($zona['partidos'] as $partido): ?>
                                     <?php
-                                    $parejas_map = [];
-                                    foreach($zona['parejas'] as $p){
-                                        $parejas_map[$p['numero']] = strtoupper($p['nombre']);
+                                    list($n1, $n2) = explode(' VS ', $partido['duelo']);
+                                    $nombre1 = $parejas_map[$n1] ?? '-';
+                                    $nombre2 = $parejas_map[$n2] ?? '-';
+                                    $jugado  = $partido['set1_p1'] !== null;
+
+                                    // calcular ganador por sets
+                                    $sets_p1 = 0; $sets_p2 = 0;
+                                    if ($jugado) {
+                                        if ($partido['set1_p1'] > $partido['set1_p2']) $sets_p1++; else $sets_p2++;
+                                        if ($partido['set2_p1'] !== null) {
+                                            if ($partido['set2_p1'] > $partido['set2_p2']) $sets_p1++; else $sets_p2++;
+                                        }
+                                        if ($partido['set3_p1'] !== null) {
+                                            if ($partido['set3_p1'] > $partido['set3_p2']) $sets_p1++; else $sets_p2++;
+                                        }
                                     }
+                                    $p1_win = $jugado && $sets_p1 > $sets_p2;
+                                    $p2_win = $jugado && $sets_p2 > $sets_p1;
                                     ?>
 
-                                    <div class="resultados-body">
+                                    <div class="res-partido-card">
+                                        <?php if ($partido['hora'] || $partido['cancha']): ?>
+                                        <div class="res-partido-meta">
+                                            <?php if ($partido['hora']): ?><span><?= substr($partido['hora'], 0, 5) ?></span><?php endif; ?>
+                                            <?php if ($partido['cancha']): ?><span>Cancha <?= $partido['cancha'] ?></span><?php endif; ?>
+                                        </div>
+                                        <?php endif; ?>
 
-                                        <?php foreach($zona['partidos'] as $partido): ?>
-
-                                            <?php
-                                            list($p1,$p2) = explode(' VS ', $partido['duelo']);
-
-                                            $nombre1 = $parejas_map[$p1] ?? '';
-                                            $nombre2 = $parejas_map[$p2] ?? '';
-
-                                            $jugado = $partido['set1_p1'] !== null;
-                                            ?>
-
-                                            <div class="resultado-item">
-
-                                                <div class="resultado-meta">
-                                                    <span><?= $partido['dia'] ?></span>
-                                                    <span><?= $partido['hora'] ?></span>
-                                                    <span>Cancha <?= $partido['cancha'] ?? '-' ?></span>
-                                                </div>
-
-                                                <div class="resultado-match">
-
-                                                    <!-- Pareja 1 -->
-                                                    <div class="pareja-block">
-                                                        <div class="pareja-nombre"><?= $nombre1 ?></div>
-                                                        <div class="sets">
-                                                            <?php if($jugado): ?>
-                                                                <span><?= $partido['set1_p1'] ?>-<?= $partido['set1_p2'] ?></span>
-                                                                <?php if($partido['set2_p1'] !== null): ?>
-                                                                    <span><?= $partido['set2_p1'] ?>-<?= $partido['set2_p2'] ?></span>
-                                                                <?php endif; ?>
-                                                                <?php if($partido['set3_p1'] !== null): ?>
-                                                                    <span><?= $partido['set3_p1'] ?>-<?= $partido['set3_p2'] ?></span>
-                                                                <?php endif; ?>
-                                                            <?php else: ?>
-                                                                <span class="estado-pendiente">Pendiente</span>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Pareja 2 -->
-                                                    <div class="pareja-block">
-                                                        <div class="pareja-nombre"><?= $nombre2 ?></div>
-                                                        <!-- <div class="sets">
-                                                            <?php if($jugado): ?>
-                                                                <span><?= $partido['set1_p2'] ?>-<?= $partido['set1_p1'] ?></span>
-                                                                <?php if($partido['set2_p1'] !== null): ?>
-                                                                    <span><?= $partido['set2_p2'] ?>-<?= $partido['set2_p1'] ?></span>
-                                                                <?php endif; ?>
-                                                                <?php if($partido['set3_p1'] !== null): ?>
-                                                                    <span><?= $partido['set3_p2'] ?>-<?= $partido['set3_p1'] ?></span>
-                                                                <?php endif; ?>
-                                                            <?php else: ?>
-                                                                <span class="estado-pendiente">Pendiente</span>
-                                                            <?php endif; ?>
-                                                        </div> -->
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-
-                                        <?php endforeach; ?>
-
+                                        <div class="match-team <?= $p1_win ? 'winner' : '' ?>">
+                                            <span class="team-name"><?= htmlspecialchars($nombre1) ?></span>
+                                            <?php if ($jugado): ?>
+                                                <span class="team-score">
+                                                    <?= $partido['set1_p1'] ?>-<?= $partido['set1_p2'] ?>
+                                                    <?php if ($partido['set2_p1'] !== null): ?> / <?= $partido['set2_p1'] ?>-<?= $partido['set2_p2'] ?><?php endif; ?>
+                                                    <?php if ($partido['set3_p1'] !== null): ?> / <?= $partido['set3_p1'] ?>-<?= $partido['set3_p2'] ?><?php endif; ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="match-divider"></div>
+                                        <div class="match-team <?= $p2_win ? 'winner' : '' ?>">
+                                            <span class="team-name"><?= htmlspecialchars($nombre2) ?></span>
+                                            <?php if ($jugado): ?>
+                                                <span class="team-score">
+                                                    <?= $partido['set1_p2'] ?>-<?= $partido['set1_p1'] ?>
+                                                    <?php if ($partido['set2_p1'] !== null): ?> / <?= $partido['set2_p2'] ?>-<?= $partido['set2_p1'] ?><?php endif; ?>
+                                                    <?php if ($partido['set3_p1'] !== null): ?> / <?= $partido['set3_p2'] ?>-<?= $partido['set3_p1'] ?><?php endif; ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
 
-                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
 
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <p class="bracket-empty">Los resultados no son visibles para este torneo.</p>
-                        <?php endif; ?>
-                    </div>
-                </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p class="bracket-empty">Los resultados no son visibles para este torneo.</p>
+                <?php endif; ?>
 
             </div>
             <!-- =============================
@@ -234,7 +219,10 @@
                     <p class="bracket-empty">No hay cruces generados aún.</p>
                 <?php else: ?>
 
-                    <div class="bracket-wrapper">
+                    <div class="btn-descargar-wrap">
+                        <button class="btn-descargar" onclick="descargarImagen('playoff-bracket', 'cruces.png')">Descargar imagen</button>
+                    </div>
+                    <div class="bracket-wrapper" id="playoff-bracket">
                         <?php foreach ($playoff as $ronda => $rondaData): ?>
 
                             <div class="bracket-round">
@@ -442,6 +430,77 @@ function showTab(e, tab)
     e.currentTarget.classList.add('active');
 }
 
+// =====================
+// Descarga como imagen
+// =====================
+const LOGO_URL   = '<?= base_url("logo_inicio.png") ?>';
+const SITE_URL   = window.location.hostname;
+
+async function descargarImagen(elementId, filename) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    const btn = el.parentElement.querySelector('.btn-descargar');
+    if (btn) { btn.disabled = true; btn.textContent = 'Generando...'; }
+
+    try {
+        const canvas = await html2canvas(el, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            scrollX: -window.scrollX,
+            scrollY: -window.scrollY,
+            windowWidth: document.documentElement.scrollWidth,
+        });
+
+        const WH = 64 * 2; // watermark height scaled
+        const PADDING = 16 * 2;
+
+        const final = document.createElement('canvas');
+        final.width  = canvas.width;
+        final.height = canvas.height + WH;
+
+        const ctx = final.getContext('2d');
+
+        // Imagen capturada
+        ctx.drawImage(canvas, 0, 0);
+
+        // Banda watermark
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, canvas.height, final.width, WH);
+
+        // Logo
+        const logo = new Image();
+        logo.crossOrigin = 'anonymous';
+        await new Promise(resolve => {
+            logo.onload = resolve;
+            logo.onerror = resolve;
+            logo.src = LOGO_URL;
+        });
+
+        const logoH = WH * 0.65;
+        const logoW = logoH;
+        const logoY = canvas.height + (WH - logoH) / 2;
+        ctx.drawImage(logo, PADDING, logoY, logoW, logoH);
+
+        // Texto URL
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${22 * 2}px Arial, sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(SITE_URL, final.width - PADDING, canvas.height + WH / 2);
+
+        // Descargar
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = final.toDataURL('image/png');
+        link.click();
+
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Descargar imagen'; }
+    }
+}
+
 // Filtro por día - listado de partidos
 document.querySelectorAll('.btn-dia').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -465,3 +524,4 @@ document.querySelectorAll('.btn-dia').forEach(function(btn) {
     });
 });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

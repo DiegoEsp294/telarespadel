@@ -329,18 +329,18 @@ class FixtureService
             /*
             =====================================================
             12–14 PAREJAS — 4 zonas → cuartos completos
-            Q1: 1A vs 2C  |  Q2: 1C vs 2A
-            Q3: 1B vs 2D  |  Q4: 1D vs 2B
-            SF1: GQ1 vs GQ2  |  SF2: GQ3 vs GQ4
+            Q1: 1A vs 2C  |  Q2: 2B vs 1D
+            Q3: 1C vs 2A  |  Q4: 2D vs 1B
+            SF1: G(Q1) vs G(Q2)  |  SF2: G(Q3) vs G(Q4)
             =====================================================
             */
             case 'cuartos_4zonas':
 
                 [$q1, $q2, $q3, $q4] = $this->cruzar([
                     ['1A','2C'],
+                    ['2B','1D'],
                     ['1C','2A'],
-                    ['1B','2D'],
-                    ['1D','2B'],
+                    ['2D','1B'],
                 ], 2);
 
                 $sf1 = $this->crearPartidoPlayoff(null, null, 3);
@@ -670,28 +670,7 @@ class FixtureService
         $this->CI->Torneo_model->actualizarPartido($partido_id, ["ganador_id" => $ganador_id, "estado" => "finalizado"]);
 
         // ============================
-        // 6. Avanzar ganador (PLAYOFF)
-        // ============================
-
-        if ($partido->partido_siguiente_id)
-        {
-            $campoDestino =
-                ($partido->slot_siguiente == 1)
-                ? 'pareja1_id'
-                : 'pareja2_id';
-
-            $this->CI->Torneo_model->avanzarGanador($partido->partido_siguiente_id,'pareja1_id', $ganador_id);
-
-        }
-
-        // ============================
-        // 7. Resolver referencias APA
-        // ============================
-
-        $this->resolverReferencias($partido_id);
-
-        // ============================
-        // 8. Commit
+        // 6. Commit
         // ============================
 
         $this->CI->db->trans_complete();
@@ -1153,36 +1132,6 @@ class FixtureService
         if ($fase === 'zona') {
             $this->recalcularTablaZona($partido->zona_id);
         }
-
-        // ============================
-        // 8. Avanzar ganador en eliminación
-        // ============================
-        if ($partido->partido_siguiente_id) {
-            $campoDestino = ($partido->slot_siguiente == 1) ? 'pareja1_id' : 'pareja2_id';
-            $this->CI->Torneo_model->avanzarGanador(
-                $partido->partido_siguiente_id,
-                $campoDestino,
-                $ganador_id
-            );
-        }
-
-        // ============================
-        // 8b. Avanzar perdedor (zona APA 4 parejas)
-        // ============================
-        if (!empty($partido->partido_siguiente_perdedor_id)) {
-            $perdedor_id  = ($ganador_id == $pareja1) ? $pareja2 : $pareja1;
-            $campoDestino = ($partido->slot_siguiente_perdedor == 1) ? 'pareja1_id' : 'pareja2_id';
-            $this->CI->Torneo_model->avanzarGanador(
-                $partido->partido_siguiente_perdedor_id,
-                $campoDestino,
-                $perdedor_id
-            );
-        }
-
-        // ============================
-        // 9. Resolver referencias APA
-        // ============================
-        $this->resolverReferencias($partido_id);
 
         $this->CI->db->trans_complete();
 

@@ -1077,10 +1077,10 @@ class Torneo_model extends CI_Model {
                 s2.games_pareja1 AS set2_p1, s2.games_pareja2 AS set2_p2,
                 s3.games_pareja1 AS set3_p1, s3.games_pareja2 AS set3_p2
             FROM partidos p
-            LEFT JOIN inscripciones i1  ON i1.id  = p.pareja1_id
+            LEFT JOIN inscripciones i1  ON i1.id  = p.pareja1_id AND i1.torneo_id = p.torneo_id AND i1.categoria_id = p.categoria_id
             LEFT JOIN participantes p1a ON p1a.id = i1.participante1_id
             LEFT JOIN participantes p1b ON p1b.id = i1.participante2_id
-            LEFT JOIN inscripciones i2  ON i2.id  = p.pareja2_id
+            LEFT JOIN inscripciones i2  ON i2.id  = p.pareja2_id AND i2.torneo_id = p.torneo_id AND i2.categoria_id = p.categoria_id
             LEFT JOIN participantes p2a ON p2a.id = i2.participante1_id
             LEFT JOIN participantes p2b ON p2b.id = i2.participante2_id
             LEFT JOIN partido_sets s1 ON s1.partido_id = p.id AND s1.numero_set = 1
@@ -1090,7 +1090,7 @@ class Torneo_model extends CI_Model {
               AND p.categoria_id = ?
               AND p.zona_id      IS NULL
               AND p.fase         = 'playoff'
-            ORDER BY p.ronda ASC, p.id ASC
+            ORDER BY p.ronda ASC, COALESCE(p.orden_fase, p.id) ASC
         ", [$torneo_id, $categoria_id])->result();
 
         $nombres = [
