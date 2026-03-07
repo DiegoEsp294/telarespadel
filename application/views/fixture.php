@@ -119,7 +119,7 @@
 
                             </div>
                             <div class="btn-descargar-wrap">
-                                <button class="btn-descargar" onclick="descargarImagen('zona-card-<?= $idx ?>', 'zona-<?= chr(64+$zona['grupo']) ?>.png')">Descargar imagen</button>
+                                <button class="btn-descargar" onclick="descargarImagen('zona-card-<?= $idx ?>', 'zona-<?= chr(64+$zona['grupo']) ?>.png')">Descargar</button>
                             </div>
 
                         <?php endforeach; ?>
@@ -220,7 +220,7 @@
                 <?php else: ?>
 
                     <div class="btn-descargar-wrap">
-                        <button class="btn-descargar" onclick="descargarImagen('playoff-bracket', 'cruces.png')">Descargar imagen</button>
+                        <button class="btn-descargar" onclick="descargarImagen('playoff-bracket', 'cruces.png')">Descargar</button>
                     </div>
                     <div class="bracket-wrapper" id="playoff-bracket">
                         <?php foreach ($playoff as $ronda => $rondaData): ?>
@@ -497,7 +497,7 @@ async function descargarImagen(elementId, filename) {
         link.click();
 
     } finally {
-        if (btn) { btn.disabled = false; btn.textContent = 'Descargar imagen'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'Descargar'; }
     }
 }
 
