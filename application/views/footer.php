@@ -39,5 +39,42 @@
     </footer>
 
     <script src="<?php echo base_url('assets/js/script.js'); ?>"></script>
+
+<?php if (!$this->session->userdata('usuario_id') || $this->session->userdata('id_roles') != 1): ?>
+<script>
+(function() {
+    var ENDPOINT = '<?= base_url("metricas/registrar") ?>';
+    var isMobile = window.innerWidth < 768;
+
+    function track(tipo, accion, extra) {
+        var body = new URLSearchParams({
+            tipo:         tipo,
+            url:          window.location.pathname + window.location.search,
+            accion:       accion || '',
+            torneo_id:    (extra && extra.torneo_id)    ? extra.torneo_id    : '',
+            categoria_id: (extra && extra.categoria_id) ? extra.categoria_id : '',
+            es_mobile:    isMobile ? 'true' : 'false',
+        });
+        navigator.sendBeacon ? navigator.sendBeacon(ENDPOINT, body)
+            : fetch(ENDPOINT, { method:'POST', body:body, keepalive:true }).catch(function(){});
+    }
+
+    // Page view al cargar
+    window.addEventListener('load', function() {
+        var m = window.location.search.match(/[?&]torneo_id=(\d+)/);
+        var c = window.location.search.match(/[?&]categoria_id=(\d+)/);
+        track('page_view', '', {
+            torneo_id:    m ? m[1] : '',
+            categoria_id: c ? c[1] : '',
+        });
+    });
+
+    // Exponer función global para acciones específicas
+    window.trackAccion = function(accion, extra) {
+        track('accion', accion, extra || {});
+    };
+})();
+</script>
+<?php endif; ?>
 </body>
 </html>

@@ -31,6 +31,10 @@ class Home extends CI_Controller {
             $data['torneos'] = array();
         }
 
+        $data['seo_title']       = 'Telares Padel';
+        $data['seo_description'] = 'Torneos de pádel en Los Telares, Santiago del Estero. Seguí los fixtures, resultados y cruces en tiempo real.';
+        $data['seo_url']         = base_url();
+
         // Cargar vista
         $this->load->view('header', $data);
         $this->load->view('inicio', $data);
@@ -91,8 +95,18 @@ class Home extends CI_Controller {
 
         $data['fixture'] = $data;
 
+        // SEO específico del torneo
+        $cats_label = trim($data['categorias_label']);
+        $descripcion_torneo = 'Seguí el fixture, resultados y cruces del torneo ' . $torneo->nombre . ' en Telares Padel.';
+        if ($cats_label) {
+            $descripcion_torneo .= ' Categorías: ' . $cats_label . '.';
+        }
+        $data['seo_title']       = $torneo->nombre;
+        $data['seo_description'] = $descripcion_torneo;
+        $data['seo_url']         = site_url('home/torneo/' . $id);
+
         // Cargar vista
-        $this->load->view('header', array('club_nombre' => 'Telares Padel'));
+        $this->load->view('header', $data);
         $this->load->view('detalle_torneo', $data);
         $this->load->view('footer');
     }

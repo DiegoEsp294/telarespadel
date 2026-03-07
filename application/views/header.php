@@ -3,7 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($club_nombre) ? $club_nombre : 'Telares Padel'; ?></title>
+
+    <?php
+        $seo_title       = isset($seo_title)       ? $seo_title       : (isset($club_nombre) ? $club_nombre : 'Telares Padel');
+        $seo_description = isset($seo_description) ? $seo_description : 'Torneos de pádel en Los Telares, Santiago del Estero. Seguí los fixtures, resultados y cruces en tiempo real.';
+        $seo_image       = isset($seo_image)       ? $seo_image       : base_url('logo_inicio.png');
+        $seo_url         = isset($seo_url)         ? $seo_url         : current_url();
+        $seo_robots      = isset($seo_robots)      ? $seo_robots      : 'index, follow';
+        $page_title      = ($seo_title === 'Telares Padel') ? 'Telares Padel' : $seo_title . ' | Telares Padel';
+    ?>
+
+    <title><?= htmlspecialchars($page_title) ?></title>
+    <meta name="description"    content="<?= htmlspecialchars($seo_description) ?>">
+    <meta name="robots"         content="<?= $seo_robots ?>">
+    <link rel="canonical"       href="<?= $seo_url ?>">
+
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="Telares Padel">
+    <meta property="og:title"       content="<?= htmlspecialchars($page_title) ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($seo_description) ?>">
+    <meta property="og:image"       content="<?= $seo_image ?>">
+    <meta property="og:url"         content="<?= $seo_url ?>">
+    <meta property="og:locale"      content="es_AR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<?= htmlspecialchars($page_title) ?>">
+    <meta name="twitter:description" content="<?= htmlspecialchars($seo_description) ?>">
+    <meta name="twitter:image"       content="<?= $seo_image ?>">
+
+    <!-- JSON-LD: Organización -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SportsOrganization",
+        "name": "Telares Padel",
+        "sport": "Padel",
+        "url": "<?= base_url() ?>",
+        "logo": "<?= base_url('logo_inicio.png') ?>",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Los Telares",
+            "addressRegion": "Santiago del Estero",
+            "addressCountry": "AR"
+        }
+    }
+    </script>
+
     <link rel="icon" type="image/png" href="<?= base_url('logo_inicio.png') ?>">
     <link rel="shortcut icon" type="image/png" href="<?= base_url('logo_inicio.png') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/style.css?v='.time()); ?>">

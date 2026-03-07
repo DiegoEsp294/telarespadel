@@ -72,7 +72,7 @@ class Auth extends CI_Controller {
         $data['usuario_logueado'] = $this->session->userdata('usuario_id');
         $data['usuario_rol'] = $this->session->userdata('id_roles');
         $data['usuario_nombre'] = $this->session->userdata('usuario_nombre');
-
+        $data['seo_robots'] = 'noindex, nofollow';
 
         $this->load->view('header', $data);
         $this->load->view('login', $data);
@@ -135,6 +135,7 @@ class Auth extends CI_Controller {
         $data['usuario_logueado'] = $this->session->userdata('usuario_id');
         $data['usuario_rol'] = $this->session->userdata('id_roles');
         $data['usuario_nombre'] = $this->session->userdata('usuario_nombre');
+        $data['seo_robots'] = 'noindex, nofollow';
 
         $this->load->view('header', $data);
         $this->load->view('registro', $data);
@@ -157,11 +158,12 @@ class Auth extends CI_Controller {
         $usuario_id = $this->session->userdata('usuario_id');
         $data['usuario'] = $this->Usuario_model->obtener_por_id($usuario_id);
         $data['club_nombre'] = 'Telares Padel';
-        
+
         // Cargar datos de sesión para el header
         $data['usuario_logueado'] = $this->session->userdata('usuario_id');
         $data['usuario_rol'] = $this->session->userdata('id_roles');
         $data['usuario_nombre'] = $this->session->userdata('usuario_nombre');
+        $data['seo_robots'] = 'noindex, nofollow';
 
         $this->load->view('header', $data);
         $this->load->view('perfil_usuario', $data);

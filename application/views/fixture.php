@@ -413,6 +413,11 @@ document.getElementById('formPartido')
 
 
 <script>
+var _fixtureContext = {
+    torneo_id:    '<?= $torneo->id ?? '' ?>',
+    categoria_id: '<?= $categoria_id ?? '' ?>',
+};
+
 function showTab(e, tab)
 {
     // ocultar todos
@@ -428,6 +433,10 @@ function showTab(e, tab)
 
     // activar botón clickeado
     e.currentTarget.classList.add('active');
+
+    if (typeof trackAccion === 'function') {
+        trackAccion('tab_' + tab, _fixtureContext);
+    }
 }
 
 // =====================

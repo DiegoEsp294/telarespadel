@@ -27,5 +27,11 @@
             </a>
         </li>
 
+        <li class="nav-item mb-2">
+            <a href="<?= base_url('admin/metricas') ?>" class="nav-link text-white">
+                Métricas
+            </a>
+        </li>
+
     </ul>
 </div>

@@ -28,6 +28,9 @@ system/logs/*
 *.sql
 database/*.sql
 
+# Scripts con credenciales
+scripts/backup_bd.bat
+
 # Node
 node_modules/
 npm-debug.log
@@ -37,3 +40,4 @@ desktop.ini
 
 backup.sql
 .htaccess
+.claude/settings.local.json
