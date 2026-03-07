@@ -179,22 +179,30 @@
                                         <div class="match-team <?= $p1_win ? 'winner' : '' ?>">
                                             <span class="team-name"><?= htmlspecialchars($nombre1) ?></span>
                                             <?php if ($jugado): ?>
-                                                <span class="team-score">
-                                                    <?= $partido['set1_p1'] ?>-<?= $partido['set1_p2'] ?>
-                                                    <?php if ($partido['set2_p1'] !== null): ?> / <?= $partido['set2_p1'] ?>-<?= $partido['set2_p2'] ?><?php endif; ?>
-                                                    <?php if ($partido['set3_p1'] !== null): ?> / <?= $partido['set3_p1'] ?>-<?= $partido['set3_p2'] ?><?php endif; ?>
-                                                </span>
+                                                <div class="set-boxes">
+                                                    <span class="set-box <?= $partido['set1_p1'] > $partido['set1_p2'] ? 'win' : '' ?>"><?= $partido['set1_p1'] ?></span>
+                                                    <?php if ($partido['set2_p1'] !== null): ?>
+                                                        <span class="set-box <?= $partido['set2_p1'] > $partido['set2_p2'] ? 'win' : '' ?>"><?= $partido['set2_p1'] ?></span>
+                                                    <?php endif; ?>
+                                                    <?php if ($partido['set3_p1'] !== null): ?>
+                                                        <span class="set-box <?= $partido['set3_p1'] > $partido['set3_p2'] ? 'win' : '' ?>"><?= $partido['set3_p1'] ?></span>
+                                                    <?php endif; ?>
+                                                </div>
                                             <?php endif; ?>
                                         </div>
                                         <div class="match-divider"></div>
                                         <div class="match-team <?= $p2_win ? 'winner' : '' ?>">
                                             <span class="team-name"><?= htmlspecialchars($nombre2) ?></span>
                                             <?php if ($jugado): ?>
-                                                <span class="team-score">
-                                                    <?= $partido['set1_p2'] ?>-<?= $partido['set1_p1'] ?>
-                                                    <?php if ($partido['set2_p1'] !== null): ?> / <?= $partido['set2_p2'] ?>-<?= $partido['set2_p1'] ?><?php endif; ?>
-                                                    <?php if ($partido['set3_p1'] !== null): ?> / <?= $partido['set3_p2'] ?>-<?= $partido['set3_p1'] ?><?php endif; ?>
-                                                </span>
+                                                <div class="set-boxes">
+                                                    <span class="set-box <?= $partido['set1_p2'] > $partido['set1_p1'] ? 'win' : '' ?>"><?= $partido['set1_p2'] ?></span>
+                                                    <?php if ($partido['set2_p1'] !== null): ?>
+                                                        <span class="set-box <?= $partido['set2_p2'] > $partido['set2_p1'] ? 'win' : '' ?>"><?= $partido['set2_p2'] ?></span>
+                                                    <?php endif; ?>
+                                                    <?php if ($partido['set3_p1'] !== null): ?>
+                                                        <span class="set-box <?= $partido['set3_p2'] > $partido['set3_p1'] ? 'win' : '' ?>"><?= $partido['set3_p2'] ?></span>
+                                                    <?php endif; ?>
+                                                </div>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -253,11 +261,15 @@
                                                 <div class="match-team <?= $p1_winner ? 'winner' : ($p1_tbd ? 'tbd' : '') ?>">
                                                     <span class="team-name"><?= htmlspecialchars($p1_name) ?></span>
                                                     <?php if ($jugado_playoff): ?>
-                                                        <span class="team-score">
-                                                            <?= $partido->set1_p1 ?>-<?= $partido->set1_p2 ?>
-                                                            <?php if ($partido->set2_p1 !== null): ?> / <?= $partido->set2_p1 ?>-<?= $partido->set2_p2 ?><?php endif; ?>
-                                                            <?php if ($partido->set3_p1 !== null): ?> / <?= $partido->set3_p1 ?>-<?= $partido->set3_p2 ?><?php endif; ?>
-                                                        </span>
+                                                        <div class="set-boxes">
+                                                            <span class="set-box <?= $partido->set1_p1 > $partido->set1_p2 ? 'win' : '' ?>"><?= $partido->set1_p1 ?></span>
+                                                            <?php if ($partido->set2_p1 !== null): ?>
+                                                                <span class="set-box <?= $partido->set2_p1 > $partido->set2_p2 ? 'win' : '' ?>"><?= $partido->set2_p1 ?></span>
+                                                            <?php endif; ?>
+                                                            <?php if ($partido->set3_p1 !== null): ?>
+                                                                <span class="set-box <?= $partido->set3_p1 > $partido->set3_p2 ? 'win' : '' ?>"><?= $partido->set3_p1 ?></span>
+                                                            <?php endif; ?>
+                                                        </div>
                                                     <?php endif; ?>
                                                 </div>
 
@@ -266,11 +278,15 @@
                                                 <div class="match-team <?= $p2_winner ? 'winner' : ($p2_tbd ? 'tbd' : '') ?>">
                                                     <span class="team-name"><?= htmlspecialchars($p2_name) ?></span>
                                                     <?php if ($jugado_playoff): ?>
-                                                        <span class="team-score">
-                                                            <?= $partido->set1_p2 ?>-<?= $partido->set1_p1 ?>
-                                                            <?php if ($partido->set2_p1 !== null): ?> / <?= $partido->set2_p2 ?>-<?= $partido->set2_p1 ?><?php endif; ?>
-                                                            <?php if ($partido->set3_p1 !== null): ?> / <?= $partido->set3_p2 ?>-<?= $partido->set3_p1 ?><?php endif; ?>
-                                                        </span>
+                                                        <div class="set-boxes">
+                                                            <span class="set-box <?= $partido->set1_p2 > $partido->set1_p1 ? 'win' : '' ?>"><?= $partido->set1_p2 ?></span>
+                                                            <?php if ($partido->set2_p1 !== null): ?>
+                                                                <span class="set-box <?= $partido->set2_p2 > $partido->set2_p1 ? 'win' : '' ?>"><?= $partido->set2_p2 ?></span>
+                                                            <?php endif; ?>
+                                                            <?php if ($partido->set3_p1 !== null): ?>
+                                                                <span class="set-box <?= $partido->set3_p2 > $partido->set3_p1 ? 'win' : '' ?>"><?= $partido->set3_p2 ?></span>
+                                                            <?php endif; ?>
+                                                        </div>
                                                     <?php endif; ?>
                                                 </div>
 

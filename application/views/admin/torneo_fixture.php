@@ -359,11 +359,15 @@
                                     <div class="match-team <?= $p1_win ? 'winner' : '' ?>">
                                         <span class="team-name"><?= htmlspecialchars($nombre1) ?></span>
                                         <?php if ($jugado): ?>
-                                            <span class="team-score">
-                                                <?= $partido['set1_p1'] ?>-<?= $partido['set1_p2'] ?>
-                                                <?php if ($partido['set2_p1'] !== null): ?> / <?= $partido['set2_p1'] ?>-<?= $partido['set2_p2'] ?><?php endif; ?>
-                                                <?php if ($partido['set3_p1'] !== null): ?> / <?= $partido['set3_p1'] ?>-<?= $partido['set3_p2'] ?><?php endif; ?>
-                                            </span>
+                                            <div class="set-boxes">
+                                                <span class="set-box <?= $partido['set1_p1'] > $partido['set1_p2'] ? 'win' : '' ?>"><?= $partido['set1_p1'] ?></span>
+                                                <?php if ($partido['set2_p1'] !== null): ?>
+                                                    <span class="set-box <?= $partido['set2_p1'] > $partido['set2_p2'] ? 'win' : '' ?>"><?= $partido['set2_p1'] ?></span>
+                                                <?php endif; ?>
+                                                <?php if ($partido['set3_p1'] !== null): ?>
+                                                    <span class="set-box <?= $partido['set3_p1'] > $partido['set3_p2'] ? 'win' : '' ?>"><?= $partido['set3_p1'] ?></span>
+                                                <?php endif; ?>
+                                            </div>
                                         <?php else: ?>
                                             <span class="team-score" style="color:#bbb;">Pendiente</span>
                                         <?php endif; ?>
@@ -372,11 +376,15 @@
                                     <div class="match-team <?= $p2_win ? 'winner' : '' ?>">
                                         <span class="team-name"><?= htmlspecialchars($nombre2) ?></span>
                                         <?php if ($jugado): ?>
-                                            <span class="team-score">
-                                                <?= $partido['set1_p2'] ?>-<?= $partido['set1_p1'] ?>
-                                                <?php if ($partido['set2_p1'] !== null): ?> / <?= $partido['set2_p2'] ?>-<?= $partido['set2_p1'] ?><?php endif; ?>
-                                                <?php if ($partido['set3_p1'] !== null): ?> / <?= $partido['set3_p2'] ?>-<?= $partido['set3_p1'] ?><?php endif; ?>
-                                            </span>
+                                            <div class="set-boxes">
+                                                <span class="set-box <?= $partido['set1_p2'] > $partido['set1_p1'] ? 'win' : '' ?>"><?= $partido['set1_p2'] ?></span>
+                                                <?php if ($partido['set2_p1'] !== null): ?>
+                                                    <span class="set-box <?= $partido['set2_p2'] > $partido['set2_p1'] ? 'win' : '' ?>"><?= $partido['set2_p2'] ?></span>
+                                                <?php endif; ?>
+                                                <?php if ($partido['set3_p1'] !== null): ?>
+                                                    <span class="set-box <?= $partido['set3_p2'] > $partido['set3_p1'] ? 'win' : '' ?>"><?= $partido['set3_p2'] ?></span>
+                                                <?php endif; ?>
+                                            </div>
                                         <?php endif; ?>
                                     </div>
 
@@ -696,14 +704,32 @@
             <label>Cancha</label>
             <input type="text" name="cancha" id="cancha">
 
-            <label>Primer set</label>
-            <input type="text" name="set_1" id="set_1" placeholder="N-N" pattern="^\d{1,2}-\d{1,2}$">
+            <input type="hidden" name="set_1" id="set_1">
+            <input type="hidden" name="set_2" id="set_2">
+            <input type="hidden" name="set_3" id="set_3">
 
-            <label>Segundo set</label>
-            <input type="text" name="set_2" id="set_2" placeholder="N-N" pattern="^\d{1,2}-\d{1,2}$">
-
-            <label>Tercer set</label>
-            <input type="text" name="set_3" id="set_3" placeholder="N-N" pattern="^\d{1,2}-\d{1,2}$">
+            <div class="set-input-grid">
+                <div class="set-grid-team-col">
+                    <div class="set-grid-header"></div>
+                    <div class="set-grid-team-label">Pareja 1</div>
+                    <div class="set-grid-team-label">Pareja 2</div>
+                </div>
+                <div class="set-grid-set-col">
+                    <div class="set-grid-header">Set 1</div>
+                    <input type="number" class="set-num-input" id="s1p1" min="0" max="9" placeholder="–">
+                    <input type="number" class="set-num-input" id="s1p2" min="0" max="9" placeholder="–">
+                </div>
+                <div class="set-grid-set-col">
+                    <div class="set-grid-header">Set 2</div>
+                    <input type="number" class="set-num-input" id="s2p1" min="0" max="9" placeholder="–">
+                    <input type="number" class="set-num-input" id="s2p2" min="0" max="9" placeholder="–">
+                </div>
+                <div class="set-grid-set-col">
+                    <div class="set-grid-header">Set 3</div>
+                    <input type="number" class="set-num-input" id="s3p1" min="0" max="9" placeholder="–">
+                    <input type="number" class="set-num-input" id="s3p2" min="0" max="9" placeholder="–">
+                </div>
+            </div>
 
             <button type="submit">Guardar</button>
             <button type="button" onclick="cerrarModal()">Cancelar</button>
@@ -715,6 +741,24 @@
 
 
 <script>
+function _parseSet(str) {
+    if (!str) return [null, null];
+    const p = str.split('-');
+    return p.length === 2 ? [p[0], p[1]] : [null, null];
+}
+
+function _cargarSetsEnInputs(set1, set2, set3) {
+    const [s1p1, s1p2] = _parseSet(set1);
+    const [s2p1, s2p2] = _parseSet(set2);
+    const [s3p1, s3p2] = _parseSet(set3);
+    document.getElementById('s1p1').value = s1p1 ?? '';
+    document.getElementById('s1p2').value = s1p2 ?? '';
+    document.getElementById('s2p1').value = s2p1 ?? '';
+    document.getElementById('s2p2').value = s2p2 ?? '';
+    document.getElementById('s3p1').value = s3p1 ?? '';
+    document.getElementById('s3p2').value = s3p2 ?? '';
+}
+
 function abrirModalPartido(el)
 {
     const partidoId = el.dataset.partidoId;
@@ -722,21 +766,26 @@ function abrirModalPartido(el)
     fetch("<?= base_url('admin/torneos/obtener_partido') ?>/" + partidoId)
         .then(r => r.json())
         .then(data => {
-
             document.getElementById('partido_id').value = data.id;
+            document.getElementById('dia').value    = data.fecha  ? data.fecha.slice(0, 10) : '';
+            document.getElementById('hora').value   = data.hora   ?? '';
+            document.getElementById('cancha').value = data.cancha ?? '';
 
-            let fechaCompleta = data.fecha;
-            if (fechaCompleta) {
-                document.getElementById('dia').value = fechaCompleta.slice(0, 10);
-            } else {
-                document.getElementById('dia').value = '';
-            }
+            _cargarSetsEnInputs(data.set_1, data.set_2, data.set_3);
 
-            document.getElementById('hora').value    = data.hora   ?? '';
-            document.getElementById('cancha').value  = data.cancha ?? '';
-            document.getElementById('set_1').value   = data.set_1  ?? '';
-            document.getElementById('set_2').value   = data.set_2  ?? '';
-            document.getElementById('set_3').value   = data.set_3  ?? '';
+            // editable
+            ['dia','hora','cancha'].forEach(id => {
+                document.getElementById(id).removeAttribute('readonly');
+                document.getElementById(id).style.background = '';
+                document.getElementById(id).style.color = '';
+                document.getElementById(id).style.pointerEvents = '';
+            });
+            document.querySelectorAll('.set-num-input').forEach(i => {
+                i.removeAttribute('readonly');
+                i.style.background = '';
+                i.style.color = '';
+                i.style.pointerEvents = '';
+            });
 
             document.getElementById('modalPartido').style.display = 'flex';
         });
@@ -744,7 +793,6 @@ function abrirModalPartido(el)
 
 function cerrarModal()
 {
-    // restaurar campos si estaban readonly
     ['dia','hora','cancha'].forEach(id => {
         document.getElementById(id).removeAttribute('readonly');
         document.getElementById(id).style.background = '';
@@ -764,9 +812,8 @@ function abrirModalResultado(el)
             document.getElementById('dia').value    = data.fecha  ? data.fecha.slice(0, 10) : '';
             document.getElementById('hora').value   = data.hora   ? data.hora.slice(0, 5)   : '';
             document.getElementById('cancha').value = data.cancha ?? '';
-            document.getElementById('set_1').value  = data.set_1  ?? '';
-            document.getElementById('set_2').value  = data.set_2  ?? '';
-            document.getElementById('set_3').value  = data.set_3  ?? '';
+
+            _cargarSetsEnInputs(data.set_1, data.set_2, data.set_3);
 
             // fecha/hora/cancha solo lectura
             ['dia','hora','cancha'].forEach(id => {
@@ -775,6 +822,13 @@ function abrirModalResultado(el)
                 f.style.background    = '#f4f6f8';
                 f.style.color         = '#888';
                 f.style.pointerEvents = 'none';
+            });
+            // sets editables (la pestaña resultados SÍ permite editar sets)
+            document.querySelectorAll('.set-num-input').forEach(i => {
+                i.removeAttribute('readonly');
+                i.style.background = '';
+                i.style.color = '';
+                i.style.pointerEvents = '';
             });
 
             document.getElementById('modalPartido').style.display = 'flex';
@@ -787,6 +841,16 @@ document.getElementById('formPartido')
 .addEventListener('submit', function(e){
 
     e.preventDefault();
+
+    // Combinar inputs numéricos en formato "N-N" para el backend
+    function buildSet(p1id, p2id) {
+        const v1 = document.getElementById(p1id).value;
+        const v2 = document.getElementById(p2id).value;
+        return (v1 !== '' && v2 !== '') ? v1 + '-' + v2 : '';
+    }
+    document.getElementById('set_1').value = buildSet('s1p1','s1p2');
+    document.getElementById('set_2').value = buildSet('s2p1','s2p2');
+    document.getElementById('set_3').value = buildSet('s3p1','s3p2');
 
     const formData = new FormData(this);
 

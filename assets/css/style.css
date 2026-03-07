@@ -2968,6 +2968,108 @@ button {
     color: rgba(255,255,255,0.85);
 }
 
+/* Cuadritos de sets */
+.set-boxes {
+    display: flex;
+    gap: 3px;
+    flex-shrink: 0;
+    align-items: center;
+}
+.set-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 3px;
+    border: 1.5px solid #c8d0db;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    background: #f0f2f5;
+    color: #555;
+    line-height: 1;
+}
+.set-box.win {
+    border-color: #1a3a6b;
+    background: #1a3a6b;
+    color: #fff;
+}
+.match-team.winner .set-box {
+    border-color: rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+}
+.match-team.winner .set-box.win {
+    border-color: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.35);
+    color: #fff;
+}
+
+/* Modal: inputs de sets — grilla tipo marcador */
+.set-input-grid {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    margin: 10px 0 4px;
+}
+.set-grid-team-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.set-grid-set-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+}
+.set-grid-header {
+    height: 22px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    text-align: center;
+    line-height: 22px;
+}
+.set-grid-team-label {
+    height: 46px;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #555;
+    font-weight: 600;
+    padding-right: 6px;
+    white-space: nowrap;
+}
+.set-num-input {
+    width: 46px;
+    height: 46px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    border: 2px solid #d0d8e4;
+    border-radius: 6px;
+    background: #f8f9fa;
+    color: #1a3a6b;
+    -moz-appearance: textfield;
+}
+.set-num-input::-webkit-outer-spin-button,
+.set-num-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.set-num-input:focus {
+    border-color: #1a3a6b;
+    outline: none;
+    background: #fff;
+}
+.set-dash {
+    font-size: 20px;
+    color: #bbb;
+    font-weight: 300;
+    line-height: 1;
+}
+
 /* Admin: bracket cards are clickable */
 .match-card-bracket.admin-clickable {
     cursor: pointer;
