@@ -86,8 +86,9 @@ class Torneos extends CI_Controller {
             'visible'                  => $this->input->post('visible') ? TRUE : FALSE,
             'inscripciones_visibles'   => $this->input->post('inscripciones_visibles') ? TRUE : FALSE,
             'fixture_visible'          => $this->input->post('fixture_visible') ? TRUE : FALSE,
-            'zona_visible'          => $this->input->post('zona_visible') ? TRUE : FALSE,
+            'zona_visible'             => $this->input->post('zona_visible') ? TRUE : FALSE,
             'resultados_visibles'      => $this->input->post('resultados_visibles') ? TRUE : FALSE,
+            'partidos_visibles'        => $this->input->post('partidos_visibles') ? TRUE : FALSE,
         ];
 
         log_message('debug', 'Creando torneo con datos: ' . json_encode($data));
@@ -192,8 +193,9 @@ class Torneos extends CI_Controller {
             'visible'                  => $this->input->post('visible') ? TRUE : FALSE,
             'inscripciones_visibles'   => $this->input->post('inscripciones_visibles') ? TRUE : FALSE,
             'fixture_visible'          => $this->input->post('fixture_visible') ? TRUE : FALSE,
-            'zona_visible'          => $this->input->post('zona_visible') ? TRUE : FALSE,
+            'zona_visible'             => $this->input->post('zona_visible') ? TRUE : FALSE,
             'resultados_visibles'      => $this->input->post('resultados_visibles') ? TRUE : FALSE,
+            'partidos_visibles'        => $this->input->post('partidos_visibles') ? TRUE : FALSE,
         ];
 
         log_message('debug', 'Actualizando torneo ID: ' . $id . ' con datos: ' . json_encode($data));
@@ -326,11 +328,35 @@ class Torneos extends CI_Controller {
         // datos para la pestaña de configuración de zonas
         $data['inscripciones_zona'] = $this->Torneo_model->obtenerInscripcionesConZona($torneo_id, $categoria_id);
         $data['zonas_db']           = $this->Torneo_model->obtenerZonasPorCategoria($torneo_id, $categoria_id);
-        $data['inscriptos']         = $this->Torneo_model->obtener_inscripciones_por_categoria($torneo_id, $categoria_id);
+        $data['inscriptos']          = $this->Torneo_model->obtener_inscripciones_por_categoria($torneo_id, $categoria_id);
+        $data['inscriptos_con_seed'] = $this->Torneo_model->obtenerInscripcionesConSeed($torneo_id, $categoria_id);
+        $data['todos_partidos']      = $this->Torneo_model->obtenerTodosPartidosTorneo($torneo_id);
 
         $this->load->view('header');
         $this->load->view('admin/torneo_fixture', $data);
         $this->load->view('footer');
+    }
+
+    public function editar_pareja_playoff()
+    {
+        $this->load->model('Torneo_model');
+
+        $partido_id  = (int)$this->input->post('partido_id');
+        $pareja1_id  = $this->input->post('pareja1_id') ?: null;
+        $pareja2_id  = $this->input->post('pareja2_id') ?: null;
+
+        if (!$partido_id) {
+            echo json_encode(['ok' => false, 'msg' => 'ID inválido']);
+            return;
+        }
+
+        $update = [
+            'pareja1_id' => $pareja1_id ? (int)$pareja1_id : null,
+            'pareja2_id' => $pareja2_id ? (int)$pareja2_id : null,
+        ];
+
+        $this->Torneo_model->actualizarPartidoDatos($partido_id, $update);
+        echo json_encode(['ok' => true]);
     }
 
     public function guardar_zonas($torneo_id)

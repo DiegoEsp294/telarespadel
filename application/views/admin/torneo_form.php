@@ -96,6 +96,7 @@
     $chk_fixture       = isset($torneo->fixture_visible) && $torneo->fixture_visible == "t" ? true : false;
     $chk_zona          = isset($torneo->zona_visible) && $torneo->zona_visible == "t" ? true : false;
     $chk_resultados    = isset($torneo->resultados_visibles) && $torneo->resultados_visibles == "t" ? true : false;
+    $chk_partidos      = isset($torneo->partidos_visibles) && $torneo->partidos_visibles == "t" ? true : false;
     ?>
 
     <label class="toggle-label">
@@ -122,6 +123,11 @@
     <label class="toggle-label">
         <input type="checkbox" name="resultados_visibles" value="1" <?= $chk_resultados ? 'checked' : '' ?>>
         <span>Resultados visibles para usuarios</span>
+    </label>
+
+    <label class="toggle-label">
+        <input type="checkbox" name="partidos_visibles" value="1" <?= $chk_partidos ? 'checked' : '' ?>>
+        <span>Listado de partidos visible para usuarios</span>
     </label>
 
     <hr>

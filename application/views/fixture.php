@@ -32,6 +32,9 @@
                 <?php if($torneo->fixture_visible == "t"):?>
                     <button class="tab" onclick="showTab(event,'playoff')">Cruces</button>
                 <?php endif; ?>
+                <?php if($torneo->partidos_visibles == "t" && !empty($todos_partidos)):?>
+                    <button class="tab" onclick="showTab(event,'listado')">Partidos</button>
+                <?php endif; ?>
             </div>
 
             <!-- =============================
@@ -298,6 +301,94 @@
                 <?php endif; ?>
 
             </div>
+            <!-- =============================
+                    LISTADO DE PARTIDOS
+            ============================= -->
+
+            <?php if(!empty($todos_partidos)): ?>
+            <div id="tab-listado" class="fixture-tab-content" style="display:none;">
+
+                <?php
+                $dias_es = ['Sunday'=>'Domingo','Monday'=>'Lunes','Tuesday'=>'Martes','Wednesday'=>'Miércoles','Thursday'=>'Jueves','Friday'=>'Viernes','Saturday'=>'Sábado'];
+
+                $fechas_unicas = [];
+                foreach ($todos_partidos as $p) {
+                    if ($p->fecha) $fechas_unicas[substr($p->fecha, 0, 10)] = true;
+                }
+                ksort($fechas_unicas);
+                $fechas_unicas = array_keys($fechas_unicas);
+                ?>
+
+                <div class="listado-filtro">
+                    <label>Filtrar por día:</label>
+                    <div class="listado-dias">
+                        <button class="btn-dia active" data-fecha="">Todos</button>
+                        <?php foreach ($fechas_unicas as $fecha): ?>
+                            <button class="btn-dia" data-fecha="<?= $fecha ?>">
+                                <?= date('d/m/Y', strtotime($fecha)) ?>
+                                <span><?= $dias_es[date('l', strtotime($fecha))] ?? '' ?></span>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="listado-cards" id="listado-tbody-pub">
+                    <?php foreach ($todos_partidos as $p):
+                        $jugado = $p->set1_p1 !== null;
+
+                        if ($p->zona_numero) {
+                            $zona_label = 'Zona ' . chr(64 + $p->zona_numero);
+                        } else {
+                            $nombres_ronda = [1 => 'Reclasificación', 2 => 'Cuartos', 3 => 'Semifinal', 4 => 'Final'];
+                            $zona_label = $nombres_ronda[$p->ronda] ?? 'Playoff';
+                        }
+
+                        $hora_display = $p->hora ? substr($p->hora, 0, 5) : '-';
+                        $fecha_attr   = $p->fecha ? substr($p->fecha, 0, 10) : '';
+                        $dia_display  = '';
+                        if ($fecha_attr) {
+                            $dia_en = date('l', strtotime($fecha_attr));
+                            $dia_display = ($dias_es[$dia_en] ?? $dia_en) . ' ' . date('d/m', strtotime($fecha_attr));
+                        }
+                    ?>
+                    <div class="listado-card listado-row" data-fecha="<?= $fecha_attr ?>">
+                        <div class="listado-card-header">
+                            <div class="listado-card-tiempo">
+                                <?php if ($dia_display): ?><span class="listado-card-dia"><?= $dia_display ?></span><?php endif; ?>
+                                <span class="listado-card-hora"><?= $hora_display ?></span>
+                            </div>
+                            <?php if ($p->cancha): ?><span class="listado-card-cancha">Cancha <?= $p->cancha ?></span><?php endif; ?>
+                        </div>
+                        <div class="listado-card-tags">
+                            <span class="listado-zona"><?= $zona_label ?></span>
+                            <?php if ($p->categoria_nombre): ?>
+                                <span class="listado-cat"><?= htmlspecialchars($p->categoria_nombre) ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="listado-card-match">
+                            <span class="listado-card-pareja"><?= htmlspecialchars($p->pareja1_nombre ?? '-') ?></span>
+                            <div class="listado-card-result">
+                                <?php if ($jugado): ?>
+                                    <span class="set-badge"><?= $p->set1_p1 ?>-<?= $p->set1_p2 ?></span>
+                                    <?php if ($p->set2_p1 !== null): ?><span class="set-badge"><?= $p->set2_p1 ?>-<?= $p->set2_p2 ?></span><?php endif; ?>
+                                    <?php if ($p->set3_p1 !== null): ?><span class="set-badge"><?= $p->set3_p1 ?>-<?= $p->set3_p2 ?></span><?php endif; ?>
+                                <?php else: ?>
+                                    <span class="listado-vs">VS</span>
+                                <?php endif; ?>
+                            </div>
+                            <span class="listado-card-pareja"><?= htmlspecialchars($p->pareja2_nombre ?? '-') ?></span>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <p class="listado-sin-resultados" id="listado-vacio-pub" style="display:none;">
+                    No hay partidos para el día seleccionado.
+                </p>
+
+            </div>
+            <?php endif; ?>
+
         </div>
     </div>
 </div>
@@ -350,4 +441,27 @@ function showTab(e, tab)
     // activar botón clickeado
     e.currentTarget.classList.add('active');
 }
+
+// Filtro por día - listado de partidos
+document.querySelectorAll('.btn-dia').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.btn-dia').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        var fechaFiltro = this.dataset.fecha;
+        var rows     = document.querySelectorAll('.listado-row');
+        var visibles = 0;
+
+        rows.forEach(function(row) {
+            var mostrar = !fechaFiltro || row.dataset.fecha === fechaFiltro;
+            row.style.display = mostrar ? '' : 'none';
+            if (mostrar) visibles++;
+        });
+
+        ['listado-vacio', 'listado-vacio-pub'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.style.display = visibles === 0 ? '' : 'none';
+        });
+    });
+});
 </script>

@@ -362,31 +362,32 @@ class FixtureService
             /*
             =====================================================
             15–17 PAREJAS — 5 zonas (APA híbrida)
-            Repechaje: 2B vs 2C | 2A vs 2D | 2E vs 1C
-            Directos a cuartos: 1A, 1B, 1D, 1E
-            Q1: 1A vs GR1  |  Q2: 1B vs GR2
-            Q3: 1D vs GR3  |  Q4: 1E — bye (juega igual si hay 4to)
+            Reclasificación: 2B vs 2C | 2A vs 2D
+            Cuartos: 1A vs G(r1) | 1E vs 1D | 1C vs 2E | 1B vs G(r2)
+            Semis:   G(Q1) vs G(Q2) | G(Q3) vs G(Q4)
+            Final:   G(SF1) vs G(SF2)
             =====================================================
             */
             case 'apa_5zonas':
 
-                [$r1, $r2, $r3] = $this->cruzar([
+                [$r1, $r2] = $this->cruzar([
                     ['2B','2C'],
                     ['2A','2D'],
-                    ['2E','1C'],
                 ], 1);
 
+                // Q1: 1A vs G(r1)
                 $q1 = $this->crearPartidoPlayoff('1A', null, 2);
-                $q2 = $this->crearPartidoPlayoff('1B', null, 2);
-                $q3 = $this->crearPartidoPlayoff('1D', null, 2);
-                $q4 = $this->crearPartidoPlayoff('1E', null, 2);
-
                 $this->CI->Torneo_model->actualizarPartido($r1, ['partido_siguiente_id' => $q1, 'slot_siguiente' => 2]);
-                $this->CI->Torneo_model->actualizarPartido($r2, ['partido_siguiente_id' => $q2, 'slot_siguiente' => 2]);
-                $this->CI->Torneo_model->actualizarPartido($r3, ['partido_siguiente_id' => $q3, 'slot_siguiente' => 2]);
 
-                // Q4 (1E) queda sin rival hasta que se defina por APA
-                // Si el torneo define un 4to repechaje, completar aquí
+                // Q2: 1E vs 1D (directo)
+                $q2 = $this->crearPartidoPlayoff('1E', '1D', 2);
+
+                // Q3: 1C vs 2E (directo)
+                $q3 = $this->crearPartidoPlayoff('1C', '2E', 2);
+
+                // Q4: 1B vs G(r2)
+                $q4 = $this->crearPartidoPlayoff('1B', null, 2);
+                $this->CI->Torneo_model->actualizarPartido($r2, ['partido_siguiente_id' => $q4, 'slot_siguiente' => 2]);
 
                 $sf1 = $this->crearPartidoPlayoff(null, null, 3);
                 $sf2 = $this->crearPartidoPlayoff(null, null, 3);
@@ -841,14 +842,13 @@ class FixtureService
             'categoria_id' => $zona->categoria_id
         ]);
 
-        // intenta completar cruces
-        $this->resolverReferenciasSeed($codigo,$inscripcion_id);
+        // Los cruces se asignan manualmente desde el admin — no resolución automática
     }
 
-    private function resolverReferenciasSeed($codigo, $inscripcion_id)
+    private function resolverReferenciasSeed($codigo, $inscripcion_id, $torneo_id, $categoria_id)
     {
         $pendientes = $this->CI->Torneo_model
-            ->buscarPartidosPorSeed($codigo);
+            ->buscarPartidosPorSeed($codigo, $torneo_id, $categoria_id);
 
         foreach ($pendientes as $p)
         {

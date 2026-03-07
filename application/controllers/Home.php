@@ -85,6 +85,7 @@ class Home extends CI_Controller {
         // traer todo el fixture armado
         $data['zonas'] = $this->fixtureservice->obtenerFixtureCompleto($id, $categoria_id);
         $data['playoff'] = $this->Torneo_model->obtenerPlayoffBracket($id, $categoria_id);
+        $data['todos_partidos'] = $this->Torneo_model->obtenerTodosPartidosTorneo($id);
 
         // $data['resultados'] = $this->Torneo_model->ObtenerResultados($id_torneo);
 

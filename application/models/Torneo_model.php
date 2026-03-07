@@ -278,6 +278,25 @@ class Torneo_model extends CI_Model {
             ->result();
     }
 
+    public function obtenerInscripcionesConSeed($torneo_id, $categoria_id)
+    {
+        return $this->db->query("
+            SELECT i.id,
+                   p1.nombre as nombre1, p1.apellido as apellido1,
+                   p2.nombre as nombre2, p2.apellido as apellido2,
+                   s.codigo
+            FROM inscripciones i
+            LEFT JOIN participantes p1 ON p1.id = i.participante1_id
+            LEFT JOIN participantes p2 ON p2.id = i.participante2_id
+            LEFT JOIN seeds s ON s.inscripcion_id = i.id
+                              AND s.torneo_id = i.torneo_id
+                              AND s.categoria_id = i.categoria_id
+            WHERE i.torneo_id = ?
+              AND i.categoria_id = ?
+            ORDER BY s.codigo ASC NULLS LAST, i.id ASC
+        ", [$torneo_id, $categoria_id])->result();
+    }
+
     public function obtenerParejas($torneo_id, $categoria_id)
     {
         return $this->db
@@ -816,14 +835,14 @@ class Torneo_model extends CI_Model {
         }
     }
 
-    public function buscarPartidosPorSeed($codigo)
+    public function buscarPartidosPorSeed($codigo, $torneo_id, $categoria_id)
     {
-        return $this->db
-            ->from('partidos')
-            ->where('referencia1', $codigo)
-            ->or_where('referencia2', $codigo)
-            ->get()
-            ->result();
+        return $this->db->query("
+            SELECT * FROM partidos
+            WHERE torneo_id = ?
+              AND categoria_id = ?
+              AND (referencia1 = ? OR referencia2 = ?)
+        ", [$torneo_id, $categoria_id, $codigo, $codigo])->result();
     }
 
     public function actualizarPartidoDatos($partido_id, $data)
@@ -959,6 +978,76 @@ class Torneo_model extends CI_Model {
     public function ObtenerResultados($torneo_id)
     {
 
+    }
+
+    public function obtenerTodosPartidosTorneo($torneo_id)
+    {
+        $rows = $this->db->query("
+            SELECT
+                p.id AS partido_id,
+                p.fecha,
+                p.hora,
+                p.cancha,
+                p.estado,
+                p.fase,
+                p.ronda,
+                c.nombre AS categoria_nombre,
+                z.numero AS zona_numero,
+                COALESCE(
+                    CONCAT(p1a.apellido,' ',p1a.nombre,' / ',p1b.apellido,' ',p1b.nombre),
+                    p.referencia1
+                ) AS pareja1_nombre,
+                COALESCE(
+                    CONCAT(p2a.apellido,' ',p2a.nombre,' / ',p2b.apellido,' ',p2b.nombre),
+                    p.referencia2
+                ) AS pareja2_nombre,
+                s1.games_pareja1 AS set1_p1, s1.games_pareja2 AS set1_p2,
+                s2.games_pareja1 AS set2_p1, s2.games_pareja2 AS set2_p2,
+                s3.games_pareja1 AS set3_p1, s3.games_pareja2 AS set3_p2
+            FROM partidos p
+            LEFT JOIN categorias c ON c.id = p.categoria_id
+            LEFT JOIN zonas z ON z.id = p.zona_id
+            LEFT JOIN inscripciones ins1 ON ins1.id = p.pareja1_id
+            LEFT JOIN participantes p1a ON p1a.id = ins1.participante1_id
+            LEFT JOIN participantes p1b ON p1b.id = ins1.participante2_id
+            LEFT JOIN inscripciones ins2 ON ins2.id = p.pareja2_id
+            LEFT JOIN participantes p2a ON p2a.id = ins2.participante1_id
+            LEFT JOIN participantes p2b ON p2b.id = ins2.participante2_id
+            LEFT JOIN partido_sets s1 ON s1.partido_id = p.id AND s1.numero_set = 1
+            LEFT JOIN partido_sets s2 ON s2.partido_id = p.id AND s2.numero_set = 2
+            LEFT JOIN partido_sets s3 ON s3.partido_id = p.id AND s3.numero_set = 3
+            WHERE p.torneo_id = ?
+              AND p.hora IS NOT NULL
+        ", [$torneo_id])->result();
+
+        // Ordenar en PHP: sin fecha al final, luego por fecha y hora
+        usort($rows, function($a, $b) {
+            $fa = $a->fecha ? substr($a->fecha, 0, 10) : null;
+            $fb = $b->fecha ? substr($b->fecha, 0, 10) : null;
+
+            // sin fecha van al final
+            if ($fa === null && $fb === null) return 0;
+            if ($fa === null) return 1;
+            if ($fb === null) return -1;
+
+            if ($fa !== $fb) return strcmp($fa, $fb);
+
+            // misma fecha: ordenar por hora
+            $ha = $a->hora ? substr($a->hora, 0, 5) : null;
+            $hb = $b->hora ? substr($b->hora, 0, 5) : null;
+
+            if ($ha === null && $hb === null) return 0;
+            if ($ha === null) return 1;
+            if ($hb === null) return -1;
+
+            // forzar formato HH:MM con cero a la izquierda para comparación correcta
+            $ha = sprintf('%02d:%02d', ...explode(':', $ha));
+            $hb = sprintf('%02d:%02d', ...explode(':', $hb));
+
+            return strcmp($ha, $hb);
+        });
+
+        return $rows;
     }
 
     public function obtenerPlayoffBracket($torneo_id, $categoria_id)

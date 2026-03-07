@@ -33,6 +33,7 @@
                 <button class="tab" onclick="showTab(event,'zonas')">Zonas</button>
                 <button class="tab" onclick="showTab(event,'resultados')">Resultados</button>
                 <button class="tab" onclick="showTab(event,'playoff')">Cruces</button>
+                <button class="tab" onclick="showTab(event,'listado')">Partidos</button>
             </div>
 
             <!-- =============================
@@ -463,6 +464,12 @@
                                     <div class="pg-footer"><?= htmlspecialchars($footer) ?></div>
                                     <?php endif; ?>
                                 </div>
+                                <button class="btn-editar-pareja"
+                                        data-id="<?= $p->id ?>"
+                                        data-p1="<?= (int)$p->pareja1_id ?>"
+                                        data-p2="<?= (int)$p->pareja2_id ?>"
+                                        onclick="abrirModalParejaPlayoff(this)"
+                                        title="Editar parejas del cruce">✏️ Parejas</button>
                             </div>
                             <?php endforeach; ?>
 
@@ -473,6 +480,187 @@
                 </div>
 
                 <?php endif; ?>
+
+            </div>
+
+            <!-- MODAL EDITAR PAREJAS PLAYOFF -->
+            <div id="modal-pareja-playoff" class="modal-overlay" style="display:none;" onclick="cerrarModalParejaPlayoff(event)">
+                <div class="modal-box">
+                    <h3>Editar parejas del cruce</h3>
+                    <input type="hidden" id="mpp-partido-id">
+
+                    <label>Pareja 1</label>
+                    <select id="mpp-pareja1">
+                        <option value="">— Sin asignar —</option>
+                        <?php foreach($inscriptos_con_seed as $ins): ?>
+                            <option value="<?= $ins->id ?>">
+                                <?php
+                                $prefijo = $ins->codigo ? $ins->codigo.' - ' : '';
+                                echo htmlspecialchars($prefijo.$ins->apellido1.' '.$ins->nombre1.' / '.$ins->apellido2.' '.$ins->nombre2);
+                                ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <label>Pareja 2</label>
+                    <select id="mpp-pareja2">
+                        <option value="">— Sin asignar —</option>
+                        <?php foreach($inscriptos_con_seed as $ins): ?>
+                            <option value="<?= $ins->id ?>">
+                                <?php
+                                $prefijo = $ins->codigo ? $ins->codigo.' - ' : '';
+                                echo htmlspecialchars($prefijo.$ins->apellido1.' '.$ins->nombre1.' / '.$ins->apellido2.' '.$ins->nombre2);
+                                ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <div class="modal-actions" style="margin-top:12px;display:flex;gap:8px;">
+                        <button class="btn btn-primary" onclick="guardarParejaPlayoff()">Guardar</button>
+                        <button class="btn btn-secondary" onclick="cerrarModalParejaPlayoff()">Cancelar</button>
+                    </div>
+                    <p id="mpp-msg" style="margin-top:8px;font-size:13px;color:green;display:none;"></p>
+                </div>
+            </div>
+
+            <script>
+            function abrirModalParejaPlayoff(btn) {
+                document.getElementById('mpp-partido-id').value = btn.dataset.id;
+                document.getElementById('mpp-pareja1').value    = btn.dataset.p1 || '';
+                document.getElementById('mpp-pareja2').value    = btn.dataset.p2 || '';
+                document.getElementById('mpp-msg').style.display = 'none';
+                document.getElementById('modal-pareja-playoff').style.display = 'flex';
+            }
+            function cerrarModalParejaPlayoff(e) {
+                if (!e || e.target.id === 'modal-pareja-playoff') {
+                    document.getElementById('modal-pareja-playoff').style.display = 'none';
+                }
+            }
+            function guardarParejaPlayoff() {
+                const id = document.getElementById('mpp-partido-id').value;
+                const p1 = document.getElementById('mpp-pareja1').value;
+                const p2 = document.getElementById('mpp-pareja2').value;
+                const msg = document.getElementById('mpp-msg');
+
+                fetch('<?= base_url('admin/Torneos/editar_pareja_playoff') ?>', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'partido_id='+id+'&pareja1_id='+p1+'&pareja2_id='+p2
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.ok) {
+                        msg.textContent = 'Guardado correctamente.';
+                        msg.style.color = 'green';
+                        msg.style.display = 'block';
+                        setTimeout(() => location.reload(), 800);
+                    } else {
+                        msg.textContent = data.msg || 'Error al guardar.';
+                        msg.style.color = 'red';
+                        msg.style.display = 'block';
+                    }
+                });
+            }
+            </script>
+
+            <!-- =============================
+                    LISTADO DE PARTIDOS
+            ============================= -->
+
+            <div id="tab-listado" class="fixture-tab-content" style="display:none;">
+
+                <div class="config-card">
+
+                    <h3>Listado de Partidos</h3>
+
+                    <?php
+                    $dias_es = ['Sunday'=>'Domingo','Monday'=>'Lunes','Tuesday'=>'Martes','Wednesday'=>'Miércoles','Thursday'=>'Jueves','Friday'=>'Viernes','Saturday'=>'Sábado'];
+
+                    // Reunir fechas únicas (solo YYYY-MM-DD)
+                    $fechas_unicas = [];
+                    foreach ($todos_partidos as $p) {
+                        if ($p->fecha) {
+                            $fechas_unicas[substr($p->fecha, 0, 10)] = true;
+                        }
+                    }
+                    ksort($fechas_unicas);
+                    $fechas_unicas = array_keys($fechas_unicas);
+                    ?>
+
+                    <?php if (!empty($todos_partidos)): ?>
+
+                        <div class="listado-filtro">
+                            <label>Filtrar por día:</label>
+                            <div class="listado-dias">
+                                <button class="btn-dia active" data-fecha="">Todos</button>
+                                <?php foreach ($fechas_unicas as $fecha): ?>
+                                    <button class="btn-dia" data-fecha="<?= $fecha ?>">
+                                        <?= date('d/m/Y', strtotime($fecha)) ?>
+                                        <span><?= $dias_es[date('l', strtotime($fecha))] ?? '' ?></span>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div class="listado-cards" id="listado-tbody">
+                                <?php foreach ($todos_partidos as $p):
+                                    $jugado = $p->set1_p1 !== null;
+
+                                    if ($p->zona_numero) {
+                                        $zona_label = 'Zona ' . chr(64 + $p->zona_numero);
+                                    } else {
+                                        $nombres_ronda = [1 => 'Reclasificación', 2 => 'Cuartos', 3 => 'Semifinal', 4 => 'Final'];
+                                        $zona_label = $nombres_ronda[$p->ronda] ?? 'Playoff';
+                                    }
+
+                                    $hora_display = $p->hora ? substr($p->hora, 0, 5) : '-';
+                                    $fecha_attr   = $p->fecha ? substr($p->fecha, 0, 10) : '';
+                                    $dia_display  = '';
+                                    if ($fecha_attr) {
+                                        $dia_en = date('l', strtotime($fecha_attr));
+                                        $dia_display = ($dias_es[$dia_en] ?? $dia_en) . ' ' . date('d/m', strtotime($fecha_attr));
+                                    }
+                                ?>
+                                <div class="listado-card listado-row" data-fecha="<?= $fecha_attr ?>">
+                                    <div class="listado-card-header">
+                                        <div class="listado-card-tiempo">
+                                            <?php if ($dia_display): ?><span class="listado-card-dia"><?= $dia_display ?></span><?php endif; ?>
+                                            <span class="listado-card-hora"><?= $hora_display ?></span>
+                                        </div>
+                                        <?php if ($p->cancha): ?><span class="listado-card-cancha">Cancha <?= $p->cancha ?></span><?php endif; ?>
+                                    </div>
+                                    <div class="listado-card-tags">
+                                        <span class="listado-zona"><?= $zona_label ?></span>
+                                        <?php if ($p->categoria_nombre): ?>
+                                            <span class="listado-cat"><?= htmlspecialchars($p->categoria_nombre) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="listado-card-match">
+                                        <span class="listado-card-pareja"><?= htmlspecialchars($p->pareja1_nombre ?? '-') ?></span>
+                                        <div class="listado-card-result">
+                                            <?php if ($jugado): ?>
+                                                <span class="set-badge"><?= $p->set1_p1 ?>-<?= $p->set1_p2 ?></span>
+                                                <?php if ($p->set2_p1 !== null): ?><span class="set-badge"><?= $p->set2_p1 ?>-<?= $p->set2_p2 ?></span><?php endif; ?>
+                                                <?php if ($p->set3_p1 !== null): ?><span class="set-badge"><?= $p->set3_p1 ?>-<?= $p->set3_p2 ?></span><?php endif; ?>
+                                            <?php else: ?>
+                                                <span class="listado-vs">VS</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <span class="listado-card-pareja"><?= htmlspecialchars($p->pareja2_nombre ?? '-') ?></span>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+
+                        <p class="listado-sin-resultados" id="listado-vacio" style="display:none;">
+                            No hay partidos para el día seleccionado.
+                        </p>
+
+                    <?php else: ?>
+                        <p class="config-hint">No hay partidos generados aún.</p>
+                    <?php endif; ?>
+
+                </div>
 
             </div>
 
@@ -644,4 +832,25 @@ function actualizarSelectsZona(numZonas)
         }
     });
 }
+
+// ---- Listado de partidos: filtro por día ----
+document.querySelectorAll('.btn-dia').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.btn-dia').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        var fechaFiltro = this.dataset.fecha;
+        var rows        = document.querySelectorAll('#listado-tbody .listado-row');
+        var visibles    = 0;
+
+        rows.forEach(function(row) {
+            var mostrar = !fechaFiltro || row.dataset.fecha === fechaFiltro;
+            row.style.display = mostrar ? '' : 'none';
+            if (mostrar) visibles++;
+        });
+
+        var vacio = document.getElementById('listado-vacio');
+        if (vacio) vacio.style.display = visibles === 0 ? '' : 'none';
+    });
+});
 </script>
