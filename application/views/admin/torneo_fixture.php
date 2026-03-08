@@ -433,8 +433,9 @@
                                 $p2n    = $p->pareja2_nombre ?: ($p->referencia2 ?: '?');
                                 $jugado = $p->set1_p1 !== null;
                                 $footer = '';
-                                if (!empty($p->cancha)) $footer .= 'C'.$p->cancha;
-                                if (!empty($p->fecha))  $footer .= ($footer?' ':'').date('d/m/Y', strtotime($p->fecha));
+                                if (!empty($p->hora))   $footer .= substr($p->hora, 0, 5).'h';
+                                if (!empty($p->cancha)) $footer .= ($footer?' ':'').'C'.$p->cancha;
+                                if (!empty($p->fecha))  $footer .= ($footer?' ':'').date('d/m', strtotime($p->fecha));
                             ?>
                             <div class="pg-slot">
                                 <div class="pg-match admin-clickable"

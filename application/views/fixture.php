@@ -254,9 +254,17 @@
 
                                         <?php
                                             $jugado_playoff = $partido->set1_p1 !== null;
+                                            $meta_playoff = '';
+                                            if (!empty($partido->hora))   $meta_playoff .= substr($partido->hora, 0, 5).'h';
+                                            if (!empty($partido->cancha)) $meta_playoff .= ($meta_playoff ? ' · ' : '').'Cancha '.$partido->cancha;
+                                            if (!empty($partido->fecha))  $meta_playoff .= ($meta_playoff ? ' · ' : '').date('d/m', strtotime($partido->fecha));
                                         ?>
                                         <div class="match-wrapper">
                                             <div class="match-card-bracket">
+
+                                                <?php if ($meta_playoff): ?>
+                                                    <div class="match-card-meta"><?= htmlspecialchars($meta_playoff) ?></div>
+                                                <?php endif; ?>
 
                                                 <div class="match-team <?= $p1_winner ? 'winner' : ($p1_tbd ? 'tbd' : '') ?>">
                                                     <span class="team-name"><?= htmlspecialchars($p1_name) ?></span>
