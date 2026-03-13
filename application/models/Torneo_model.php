@@ -226,6 +226,8 @@ class Torneo_model extends CI_Model {
                 p1.nombre as nombre1, p2.nombre as nombre2,
                 p1.apellido as apellido1, p2.apellido as apellido2,
                 p1.telefono as telefono1, p2.telefono as telefono2,
+                p1.dni as dni1, p2.dni as dni2,
+                p1.categoria as categoria_p1, p2.categoria as categoria_p2,
                 c.nombre as categoria'
             )
             ->from('inscripciones i')
@@ -247,14 +249,63 @@ class Torneo_model extends CI_Model {
     {
         return $this->db
             ->select('i.*, i.participante1_id, i.participante2_id,
-                p1.nombre as nombre1, p1.apellido as apellido1, p1.telefono as telefono1,
-                p2.nombre as nombre2, p2.apellido as apellido2, p2.telefono as telefono2')
+                p1.nombre as nombre1, p1.apellido as apellido1, p1.telefono as telefono1, p1.dni as dni1, p1.categoria as categoria_p1,
+                p2.nombre as nombre2, p2.apellido as apellido2, p2.telefono as telefono2, p2.dni as dni2, p2.categoria as categoria_p2')
             ->from('inscripciones i')
             ->join('participantes p1', 'p1.id = i.participante1_id', 'LEFT')
             ->join('participantes p2', 'p2.id = i.participante2_id', 'LEFT')
             ->where('i.id', $id)
             ->get()
             ->row();
+    }
+
+    public function buscar_participantes($term)
+    {
+        $like = '%' . $term . '%';
+        return $this->db->query("
+            SELECT id, nombre, apellido, dni, categoria, telefono
+            FROM participantes
+            WHERE unaccent(nombre)   ILIKE unaccent(?)
+               OR unaccent(apellido) ILIKE unaccent(?)
+               OR COALESCE(dni, '')  ILIKE ?
+            ORDER BY apellido ASC, nombre ASC
+            LIMIT 20
+        ", [$like, $like, $like])->result();
+    }
+
+    public function obtener_todos_participantes($search = '')
+    {
+        if ($search !== '') {
+            $like = '%' . $search . '%';
+            return $this->db->query("
+                SELECT id, nombre, apellido, dni, categoria, telefono
+                FROM participantes
+                WHERE unaccent(nombre)   ILIKE unaccent(?)
+                   OR unaccent(apellido) ILIKE unaccent(?)
+                   OR COALESCE(dni, '')  ILIKE ?
+                ORDER BY apellido ASC, nombre ASC
+            ", [$like, $like, $like])->result();
+        }
+
+        return $this->db
+            ->select('id, nombre, apellido, dni, categoria, telefono')
+            ->from('participantes')
+            ->order_by('apellido', 'ASC')
+            ->order_by('nombre', 'ASC')
+            ->get()->result();
+    }
+
+    public function obtener_participante($id)
+    {
+        return $this->db
+            ->where('id', $id)
+            ->get('participantes')
+            ->row();
+    }
+
+    public function eliminar_participante($id)
+    {
+        return $this->db->where('id', $id)->delete('participantes');
     }
 
     public function actualizar_participante($id, $data)
@@ -1017,22 +1068,37 @@ class Torneo_model extends CI_Model {
             LEFT JOIN partido_sets s2 ON s2.partido_id = p.id AND s2.numero_set = 2
             LEFT JOIN partido_sets s3 ON s3.partido_id = p.id AND s3.numero_set = 3
             WHERE p.torneo_id = ?
-              AND p.hora IS NOT NULL
         ", [$torneo_id])->result();
 
         // Ordenar en PHP: sin fecha al final, luego por fecha y hora
         usort($rows, function($a, $b) {
+            // 1) Zona primero (NULL = playoff, va al final)
+            $za = $a->zona_numero;
+            $zb = $b->zona_numero;
+            if ($za !== $zb) {
+                if ($za === null) return 1;
+                if ($zb === null) return -1;
+                return $za - $zb;
+            }
+
+            // 2) Dentro del playoff: por ronda (Octavos→Cuartos→Semi→Final)
+            if ($za === null) {
+                $ra = (int)($a->ronda ?? 0);
+                $rb = (int)($b->ronda ?? 0);
+                if ($ra !== $rb) return $ra - $rb;
+            }
+
+            // 3) Dentro de la misma zona/ronda: por fecha
             $fa = $a->fecha ? substr($a->fecha, 0, 10) : null;
             $fb = $b->fecha ? substr($b->fecha, 0, 10) : null;
 
-            // sin fecha van al final
-            if ($fa === null && $fb === null) return 0;
-            if ($fa === null) return 1;
-            if ($fb === null) return -1;
+            if ($fa !== $fb) {
+                if ($fa === null) return 1;
+                if ($fb === null) return -1;
+                return strcmp($fa, $fb);
+            }
 
-            if ($fa !== $fb) return strcmp($fa, $fb);
-
-            // misma fecha: ordenar por hora
+            // 3) Misma fecha: por hora
             $ha = $a->hora ? substr($a->hora, 0, 5) : null;
             $hb = $b->hora ? substr($b->hora, 0, 5) : null;
 
@@ -1040,7 +1106,6 @@ class Torneo_model extends CI_Model {
             if ($ha === null) return 1;
             if ($hb === null) return -1;
 
-            // forzar formato HH:MM con cero a la izquierda para comparación correcta
             $ha = sprintf('%02d:%02d', ...explode(':', $ha));
             $hb = sprintf('%02d:%02d', ...explode(':', $hb));
 
@@ -1062,6 +1127,8 @@ class Torneo_model extends CI_Model {
                 p.ganador_id,
                 p.referencia1,
                 p.referencia2,
+                p.partido_siguiente_id,
+                p.slot_siguiente,
                 p.cancha,
                 p.hora,
                 p.fecha,

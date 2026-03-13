@@ -3,9 +3,12 @@
 
 <h2 class="admin-title">Mis Torneos</h2>
 <br>
-<div class="admin-toolbar">
+<div class="admin-toolbar" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
     <a href="<?= base_url('admin/torneos/crear') ?>" class="btn-create">
         + Crear Torneo
+    </a>
+    <a href="<?= base_url('admin/Participantes/index') ?>" class="btn-admin info" style="padding:8px 16px;text-decoration:none;border-radius:6px;">
+        👥 Participantes
     </a>
 </div>
 <br>

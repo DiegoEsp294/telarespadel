@@ -252,51 +252,73 @@ class Torneos extends CI_Controller {
         $this->load->view('footer');
     }
 
+    public function buscar_participantes()
+    {
+        $this->load->model('Torneo_model');
+        $q = $this->input->get('q');
+
+        if (!$q || strlen(trim($q)) < 2) {
+            echo json_encode([]);
+            return;
+        }
+
+        $resultados = $this->Torneo_model->buscar_participantes(trim($q));
+        echo json_encode($resultados);
+    }
+
     public function guardar_inscripcion(){
         $this->load->model('Torneo_model');
 
-        $data_participante1 = [
-            "nombre" => $this->input->post('nombre1'),
-            "apellido" => $this->input->post('apellido1'),
-            "telefono" => $this->input->post('telefono1'),
-        ];
-
-        $id_participante1 = $this->Torneo_model->guardar_participante($data_participante1);
-
-        $data_participante2 = [
-            "nombre" => $this->input->post('nombre2'),
-            "apellido" => $this->input->post('apellido2'),
-            "telefono" => $this->input->post('telefono2'),
-        ];
-
-        $id_participante2 = $this->Torneo_model->guardar_participante($data_participante2);
-        $id_torneo = $this->input->post('torneo_id');
+        $id_torneo   = $this->input->post('torneo_id');
         $categoria_id = $this->input->post('categoria');
 
-        if($id_participante1 && $id_participante2){
-            $data = [
-                "torneo_id" => $id_torneo,
-                "participante1_id"  => $id_participante1,
-                "participante2_id"  => $id_participante2,
-                "estado" => "pendiente",
-                "categoria_id" => $categoria_id
-            ];
-
-            $this->Torneo_model->guardar_inscripcion($data);
-
+        // Participante 1: usar existente o crear nuevo
+        $p1_id = (int)$this->input->post('participante1_id');
+        if ($p1_id > 0) {
+            $id_participante1 = $p1_id;
+        } else {
+            $id_participante1 = $this->Torneo_model->guardar_participante([
+                'nombre'    => $this->input->post('nombre1'),
+                'apellido'  => $this->input->post('apellido1'),
+                'telefono'  => $this->input->post('telefono1') ?: null,
+                'dni'       => $this->input->post('dni1') ?: null,
+                'categoria' => $this->input->post('categoria_p1') ?: null,
+            ]);
         }
 
-        $inscripciones = $this->Torneo_model->obtener_inscripciones($id_torneo);
+        // Participante 2: usar existente o crear nuevo
+        $p2_id = (int)$this->input->post('participante2_id');
+        if ($p2_id > 0) {
+            $id_participante2 = $p2_id;
+        } else {
+            $id_participante2 = $this->Torneo_model->guardar_participante([
+                'nombre'    => $this->input->post('nombre2'),
+                'apellido'  => $this->input->post('apellido2'),
+                'telefono'  => $this->input->post('telefono2') ?: null,
+                'dni'       => $this->input->post('dni2') ?: null,
+                'categoria' => $this->input->post('categoria_p2') ?: null,
+            ]);
+        }
 
-        echo json_encode($inscripciones);
+        if ($id_participante1 && $id_participante2) {
+            $this->Torneo_model->guardar_inscripcion([
+                'torneo_id'        => $id_torneo,
+                'participante1_id' => $id_participante1,
+                'participante2_id' => $id_participante2,
+                'estado'           => 'pendiente',
+                'categoria_id'     => $categoria_id,
+            ]);
+        }
 
+        echo json_encode($this->Torneo_model->obtener_inscripciones($id_torneo));
     }
 
     public function eliminar_inscripcion(){
         $this->load->model('Torneo_model');
         $id_inscripcion = $this->input->post('id');
+        $id_torneo      = $this->input->post('torneo_id');
         $this->Torneo_model->eliminar_inscripcion($id_inscripcion);
-        echo json_encode("ok");
+        echo json_encode($this->Torneo_model->obtener_inscripciones($id_torneo));
     }
 
     public function fixture($torneo_id)
@@ -497,6 +519,33 @@ class Torneos extends CI_Controller {
         echo json_encode($partido);
     }
 
+    public function guardar_horarios_bulk()
+    {
+        $this->load->model('Torneo_model');
+
+        $json     = $this->input->post('partidos');
+        $partidos = json_decode($json, true);
+
+        if (!$partidos || !is_array($partidos)) {
+            echo json_encode(['ok' => false, 'msg' => 'Sin datos']);
+            return;
+        }
+
+        $actualizados = 0;
+        foreach ($partidos as $p) {
+            $pid = (int)($p['id'] ?? 0);
+            if (!$pid) continue;
+            $this->Torneo_model->actualizarPartido($pid, [
+                'fecha'  => $p['fecha']  ?: null,
+                'hora'   => $p['hora']   ?: null,
+                'cancha' => $p['cancha'] ?: null,
+            ]);
+            $actualizados++;
+        }
+
+        echo json_encode(['ok' => true, 'actualizados' => $actualizados]);
+    }
+
     public function editar_inscripcion()
     {
         $this->load->model('Torneo_model');
@@ -510,15 +559,19 @@ class Torneos extends CI_Controller {
         }
 
         $this->Torneo_model->actualizar_participante($insc->participante1_id, [
-            'nombre'   => $this->input->post('nombre1'),
-            'apellido' => $this->input->post('apellido1'),
-            'telefono' => $this->input->post('telefono1'),
+            'nombre'    => $this->input->post('nombre1'),
+            'apellido'  => $this->input->post('apellido1'),
+            'telefono'  => $this->input->post('telefono1'),
+            'dni'       => $this->input->post('dni1') ?: null,
+            'categoria' => $this->input->post('categoria_p1') ?: null,
         ]);
 
         $this->Torneo_model->actualizar_participante($insc->participante2_id, [
-            'nombre'   => $this->input->post('nombre2'),
-            'apellido' => $this->input->post('apellido2'),
-            'telefono' => $this->input->post('telefono2'),
+            'nombre'    => $this->input->post('nombre2'),
+            'apellido'  => $this->input->post('apellido2'),
+            'telefono'  => $this->input->post('telefono2'),
+            'dni'       => $this->input->post('dni2') ?: null,
+            'categoria' => $this->input->post('categoria_p2') ?: null,
         ]);
 
         echo json_encode(['ok' => true]);

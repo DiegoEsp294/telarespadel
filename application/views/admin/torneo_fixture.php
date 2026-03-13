@@ -235,11 +235,6 @@
                             <!-- PAREJAS -->
                             <div class="parejas-box">
 
-                                <div class="parejas-header">
-                                    <div></div>
-                                    <div>PAREJA</div>
-                                </div>
-
                                 <?php foreach($zona['parejas'] as $pareja): ?>
 
                                     <div class="pareja-row">
@@ -367,6 +362,7 @@
                                                 <?php if ($partido['set3_p1'] !== null): ?>
                                                     <span class="set-box <?= $partido['set3_p1'] > $partido['set3_p2'] ? 'win' : '' ?>"><?= $partido['set3_p1'] ?></span>
                                                 <?php endif; ?>
+                                                <span class="set-box set-box-final <?= $p1_win ? 'win' : '' ?>"><?= $sets_p1 ?></span>
                                             </div>
                                         <?php else: ?>
                                             <span class="team-score" style="color:#bbb;">Pendiente</span>
@@ -384,6 +380,7 @@
                                                 <?php if ($partido['set3_p1'] !== null): ?>
                                                     <span class="set-box <?= $partido['set3_p2'] > $partido['set3_p1'] ? 'win' : '' ?>"><?= $partido['set3_p2'] ?></span>
                                                 <?php endif; ?>
+                                                <span class="set-box set-box-final <?= $p2_win ? 'win' : '' ?>"><?= $sets_p2 ?></span>
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -416,15 +413,23 @@
                 <div class="playoff-grid">
                 <?php foreach ($rondas as $r_idx => $rondaData):
                     $es_ultima = ($r_idx === $total_cols - 1);
-                    $groups    = array_chunk($rondaData['partidos'], 2);
+                    // Agrupar por partido_siguiente_id para respetar los cruces reales
+                    $groups_map = [];
+                    foreach ($rondaData['partidos'] as $p) {
+                        $key = $p->partido_siguiente_id ?: ('solo_' . $p->id);
+                        $groups_map[$key][] = $p;
+                    }
+                    $groups = array_values($groups_map);
                 ?>
                     <div class="pg-col">
                         <div class="pg-col-header"><?= htmlspecialchars($rondaData['nombre']) ?></div>
 
                         <?php foreach ($groups as $group):
-                            $single = (count($group) === 1);
+                            $single      = (count($group) === 1);
+                            $feeds_next  = $single && !$es_ultima && !empty($group[0]->partido_siguiente_id);
+                            $pair_class  = $es_ultima ? 'pg-single' : ($feeds_next ? 'pg-feeds-next' : ($single ? 'pg-single' : ''));
                         ?>
-                        <div class="pg-pair <?= $single ? 'pg-single' : '' ?> <?= $es_ultima ? 'pg-last' : '' ?>">
+                        <div class="pg-pair <?= $pair_class ?> <?= $es_ultima ? 'pg-last' : '' ?>">
 
                             <?php foreach ($group as $p):
                                 $p1w    = $p->ganador_id && $p->ganador_id == $p->pareja1_id;
@@ -432,6 +437,12 @@
                                 $p1n    = $p->pareja1_nombre ?: ($p->referencia1 ?: '?');
                                 $p2n    = $p->pareja2_nombre ?: ($p->referencia2 ?: '?');
                                 $jugado = $p->set1_p1 !== null;
+                                $pg_s1 = 0; $pg_s2 = 0;
+                                if ($jugado) {
+                                    if ($p->set1_p1 > $p->set1_p2) $pg_s1++; else $pg_s2++;
+                                    if ($p->set2_p1 !== null) { if ($p->set2_p1 > $p->set2_p2) $pg_s1++; else $pg_s2++; }
+                                    if ($p->set3_p1 !== null) { if ($p->set3_p1 > $p->set3_p2) $pg_s1++; else $pg_s2++; }
+                                }
                                 $footer = '';
                                 if (!empty($p->hora))   $footer .= substr($p->hora, 0, 5).'h';
                                 if (!empty($p->cancha)) $footer .= ($footer?' ':'').'C'.$p->cancha;
@@ -452,6 +463,7 @@
                                                 <span class="pg-score-cell"><?= $p->set1_p1 ?></span>
                                                 <?php if ($p->set2_p1 !== null): ?><span class="pg-score-cell"><?= $p->set2_p1 ?></span><?php endif; ?>
                                                 <?php if ($p->set3_p1 !== null): ?><span class="pg-score-cell"><?= $p->set3_p1 ?></span><?php endif; ?>
+                                                <span class="pg-score-cell pg-score-final <?= $pg_s1 > $pg_s2 ? 'win' : '' ?>"><?= $pg_s1 ?></span>
                                             <?php else: ?>
                                                 <span class="pg-score-cell"></span><span class="pg-score-cell"></span><span class="pg-score-cell"></span>
                                             <?php endif; ?>
@@ -468,6 +480,7 @@
                                                 <span class="pg-score-cell"><?= $p->set1_p2 ?></span>
                                                 <?php if ($p->set2_p1 !== null): ?><span class="pg-score-cell"><?= $p->set2_p2 ?></span><?php endif; ?>
                                                 <?php if ($p->set3_p1 !== null): ?><span class="pg-score-cell"><?= $p->set3_p2 ?></span><?php endif; ?>
+                                                <span class="pg-score-cell pg-score-final <?= $pg_s2 > $pg_s1 ? 'win' : '' ?>"><?= $pg_s2 ?></span>
                                             <?php else: ?>
                                                 <span class="pg-score-cell"></span><span class="pg-score-cell"></span><span class="pg-score-cell"></span>
                                             <?php endif; ?>
@@ -585,7 +598,80 @@
 
                 <div class="config-card">
 
-                    <h3>Listado de Partidos</h3>
+                    <div class="listado-header-row">
+                        <h3>Listado de Partidos</h3>
+                        <button class="btn-outline btn-sm" id="btn-toggle-bulk">Programar horarios</button>
+                    </div>
+
+                    <!-- ===== BULK SCHEDULE SECTION ===== -->
+                    <div id="bulk-horarios-wrap" style="display:none;margin-bottom:20px;">
+                        <div class="bulk-horarios-header">
+                            <span class="bulk-horarios-hint">Editá fecha, hora y cancha de varios partidos a la vez. Dejá en blanco para no modificar.</span>
+                            <div class="bulk-horarios-actions">
+                                <button class="btn-outline btn-sm" id="btn-bulk-fill">Aplicar a todos</button>
+                                <button class="btn-guardar" id="btn-guardar-bulk">Guardar cambios</button>
+                            </div>
+                        </div>
+
+                        <div class="bulk-fill-row" id="bulk-fill-row" style="display:none;">
+                            <label>Fecha: <input type="date" id="fill-fecha" class="bulk-input"></label>
+                            <label>Hora: <input type="time" id="fill-hora" class="bulk-input"></label>
+                            <label>Cancha: <input type="number" id="fill-cancha" class="bulk-input" min="1" max="30" placeholder="#"></label>
+                            <button class="btn-guardar btn-sm" id="btn-apply-fill">Aplicar</button>
+                        </div>
+
+                        <div class="bulk-table-wrap">
+                            <table class="bulk-table">
+                                <colgroup>
+                                    <col class="col-zona">
+                                    <col class="col-cat">
+                                    <col class="col-match">
+                                    <col class="col-fecha">
+                                    <col class="col-hora">
+                                    <col class="col-cancha">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>Zona</th>
+                                        <th>Categoría</th>
+                                        <th>Partido</th>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Cancha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <?php foreach ($todos_partidos as $p):
+                                    $jugado_b = $p->set1_p1 !== null;
+                                    if ($p->zona_numero) {
+                                        $zona_lbl = 'Zona ' . chr(64 + $p->zona_numero);
+                                    } else {
+                                        $nombres_ronda_b = [1=>'Reclas.',2=>'Cuartos',3=>'Semifinal',4=>'Final'];
+                                        $zona_lbl = $nombres_ronda_b[$p->ronda] ?? 'Playoff';
+                                    }
+                                    $bf = $p->fecha  ? substr($p->fecha, 0, 10) : '';
+                                    $bh = $p->hora   ? substr($p->hora,  0,  5) : '';
+                                    $bc = $p->cancha ?? '';
+                                ?>
+                                <tr data-id="<?= $p->partido_id ?>" class="bulk-row<?= $jugado_b ? ' bulk-jugado' : '' ?>">
+                                    <td><?= $zona_lbl ?></td>
+                                    <td><?= htmlspecialchars($p->categoria_nombre ?? '') ?></td>
+                                    <td class="bulk-td-match">
+                                        <span><?= htmlspecialchars($p->pareja1_nombre ?? '(por definir)') ?></span>
+                                        <em class="bulk-vs">vs</em>
+                                        <span><?= htmlspecialchars($p->pareja2_nombre ?? '(por definir)') ?></span>
+                                    </td>
+                                    <td><input type="date" class="bulk-input bulk-fecha" value="<?= $bf ?>"></td>
+                                    <td><input type="time" class="bulk-input bulk-hora" value="<?= $bh ?>"></td>
+                                    <td><input type="number" class="bulk-input bulk-cancha" min="1" max="30" placeholder="#" value="<?= $bc ?>"></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="bulk-msg" style="display:none;margin-top:10px;padding:8px 12px;border-radius:6px;font-size:13px;font-weight:600;"></div>
+                    </div>
 
                     <?php
                     $dias_es = ['Sunday'=>'Domingo','Monday'=>'Lunes','Tuesday'=>'Martes','Wednesday'=>'Miércoles','Thursday'=>'Jueves','Friday'=>'Viernes','Saturday'=>'Sábado'];
@@ -619,6 +705,12 @@
                         <div class="listado-cards" id="listado-tbody">
                                 <?php foreach ($todos_partidos as $p):
                                     $jugado = $p->set1_p1 !== null;
+                                    $ls1 = 0; $ls2 = 0;
+                                    if ($jugado) {
+                                        if ($p->set1_p1 > $p->set1_p2) $ls1++; else $ls2++;
+                                        if ($p->set2_p1 !== null) { if ($p->set2_p1 > $p->set2_p2) $ls1++; else $ls2++; }
+                                        if ($p->set3_p1 !== null) { if ($p->set3_p1 > $p->set3_p2) $ls1++; else $ls2++; }
+                                    }
 
                                     if ($p->zona_numero) {
                                         $zona_label = 'Zona ' . chr(64 + $p->zona_numero);
@@ -656,6 +748,7 @@
                                                 <span class="set-badge"><?= $p->set1_p1 ?>-<?= $p->set1_p2 ?></span>
                                                 <?php if ($p->set2_p1 !== null): ?><span class="set-badge"><?= $p->set2_p1 ?>-<?= $p->set2_p2 ?></span><?php endif; ?>
                                                 <?php if ($p->set3_p1 !== null): ?><span class="set-badge"><?= $p->set3_p1 ?>-<?= $p->set3_p2 ?></span><?php endif; ?>
+                                                <span class="set-badge set-badge-final"><?= $ls1 ?>-<?= $ls2 ?></span>
                                             <?php else: ?>
                                                 <span class="listado-vs">VS</span>
                                             <?php endif; ?>
@@ -880,7 +973,25 @@ function showTab(e, tab)
         .forEach(t => t.classList.remove('active'));
 
     e.currentTarget.classList.add('active');
+
+    location.hash = tab;
 }
+
+// Restaurar tab activo al cargar
+(function() {
+    const tab = location.hash.replace('#', '');
+    const validTabs = ['config','inscriptos','zonas','resultados','playoff','listado'];
+    if (tab && validTabs.includes(tab)) {
+        const el = document.getElementById('tab-' + tab);
+        const btn = document.querySelector('.tab[onclick*="\''+tab+'\'"]');
+        if (el && btn) {
+            document.querySelectorAll('.fixture-tab-content').forEach(e => e.style.display = 'none');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.style.display = 'block';
+            btn.classList.add('active');
+        }
+    }
+})();
 
 function abrirModalInscripto(id, n1, ap1, tel1, n2, ap2, tel2)
 {
@@ -936,6 +1047,80 @@ function actualizarSelectsZona(numZonas)
         }
     });
 }
+
+// ---- Bulk horarios ----
+(function() {
+    var toggleBtn = document.getElementById('btn-toggle-bulk');
+    var wrap      = document.getElementById('bulk-horarios-wrap');
+    var fillBtn   = document.getElementById('btn-bulk-fill');
+    var fillRow   = document.getElementById('bulk-fill-row');
+    var applyBtn  = document.getElementById('btn-apply-fill');
+    var saveBtn   = document.getElementById('btn-guardar-bulk');
+    var msg       = document.getElementById('bulk-msg');
+
+    if (!toggleBtn) return;
+
+    toggleBtn.addEventListener('click', function() {
+        var open = wrap.style.display !== 'none';
+        wrap.style.display = open ? 'none' : '';
+        toggleBtn.textContent = open ? 'Programar horarios' : 'Cerrar horarios';
+        toggleBtn.classList.toggle('open', !open);
+    });
+
+    fillBtn.addEventListener('click', function() {
+        fillRow.style.display = fillRow.style.display === 'none' ? '' : 'none';
+    });
+
+    applyBtn.addEventListener('click', function() {
+        var fecha  = document.getElementById('fill-fecha').value;
+        var hora   = document.getElementById('fill-hora').value;
+        var cancha = document.getElementById('fill-cancha').value;
+        document.querySelectorAll('#bulk-horarios-wrap .bulk-row').forEach(function(row) {
+            if (fecha)  row.querySelector('.bulk-fecha').value  = fecha;
+            if (hora)   row.querySelector('.bulk-hora').value   = hora;
+            if (cancha) row.querySelector('.bulk-cancha').value = cancha;
+        });
+        fillRow.style.display = 'none';
+    });
+
+    saveBtn.addEventListener('click', function() {
+        var rows = document.querySelectorAll('#bulk-horarios-wrap .bulk-row');
+        var partidos = [];
+        rows.forEach(function(row) {
+            partidos.push({
+                id:     row.dataset.id,
+                fecha:  row.querySelector('.bulk-fecha').value,
+                hora:   row.querySelector('.bulk-hora').value,
+                cancha: row.querySelector('.bulk-cancha').value
+            });
+        });
+
+        saveBtn.disabled    = true;
+        saveBtn.textContent = 'Guardando...';
+
+        fetch('<?= site_url('admin/torneos/guardar_horarios_bulk') ?>', {
+            method:  'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body:    'partidos=' + encodeURIComponent(JSON.stringify(partidos))
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            saveBtn.disabled    = false;
+            saveBtn.textContent = 'Guardar cambios';
+            msg.style.display   = 'block';
+            if (data.ok) {
+                msg.textContent   = data.actualizados + ' partido(s) actualizados correctamente.';
+                msg.style.background = '#d4edda';
+                msg.style.color      = '#155724';
+                setTimeout(function() { location.reload(); }, 1500);
+            } else {
+                msg.textContent      = data.msg || 'Error al guardar.';
+                msg.style.background = '#f8d7da';
+                msg.style.color      = '#721c24';
+            }
+        });
+    });
+})();
 
 // ---- Listado de partidos: filtro por día ----
 document.querySelectorAll('.btn-dia').forEach(function(btn) {

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuadro de Llaves — 18 Parejas (6 Zonas)</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0d1b2e; color: #e2e8f0; min-height: 100vh; padding: 28px 16px 48px; }
+.bracket-header { text-align: center; margin-bottom: 24px; }
+.bracket-header h1 { font-size: 22px; font-weight: 800; color: #f1f5f9; letter-spacing: .5px; margin-bottom: 6px; }
+.bracket-header p  { font-size: 13px; color: #475569; }
+.zonas-info { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+.zona-pill  { display: flex; align-items: center; gap: 8px; background: #17263b; border: 1px solid #1e3a5f; border-radius: 10px; padding: 7px 14px; font-size: 13px; }
+.zona-letra { font-weight: 800; font-size: 14px; color: #FF6600; background: rgba(255,102,0,.12); border: 1px solid rgba(255,102,0,.22); border-radius: 6px; padding: 2px 8px; }
+.zona-desc  { color: #94a3b8; }
+.zona-count { font-weight: 700; color: #f1f5f9; }
+.tabs { display: none; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.tab-btn { flex: 1; min-width: 80px; padding: 10px 8px; background: #1a2d44; border: 1px solid #1e3a5f; border-radius: 8px; color: #94a3b8; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .18s; }
+.tab-btn.active { background: #c2410c; border-color: #c2410c; color: #fff; }
+.tab-btn:not(.active):hover { background: #1e3a5f; }
+.mobile-panels { display: none; }
+.panel { display: none; overflow-x: auto; padding-bottom: 8px; gap: 0; }
+.panel.active { display: flex; }
+.bracket-outer { overflow-x: auto; padding-bottom: 8px; }
+.bracket { display: flex; align-items: stretch; justify-content: center; min-width: 1100px; }
+.round { flex: 1; min-width: 195px; max-width: 245px; display: flex; flex-direction: column; padding: 0 9px; }
+.round-label { text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #475569; margin-bottom: 14px; white-space: nowrap; }
+.round-label.lbl-final { color: #fb923c; font-size: 11px; }
+.matches { flex: 1; display: flex; flex-direction: column; }
+.round-rp   .matches { justify-content: space-around; gap: 8px; }
+.round-qf   .matches { justify-content: space-around; gap: 8px; }
+.round-sf   .matches { justify-content: space-around; gap: 14px; }
+.round-final .matches { justify-content: center; }
+.match { background: #17263b; border: 1px solid #1e3a5f; border-radius: 10px; overflow: hidden; transition: border-color .2s, box-shadow .2s; }
+.match:hover { border-color: #2d5a8e; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+.match.m-final { border: 2px solid #c2410c; box-shadow: 0 0 28px rgba(194,65,12,.28); }
+.match.m-final .m-hdr { background: rgba(194,65,12,.1); }
+.m-hdr { background: #0d1b2e; padding: 5px 10px; font-size: 10px; color: #475569; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid #1e3a5f; }
+.m-num { background: #1e3a5f; color: #7dd3fc; padding: 1px 7px; border-radius: 10px; font-size: 9px; font-weight: 700; letter-spacing: .5px; flex-shrink: 0; }
+.team { display: flex; justify-content: space-between; align-items: center; padding: 9px 10px; border-bottom: 1px solid #0f1f30; gap: 6px; min-height: 40px; }
+.team:last-child { border-bottom: none; }
+.team.w { background: rgba(34,197,94,.1); }
+.tname { font-size: 12px; color: #c8d8ea; line-height: 1.3; flex: 1; }
+.tname.tbd { color: #334155; font-style: italic; font-size: 11px; }
+.zona-tag { display: inline-block; font-size: 9px; font-weight: 800; background: rgba(255,102,0,.15); color: #fb923c; border: 1px solid rgba(255,102,0,.25); border-radius: 6px; padding: 1px 5px; margin-right: 4px; vertical-align: middle; letter-spacing: .3px; }
+.sc  { display: flex; gap: 3px; align-items: center; flex-shrink: 0; }
+.s   { background: #0d1b2e; color: #94a3b8; padding: 2px 5px; border-radius: 4px; font-size: 11px; font-weight: 600; min-width: 20px; text-align: center; }
+.g   { background: #16a34a; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 800; min-width: 22px; text-align: center; }
+.g.lose { background: #1e3a5f; color: #475569; }
+.conn { display: flex; align-items: center; justify-content: center; color: #1e3a5f; font-size: 18px; padding: 0 2px; user-select: none; flex-shrink: 0; }
+.rnd-sep { border-top: 1px dashed #1e3a5f; margin: 4px 0; opacity: .7; }
+.rnd-dest { font-size: 8px; font-weight: 700; color: #334155; text-align: right; padding: 0 2px 3px; letter-spacing: .8px; text-transform: uppercase; }
+@media (max-width: 960px) { .tabs { display: flex; } .bracket-outer { display: none; } .mobile-panels { display: block; } }
+@media (max-width: 480px) { .round { min-width: 170px; } .tname { font-size: 11px; } }
+</style>
+</head>
+<body>
+
+<div class="bracket-header">
+  <h1>Cuadro de Llaves</h1>
+  <p>18 Parejas &mdash; 6 Zonas + Playoff</p>
+</div>
+
+<div class="zonas-info">
+  <div class="zona-pill"><span class="zona-letra">A</span><span class="zona-desc">Zona A</span><span class="zona-count">3 parejas</span></div>
+  <div class="zona-pill"><span class="zona-letra">B</span><span class="zona-desc">Zona B</span><span class="zona-count">3 parejas</span></div>
+  <div class="zona-pill"><span class="zona-letra">C</span><span class="zona-desc">Zona C</span><span class="zona-count">3 parejas</span></div>
+  <div class="zona-pill"><span class="zona-letra">D</span><span class="zona-desc">Zona D</span><span class="zona-count">3 parejas</span></div>
+  <div class="zona-pill"><span class="zona-letra">E</span><span class="zona-desc">Zona E</span><span class="zona-count">3 parejas</span></div>
+  <div class="zona-pill"><span class="zona-letra">F</span><span class="zona-desc">Zona F</span><span class="zona-count">3 parejas</span></div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('previa',this)">Ronda Previa</button>
+  <button class="tab-btn"        onclick="showTab('cuartos',this)">Cuartos</button>
+  <button class="tab-btn"        onclick="showTab('semis',this)">Semis y Final</button>
+</div>
+
+<div class="mobile-panels">
+  <div class="panel active" id="p-previa">
+    <div class="round round-rp" style="min-width:190px">
+      <div class="round-label">Ronda Previa</div>
+      <div class="matches">
+        <div class="rnd-dest">→ Cuartos 1</div>
+        <div class="match">
+          <div class="m-hdr"><span>Fecha · Cancha</span><span class="m-num">RP1</span></div>
+          <div class="team"><div class="tname"><span class="zona-tag">2º F</span><span class="tbd">Por definir</span></div></div>
+          <div class="team"><div class="tname"><span class="zona-tag">2º C</span><span class="tbd">Por definir</span></div></div>
+        </div>
+        <div class="rnd-dest">→ Cuartos 2</div>
+        <div class="match">
+          <div class="m-hdr"><span>Fecha · Cancha</span><span class="m-num">RP2</span></div>
+          <div class="team"><div class="tname"><span class="zona-tag">1º E</span><span class="tbd">Por definir</span></div></div>
+          <div class="team"><div class="tname"><span class="zona-tag">2º B</span><span class="tbd">Por definir</span></div></div>
+        </div>
+        <div class="rnd-sep"></div>
+        <div class="rnd-dest">→ Cuartos 3</div>
+        <div class="match">
+          <div class="m-hdr"><span>Fecha · Cancha</span><span class="m-num">RP3</span></div>
+          <div class="team"><div class="tname"><span class="zona-tag">2º A</span><span class="tbd">Por definir</span></div></div>
+          <div class="team"><div class="tname"><span class="zona-tag">1º F</span><span class="tbd">Por definir</span></div></div>
+        </div>
+        <div class="rnd-dest">→ Cuartos 4</div>
+        <div class="match">
+          <div class="m-hdr"><span>Fecha · Cancha</span><span class="m-num">RP4</span></div>
+          <div class="team"><div class="tname"><span class="zona-tag">2º E</span><span class="tbd">Por definir</span></div></div>
+          <div class="team"><div class="tname"><span class="zona-tag">2º D</span><span class="tbd">Por definir</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel" id="p-cuartos">
+    <div class="round round-qf" style="min-width:190px">
+      <div class="round-label">Cuartos de Final</div>
+      <div class="matches">
+        <div class="rnd-dest">→ Semifinal 1</div>
+        <div class="match">
+          <div class="m-hdr"><span>Fecha QF · Cancha</span><span class="m-num">QF1</span></div>
+          <div class="team"><div class="tname"><span class="zona-tag">1º A</span><span class="tbd">Por definir</span></div></div>
+          <div class="team"><div class="tname tbd">Ganador RP1</div></div>
+        </div>
+        <div class="match">
+          <div class="m-hdr"><span>Fecha QF · Cancha</span><span class="m-num">QF2</span></div>
+          <div class="team"><div class="tname tbd">Ganador RP2</div></div>
+          <div class="team"><div class="tname"><span class="zona-tag">1º D</span><span class="tbd">Por definir</span></div></div>
+        </div>
+        <div class="rnd-sep"></div>
+        <div class="rnd-dest">→ Semifinal 2</div>
+        <div class="match">
+          <div class="m-hdr"><span>Fecha QF · Cancha</span><span class="m-num">QF3</span></div>
+          <div class="team"><div class="tname"><span class="zona-tag">1º C</span><span class="tbd">Por definir</span></div></div>
+          <div class="team"><div class="tname tbd">Ganador RP3</div></div>
+        </div>
+        <div class="match">
+          <div class="m-hdr"><span>Fecha QF · Cancha</span><span class="m-num">QF4</span></div>
+          <div class="team"><div class="tname tbd">Ganador RP4</div></div>
+          <div class="team"><div class="tname"><span class="zona-tag">1º B</span><span class="tbd">Por definir</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel" id="p-semis">
+    <div class="round round-sf" style="min-width:185px">
+      <div class="round-label">Semifinales</div>
+      <div class="matches">
+        <div class="match">
+          <div class="m-hdr"><span>Fecha SF · Cancha</span><span class="m-num">SF1</span></div>
+          <div class="team"><div class="tname tbd">Ganador QF1</div></div>
+          <div class="team"><div class="tname tbd">Ganador QF2</div></div>
+        </div>
+        <div class="match">
+          <div class="m-hdr"><span>Fecha SF · Cancha</span><span class="m-num">SF2</span></div>
+          <div class="team"><div class="tname tbd">Ganador QF3</div></div>
+          <div class="team"><div class="tname tbd">Ganador QF4</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="round round-final" style="min-width:185px">
+      <div class="round-label lbl-final">🏆 Final</div>
+      <div class="matches">
+        <div class="match m-final">
+          <div class="m-hdr"><span>Fecha Final · Central</span><span class="m-num">FINAL</span></div>
+          <div class="team"><div class="tname tbd">Ganador SF1</div></div>
+          <div class="team"><div class="tname tbd">Ganador SF2</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bracket-outer">
+<div class="bracket">
+
+  <!-- RONDA PREVIA: 4 partidos, todos alimentan un QF -->
+  <div class="round round-rp">
+    <div class="round-label">Ronda Previa</div>
+    <div class="matches">
+      <div class="rnd-dest">→ Cuartos 1</div>
+      <div class="match">
+        <div class="m-hdr"><span>Fecha · Cancha 1</span><span class="m-num">RP1</span></div>
+        <div class="team"><div class="tname"><span class="zona-tag">2º F</span><span class="tbd">Por definir</span></div></div>
+        <div class="team"><div class="tname"><span class="zona-tag">2º C</span><span class="tbd">Por definir</span></div></div>
+      </div>
+      <div class="rnd-dest">→ Cuartos 2</div>
+      <div class="match">
+        <div class="m-hdr"><span>Fecha · Cancha 2</span><span class="m-num">RP2</span></div>
+        <div class="team"><div class="tname"><span class="zona-tag">1º E</span><span class="tbd">Por definir</span></div></div>
+        <div class="team"><div class="tname"><span class="zona-tag">2º B</span><span class="tbd">Por definir</span></div></div>
+      </div>
+      <div class="rnd-sep"></div>
+      <div class="rnd-dest">→ Cuartos 3</div>
+      <div class="match">
+        <div class="m-hdr"><span>Fecha · Cancha 1</span><span class="m-num">RP3</span></div>
+        <div class="team"><div class="tname"><span class="zona-tag">2º A</span><span class="tbd">Por definir</span></div></div>
+        <div class="team"><div class="tname"><span class="zona-tag">1º F</span><span class="tbd">Por definir</span></div></div>
+      </div>
+      <div class="rnd-dest">→ Cuartos 4</div>
+      <div class="match">
+        <div class="m-hdr"><span>Fecha · Cancha 2</span><span class="m-num">RP4</span></div>
+        <div class="team"><div class="tname"><span class="zona-tag">2º E</span><span class="tbd">Por definir</span></div></div>
+        <div class="team"><div class="tname"><span class="zona-tag">2º D</span><span class="tbd">Por definir</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn">›</div>
+
+  <!-- CUARTOS: QF1+QF2 → SF1 / QF3+QF4 → SF2 -->
+  <div class="round round-qf">
+    <div class="round-label">Cuartos de Final</div>
+    <div class="matches">
+      <div class="rnd-dest">→ Semifinal 1</div>
+      <div class="match">
+        <div class="m-hdr"><span>Fecha QF · Cancha 1</span><span class="m-num">QF1</span></div>
+        <div class="team"><div class="tname"><span class="zona-tag">1º A</span><span class="tbd">Por definir</span></div></div>
+        <div class="team"><div class="tname tbd">Ganador RP1</div></div>
+      </div>
+      <div class="match">
+        <div class="m-hdr"><span>Fecha QF · Cancha 2</span><span class="m-num">QF2</span></div>
+        <div class="team"><div class="tname tbd">Ganador RP2</div></div>
+        <div class="team"><div class="tname"><span class="zona-tag">1º D</span><span class="tbd">Por definir</span></div></div>
+      </div>
+      <div class="rnd-sep"></div>
+      <div class="rnd-dest">→ Semifinal 2</div>
+      <div class="match">
+        <div class="m-hdr"><span>Fecha QF · Cancha 1</span><span class="m-num">QF3</span></div>
+        <div class="team"><div class="tname"><span class="zona-tag">1º C</span><span class="tbd">Por definir</span></div></div>
+        <div class="team"><div class="tname tbd">Ganador RP3</div></div>
+      </div>
+      <div class="match">
+        <div class="m-hdr"><span>Fecha QF · Cancha 2</span><span class="m-num">QF4</span></div>
+        <div class="team"><div class="tname tbd">Ganador RP4</div></div>
+        <div class="team"><div class="tname"><span class="zona-tag">1º B</span><span class="tbd">Por definir</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn">›</div>
+
+  <div class="round round-sf">
+    <div class="round-label">Semifinales</div>
+    <div class="matches">
+      <div class="match">
+        <div class="m-hdr"><span>Fecha SF · Cancha Central</span><span class="m-num">SF1</span></div>
+        <div class="team"><div class="tname tbd">Ganador QF1</div></div>
+        <div class="team"><div class="tname tbd">Ganador QF2</div></div>
+      </div>
+      <div class="match">
+        <div class="m-hdr"><span>Fecha SF · Cancha 2</span><span class="m-num">SF2</span></div>
+        <div class="team"><div class="tname tbd">Ganador QF3</div></div>
+        <div class="team"><div class="tname tbd">Ganador QF4</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn">›</div>
+
+  <div class="round round-final">
+    <div class="round-label lbl-final">🏆 Final</div>
+    <div class="matches">
+      <div class="match m-final">
+        <div class="m-hdr"><span>Fecha Final · Cancha Central</span><span class="m-num">FINAL</span></div>
+        <div class="team"><div class="tname tbd">Ganador SF1</div></div>
+        <div class="team"><div class="tname tbd">Ganador SF2</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('p-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

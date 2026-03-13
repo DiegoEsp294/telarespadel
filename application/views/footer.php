@@ -38,6 +38,59 @@
         </div>
     </footer>
 
+    <!-- ====== LOADING OVERLAY ====== -->
+    <div id="tp-loading">
+        <div class="tp-ld-wrap">
+            <div class="tp-ld-ring2"></div>
+            <div class="tp-ld-ring"></div>
+            <img src="<?= base_url('logo_inicio.png') ?>" alt="Cargando" class="tp-ld-logo">
+        </div>
+        <p class="tp-ld-text">Cargando…</p>
+    </div>
+
+    <script>
+    (function () {
+        var overlay = document.getElementById('tp-loading');
+        var fetchCount = 0;
+        var pageReady = false;
+
+        function show() { overlay.classList.add('show'); }
+        function hide() { overlay.classList.remove('show'); }
+
+        function tryHide() {
+            if (fetchCount <= 0 && pageReady) { fetchCount = 0; hide(); }
+        }
+
+        /* 1. Mostrar durante la carga inicial de la página */
+        show();
+        window.addEventListener('load', function () {
+            pageReady = true;
+            tryHide();
+        });
+
+        /* 2. Mostrar al navegar a otra página */
+        window.addEventListener('beforeunload', show);
+
+        /* 3. Interceptar todos los fetch para mostrar durante AJAX */
+        var _origFetch = window.fetch;
+        window.fetch = function () {
+            var args = arguments;
+            fetchCount++;
+
+            /* Mostrar sólo si la petición tarda más de 300 ms (evita parpadeo en búsquedas rápidas) */
+            var timer = setTimeout(function () {
+                if (fetchCount > 0) show();
+            }, 300);
+
+            return _origFetch.apply(this, args).finally(function () {
+                clearTimeout(timer);
+                fetchCount = Math.max(0, fetchCount - 1);
+                tryHide();
+            });
+        };
+    })();
+    </script>
+
     <script src="<?php echo base_url('assets/js/script.js'); ?>"></script>
 
 <?php if (!$this->session->userdata('usuario_id') || $this->session->userdata('id_roles') != 1): ?>

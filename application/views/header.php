@@ -66,6 +66,71 @@
     ?>
 
     <style>
+        /* ====== LOADING OVERLAY ====== */
+        #tp-loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 20, 35, 0.97);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .22s ease, visibility .22s ease;
+            backdrop-filter: blur(3px);
+        }
+        #tp-loading.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .tp-ld-wrap {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tp-ld-logo {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            object-fit: cover;
+            animation: tp-pulse 1.8s ease-in-out infinite;
+            position: relative;
+            z-index: 1;
+        }
+        .tp-ld-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #FF6600;
+            animation: tp-spin 1s linear infinite;
+        }
+        .tp-ld-ring2 {
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: rgba(255,102,0,.3);
+            animation: tp-spin 1.8s linear infinite reverse;
+        }
+        .tp-ld-text {
+            margin-top: 22px;
+            color: rgba(255,255,255,.45);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            animation: tp-fade 1.6s ease-in-out infinite;
+        }
+        @keyframes tp-spin  { to { transform: rotate(360deg); } }
+        @keyframes tp-pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.8; transform:scale(.94); } }
+        @keyframes tp-fade  { 0%,100% { opacity:.3; } 50% { opacity:.9; } }
+
         .menu-toggle {
             display: none;
             background: none;

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuadro de Llaves — 6 Parejas</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0d1b2e;
+  color: #e2e8f0;
+  min-height: 100vh;
+  padding: 28px 16px 48px;
+}
+
+/* ====== HEADER ====== */
+.bracket-header { text-align: center; margin-bottom: 28px; }
+.bracket-header h1 { font-size: 22px; font-weight: 800; color: #f1f5f9; letter-spacing: .5px; margin-bottom: 6px; }
+.bracket-header p  { font-size: 13px; color: #475569; }
+
+/* ====== ZONAS INFO ====== */
+.zonas-info {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.zona-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #17263b;
+  border: 1px solid #1e3a5f;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+.zona-letra {
+  font-weight: 800;
+  font-size: 15px;
+  color: #FF6600;
+  background: rgba(255,102,0,.12);
+  border: 1px solid rgba(255,102,0,.25);
+  border-radius: 6px;
+  padding: 2px 9px;
+}
+.zona-desc { color: #94a3b8; }
+.zona-count { font-weight: 700; color: #f1f5f9; }
+
+/* ====== BRACKET ====== */
+.bracket-outer { overflow-x: auto; padding-bottom: 8px; }
+.bracket {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  min-width: 580px;
+}
+
+/* ====== ROUND ====== */
+.round {
+  flex: 1;
+  min-width: 200px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px;
+}
+.round-label {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 14px;
+  white-space: nowrap;
+}
+.round-label.lbl-final { color: #fb923c; font-size: 11px; }
+.matches { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+/* ====== MATCH CARD ====== */
+.match {
+  background: #17263b;
+  border: 1px solid #1e3a5f;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+.match:hover { border-color: #2d5a8e; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+.match.m-final {
+  border: 2px solid #c2410c;
+  box-shadow: 0 0 28px rgba(194,65,12,.28);
+}
+.match.m-final .m-hdr { background: rgba(194,65,12,.1); }
+
+/* ====== MATCH HEADER ====== */
+.m-hdr {
+  background: #0d1b2e;
+  padding: 5px 10px;
+  font-size: 10px;
+  color: #475569;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #1e3a5f;
+}
+.m-num {
+  background: #1e3a5f;
+  color: #7dd3fc;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  flex-shrink: 0;
+}
+
+/* ====== EQUIPO ====== */
+.team {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 10px;
+  border-bottom: 1px solid #0f1f30;
+  gap: 6px;
+  min-height: 40px;
+}
+.team:last-child { border-bottom: none; }
+.team.w { background: rgba(34,197,94,.1); }
+
+.tname { font-size: 12px; color: #c8d8ea; line-height: 1.3; flex: 1; }
+.tname.tbd  { color: #334155; font-style: italic; font-size: 11px; }
+
+.zona-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  background: rgba(255,102,0,.15);
+  color: #fb923c;
+  border: 1px solid rgba(255,102,0,.25);
+  border-radius: 6px;
+  padding: 1px 5px;
+  margin-right: 5px;
+  vertical-align: middle;
+  letter-spacing: .3px;
+}
+
+/* ====== SCORES ====== */
+.sc  { display: flex; gap: 3px; align-items: center; flex-shrink: 0; }
+.s   { background: #0d1b2e; color: #94a3b8; padding: 2px 5px; border-radius: 4px; font-size: 11px; font-weight: 600; min-width: 20px; text-align: center; }
+.g   { background: #16a34a; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 800; min-width: 22px; text-align: center; }
+.g.lose { background: #1e3a5f; color: #475569; }
+
+/* ====== CONNECTOR ====== */
+.conn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e3a5f;
+  font-size: 20px;
+  padding: 0 4px;
+  user-select: none;
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 640px) {
+  .round { min-width: 160px; max-width: 200px; }
+  .tname { font-size: 11px; }
+  .m-hdr { font-size: 9px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bracket-header">
+  <h1>Cuadro de Llaves</h1>
+  <p>6 Parejas &mdash; Fase de Zonas + Playoff</p>
+</div>
+
+<!-- Composición de zonas -->
+<div class="zonas-info">
+  <div class="zona-pill">
+    <span class="zona-letra">A</span>
+    <span class="zona-desc">Zona A</span>
+    <span class="zona-count">3 parejas</span>
+  </div>
+  <div class="zona-pill">
+    <span class="zona-letra">B</span>
+    <span class="zona-desc">Zona B</span>
+    <span class="zona-count">3 parejas</span>
+  </div>
+</div>
+
+<!-- Bracket: SF1 → FINAL ← SF2 -->
+<div class="bracket-outer">
+<div class="bracket">
+
+  <!-- SEMIFINAL 1: 1º A vs 2º B -->
+  <div class="round">
+    <div class="round-label">Semifinal 1</div>
+    <div class="matches">
+      <div class="match">
+        <div class="m-hdr">
+          <span>Cancha Central · Fecha SF</span>
+          <span class="m-num">SF1</span>
+        </div>
+        <div class="team w">
+          <div class="tname">
+            <span class="zona-tag">1º A</span>García / López
+          </div>
+          <div class="sc"><span class="s">6</span><span class="s">6</span><span class="g">2</span></div>
+        </div>
+        <div class="team">
+          <div class="tname">
+            <span class="zona-tag">2º B</span>Pérez / González
+          </div>
+          <div class="sc"><span class="s">3</span><span class="s">4</span><span class="g lose">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn">›</div>
+
+  <!-- FINAL -->
+  <div class="round">
+    <div class="round-label lbl-final">🏆 Final</div>
+    <div class="matches">
+      <div class="match m-final">
+        <div class="m-hdr">
+          <span>Cancha Central · Fecha Final</span>
+          <span class="m-num">FINAL</span>
+        </div>
+        <div class="team">
+          <div class="tname tbd">Ganador SF1</div>
+        </div>
+        <div class="team">
+          <div class="tname tbd">Ganador SF2</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conn">‹</div>
+
+  <!-- SEMIFINAL 2: 1º B vs 2º A -->
+  <div class="round">
+    <div class="round-label">Semifinal 2</div>
+    <div class="matches">
+      <div class="match">
+        <div class="m-hdr">
+          <span>Cancha 2 · Fecha SF</span>
+          <span class="m-num">SF2</span>
+        </div>
+        <div class="team">
+          <div class="tname">
+            <span class="zona-tag">1º B</span>Rodríguez / Díaz
+          </div>
+        </div>
+        <div class="team">
+          <div class="tname">
+            <span class="zona-tag">2º A</span>Silva / Torres
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /bracket -->
+</div><!-- /bracket-outer -->
+
+</body>
+</html>

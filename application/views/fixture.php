@@ -62,11 +62,6 @@
                                 <!-- PAREJAS -->
                                 <div class="parejas-box">
 
-                                    <div class="parejas-header">
-                                        <div></div>
-                                        <div>PAREJA</div>
-                                    </div>
-
                                     <?php foreach($zona['parejas'] as $pareja): ?>
 
                                         <div class="pareja-row">
@@ -187,6 +182,7 @@
                                                     <?php if ($partido['set3_p1'] !== null): ?>
                                                         <span class="set-box <?= $partido['set3_p1'] > $partido['set3_p2'] ? 'win' : '' ?>"><?= $partido['set3_p1'] ?></span>
                                                     <?php endif; ?>
+                                                    <span class="set-box set-box-final <?= $p1_win ? 'win' : '' ?>"><?= $sets_p1 ?></span>
                                                 </div>
                                             <?php endif; ?>
                                         </div>
@@ -202,6 +198,7 @@
                                                     <?php if ($partido['set3_p1'] !== null): ?>
                                                         <span class="set-box <?= $partido['set3_p2'] > $partido['set3_p1'] ? 'win' : '' ?>"><?= $partido['set3_p2'] ?></span>
                                                     <?php endif; ?>
+                                                    <span class="set-box set-box-final <?= $p2_win ? 'win' : '' ?>"><?= $sets_p2 ?></span>
                                                 </div>
                                             <?php endif; ?>
                                         </div>
@@ -254,6 +251,12 @@
 
                                         <?php
                                             $jugado_playoff = $partido->set1_p1 !== null;
+                                            $po_s1 = 0; $po_s2 = 0;
+                                            if ($jugado_playoff) {
+                                                if ($partido->set1_p1 > $partido->set1_p2) $po_s1++; else $po_s2++;
+                                                if ($partido->set2_p1 !== null) { if ($partido->set2_p1 > $partido->set2_p2) $po_s1++; else $po_s2++; }
+                                                if ($partido->set3_p1 !== null) { if ($partido->set3_p1 > $partido->set3_p2) $po_s1++; else $po_s2++; }
+                                            }
                                             $meta_playoff = '';
                                             if (!empty($partido->hora))   $meta_playoff .= substr($partido->hora, 0, 5).'h';
                                             if (!empty($partido->cancha)) $meta_playoff .= ($meta_playoff ? ' · ' : '').'Cancha '.$partido->cancha;
@@ -277,6 +280,7 @@
                                                             <?php if ($partido->set3_p1 !== null): ?>
                                                                 <span class="set-box <?= $partido->set3_p1 > $partido->set3_p2 ? 'win' : '' ?>"><?= $partido->set3_p1 ?></span>
                                                             <?php endif; ?>
+                                                            <span class="set-box set-box-final <?= $po_s1 > $po_s2 ? 'win' : '' ?>"><?= $po_s1 ?></span>
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
@@ -294,6 +298,7 @@
                                                             <?php if ($partido->set3_p1 !== null): ?>
                                                                 <span class="set-box <?= $partido->set3_p2 > $partido->set3_p1 ? 'win' : '' ?>"><?= $partido->set3_p2 ?></span>
                                                             <?php endif; ?>
+                                                            <span class="set-box set-box-final <?= $po_s2 > $po_s1 ? 'win' : '' ?>"><?= $po_s2 ?></span>
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
@@ -347,6 +352,12 @@
                 <div class="listado-cards" id="listado-tbody-pub">
                     <?php foreach ($todos_partidos as $p):
                         $jugado = $p->set1_p1 !== null;
+                        $ls1 = 0; $ls2 = 0;
+                        if ($jugado) {
+                            if ($p->set1_p1 > $p->set1_p2) $ls1++; else $ls2++;
+                            if ($p->set2_p1 !== null) { if ($p->set2_p1 > $p->set2_p2) $ls1++; else $ls2++; }
+                            if ($p->set3_p1 !== null) { if ($p->set3_p1 > $p->set3_p2) $ls1++; else $ls2++; }
+                        }
 
                         if ($p->zona_numero) {
                             $zona_label = 'Zona ' . chr(64 + $p->zona_numero);
@@ -384,6 +395,7 @@
                                     <span class="set-badge"><?= $p->set1_p1 ?>-<?= $p->set1_p2 ?></span>
                                     <?php if ($p->set2_p1 !== null): ?><span class="set-badge"><?= $p->set2_p1 ?>-<?= $p->set2_p2 ?></span><?php endif; ?>
                                     <?php if ($p->set3_p1 !== null): ?><span class="set-badge"><?= $p->set3_p1 ?>-<?= $p->set3_p2 ?></span><?php endif; ?>
+                                    <span class="set-badge set-badge-final"><?= $ls1 ?>-<?= $ls2 ?></span>
                                 <?php else: ?>
                                     <span class="listado-vs">VS</span>
                                 <?php endif; ?>

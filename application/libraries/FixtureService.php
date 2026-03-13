@@ -289,7 +289,7 @@ class FixtureService
                     ['1B','2A'],
                 ], 3);
 
-                $final = $this->crearPartidoPlayoff(null, null, 4);
+                $final = $this->crearPartidoPlayoff(null, null, 4, 1);
 
                 $this->CI->Torneo_model->actualizarPartido($sf1,  ['partido_siguiente_id' => $final, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($sf2,  ['partido_siguiente_id' => $final, 'slot_siguiente' => 2]);
@@ -312,13 +312,13 @@ class FixtureService
                     ['2A','1C'],
                 ], 2);
 
-                $sf1 = $this->crearPartidoPlayoff('1A', null, 3);
-                $sf2 = $this->crearPartidoPlayoff('1B', null, 3);
+                $sf1 = $this->crearPartidoPlayoff('1A', null, 3, 1);
+                $sf2 = $this->crearPartidoPlayoff('1B', null, 3, 2);
 
                 $this->CI->Torneo_model->actualizarPartido($q1, ['partido_siguiente_id' => $sf1, 'slot_siguiente' => 2]);
                 $this->CI->Torneo_model->actualizarPartido($q2, ['partido_siguiente_id' => $sf2, 'slot_siguiente' => 2]);
 
-                $final = $this->crearPartidoPlayoff(null, null, 4);
+                $final = $this->crearPartidoPlayoff(null, null, 4, 1);
 
                 $this->CI->Torneo_model->actualizarPartido($sf1, ['partido_siguiente_id' => $final, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($sf2, ['partido_siguiente_id' => $final, 'slot_siguiente' => 2]);
@@ -343,15 +343,15 @@ class FixtureService
                     ['2D','1B'],
                 ], 2);
 
-                $sf1 = $this->crearPartidoPlayoff(null, null, 3);
-                $sf2 = $this->crearPartidoPlayoff(null, null, 3);
+                $sf1 = $this->crearPartidoPlayoff(null, null, 3, 1);
+                $sf2 = $this->crearPartidoPlayoff(null, null, 3, 2);
 
                 $this->CI->Torneo_model->actualizarPartido($q1, ['partido_siguiente_id' => $sf1, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($q2, ['partido_siguiente_id' => $sf1, 'slot_siguiente' => 2]);
                 $this->CI->Torneo_model->actualizarPartido($q3, ['partido_siguiente_id' => $sf2, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($q4, ['partido_siguiente_id' => $sf2, 'slot_siguiente' => 2]);
 
-                $final = $this->crearPartidoPlayoff(null, null, 4);
+                $final = $this->crearPartidoPlayoff(null, null, 4, 1);
 
                 $this->CI->Torneo_model->actualizarPartido($sf1, ['partido_siguiente_id' => $final, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($sf2, ['partido_siguiente_id' => $final, 'slot_siguiente' => 2]);
@@ -376,28 +376,28 @@ class FixtureService
                 ], 1);
 
                 // Q1: 1A vs G(r1)
-                $q1 = $this->crearPartidoPlayoff('1A', null, 2);
+                $q1 = $this->crearPartidoPlayoff('1A', null, 2, 1);
                 $this->CI->Torneo_model->actualizarPartido($r1, ['partido_siguiente_id' => $q1, 'slot_siguiente' => 2]);
 
                 // Q2: 1E vs 1D (directo)
-                $q2 = $this->crearPartidoPlayoff('1E', '1D', 2);
+                $q2 = $this->crearPartidoPlayoff('1E', '1D', 2, 2);
 
                 // Q3: 1C vs 2E (directo)
-                $q3 = $this->crearPartidoPlayoff('1C', '2E', 2);
+                $q3 = $this->crearPartidoPlayoff('1C', '2E', 2, 3);
 
                 // Q4: 1B vs G(r2)
-                $q4 = $this->crearPartidoPlayoff('1B', null, 2);
+                $q4 = $this->crearPartidoPlayoff('1B', null, 2, 4);
                 $this->CI->Torneo_model->actualizarPartido($r2, ['partido_siguiente_id' => $q4, 'slot_siguiente' => 2]);
 
-                $sf1 = $this->crearPartidoPlayoff(null, null, 3);
-                $sf2 = $this->crearPartidoPlayoff(null, null, 3);
+                $sf1 = $this->crearPartidoPlayoff(null, null, 3, 1);
+                $sf2 = $this->crearPartidoPlayoff(null, null, 3, 2);
 
                 $this->CI->Torneo_model->actualizarPartido($q1, ['partido_siguiente_id' => $sf1, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($q2, ['partido_siguiente_id' => $sf1, 'slot_siguiente' => 2]);
                 $this->CI->Torneo_model->actualizarPartido($q3, ['partido_siguiente_id' => $sf2, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($q4, ['partido_siguiente_id' => $sf2, 'slot_siguiente' => 2]);
 
-                $final = $this->crearPartidoPlayoff(null, null, 4);
+                $final = $this->crearPartidoPlayoff(null, null, 4, 1);
 
                 $this->CI->Torneo_model->actualizarPartido($sf1, ['partido_siguiente_id' => $final, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($sf2, ['partido_siguiente_id' => $final, 'slot_siguiente' => 2]);
@@ -423,30 +423,30 @@ class FixtureService
                 ], 1);
 
                 // Q1: 1A vs G(R1)
-                $q1 = $this->crearPartidoPlayoff('1A', null, 2);
+                $q1 = $this->crearPartidoPlayoff('1A', null, 2, 1);
                 $this->CI->Torneo_model->actualizarPartido($r1, ['partido_siguiente_id' => $q1, 'slot_siguiente' => 2]);
 
                 // Q2: G(R2) vs 1D
-                $q2 = $this->crearPartidoPlayoff(null, '1D', 2);
+                $q2 = $this->crearPartidoPlayoff(null, '1D', 2, 2);
                 $this->CI->Torneo_model->actualizarPartido($r2, ['partido_siguiente_id' => $q2, 'slot_siguiente' => 1]);
 
                 // Q3: 1C vs G(R3)
-                $q3 = $this->crearPartidoPlayoff('1C', null, 2);
+                $q3 = $this->crearPartidoPlayoff('1C', null, 2, 3);
                 $this->CI->Torneo_model->actualizarPartido($r3, ['partido_siguiente_id' => $q3, 'slot_siguiente' => 2]);
 
                 // Q4: G(R4) vs 1B
-                $q4 = $this->crearPartidoPlayoff(null, '1B', 2);
+                $q4 = $this->crearPartidoPlayoff(null, '1B', 2, 4);
                 $this->CI->Torneo_model->actualizarPartido($r4, ['partido_siguiente_id' => $q4, 'slot_siguiente' => 1]);
 
-                $sf1 = $this->crearPartidoPlayoff(null, null, 3);
-                $sf2 = $this->crearPartidoPlayoff(null, null, 3);
+                $sf1 = $this->crearPartidoPlayoff(null, null, 3, 1);
+                $sf2 = $this->crearPartidoPlayoff(null, null, 3, 2);
 
                 $this->CI->Torneo_model->actualizarPartido($q1, ['partido_siguiente_id' => $sf1, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($q2, ['partido_siguiente_id' => $sf1, 'slot_siguiente' => 2]);
                 $this->CI->Torneo_model->actualizarPartido($q3, ['partido_siguiente_id' => $sf2, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($q4, ['partido_siguiente_id' => $sf2, 'slot_siguiente' => 2]);
 
-                $final = $this->crearPartidoPlayoff(null, null, 4);
+                $final = $this->crearPartidoPlayoff(null, null, 4, 1);
 
                 $this->CI->Torneo_model->actualizarPartido($sf1, ['partido_siguiente_id' => $final, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($sf2, ['partido_siguiente_id' => $final, 'slot_siguiente' => 2]);
@@ -472,10 +472,10 @@ class FixtureService
                     ['1H','2G'],
                 ], 1);
 
-                $q1 = $this->crearPartidoPlayoff(null, null, 2);
-                $q2 = $this->crearPartidoPlayoff(null, null, 2);
-                $q3 = $this->crearPartidoPlayoff(null, null, 2);
-                $q4 = $this->crearPartidoPlayoff(null, null, 2);
+                $q1 = $this->crearPartidoPlayoff(null, null, 2, 1);
+                $q2 = $this->crearPartidoPlayoff(null, null, 2, 2);
+                $q3 = $this->crearPartidoPlayoff(null, null, 2, 3);
+                $q4 = $this->crearPartidoPlayoff(null, null, 2, 4);
 
                 $this->CI->Torneo_model->actualizarPartido($o1, ['partido_siguiente_id' => $q1, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($o2, ['partido_siguiente_id' => $q1, 'slot_siguiente' => 2]);
@@ -486,15 +486,15 @@ class FixtureService
                 $this->CI->Torneo_model->actualizarPartido($o7, ['partido_siguiente_id' => $q4, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($o8, ['partido_siguiente_id' => $q4, 'slot_siguiente' => 2]);
 
-                $sf1 = $this->crearPartidoPlayoff(null, null, 3);
-                $sf2 = $this->crearPartidoPlayoff(null, null, 3);
+                $sf1 = $this->crearPartidoPlayoff(null, null, 3, 1);
+                $sf2 = $this->crearPartidoPlayoff(null, null, 3, 2);
 
                 $this->CI->Torneo_model->actualizarPartido($q1, ['partido_siguiente_id' => $sf1, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($q2, ['partido_siguiente_id' => $sf1, 'slot_siguiente' => 2]);
                 $this->CI->Torneo_model->actualizarPartido($q3, ['partido_siguiente_id' => $sf2, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($q4, ['partido_siguiente_id' => $sf2, 'slot_siguiente' => 2]);
 
-                $final = $this->crearPartidoPlayoff(null, null, 4);
+                $final = $this->crearPartidoPlayoff(null, null, 4, 1);
 
                 $this->CI->Torneo_model->actualizarPartido($sf1, ['partido_siguiente_id' => $final, 'slot_siguiente' => 1]);
                 $this->CI->Torneo_model->actualizarPartido($sf2, ['partido_siguiente_id' => $final, 'slot_siguiente' => 2]);
@@ -510,12 +510,14 @@ class FixtureService
     /*
      * Crea partidos de playoff con referencias seed (ej: '1A', '2B')
      * Devuelve array de IDs en el mismo orden que $reglas.
+     * El índice 0-based se convierte en orden_fase 1, 2, 3...
      */
     private function cruzar($reglas, $ronda)
     {
-        $ids = [];
+        $ids   = [];
+        $orden = 1;
         foreach ($reglas as $regla) {
-            $ids[] = $this->crearPartidoPlayoff($regla[0], $regla[1], $ronda);
+            $ids[] = $this->crearPartidoPlayoff($regla[0], $regla[1], $ronda, $orden++);
         }
         return $ids;
     }
@@ -523,8 +525,10 @@ class FixtureService
     /*
      * Inserta un partido de playoff.
      * $ref1 / $ref2 pueden ser seed codes ('1A', '2B') o null.
+     * $orden indica la posición dentro de la ronda (1, 2, 3…)
+     * para que ORDER BY orden_fase sea determinista.
      */
-    private function crearPartidoPlayoff($ref1, $ref2, $ronda)
+    private function crearPartidoPlayoff($ref1, $ref2, $ronda, $orden = 1)
     {
         $data = [
             'torneo_id'    => $this->_torneo_id,
@@ -532,6 +536,7 @@ class FixtureService
             'referencia1'  => $ref1,
             'referencia2'  => $ref2,
             'ronda'        => $ronda,
+            'orden_fase'   => $orden,
             'fase'         => 'playoff',
             'estado'       => 'pendiente',
         ];
@@ -821,7 +826,8 @@ class FixtureService
             'categoria_id' => $zona->categoria_id
         ]);
 
-        // Los cruces se asignan manualmente desde el admin — no resolución automática
+        // Completar automáticamente los partidos de playoff que esperan este seed
+        $this->resolverReferenciasSeed($codigo, $inscripcion_id, $zona->torneo_id, $zona->categoria_id);
     }
 
     private function resolverReferenciasSeed($codigo, $inscripcion_id, $torneo_id, $categoria_id)
@@ -1135,7 +1141,42 @@ class FixtureService
 
         $this->CI->db->trans_complete();
 
+        // ============================
+        // 8. Propagar ganador al siguiente cruce (playoff)
+        // ============================
+        if ($fase === 'playoff') {
+            $this->propagarGanadorPlayoff($partido_id, $ganador_id);
+        }
+
         return $this->CI->db->trans_status();
+    }
+
+    private function propagarGanadorPlayoff($partido_id, $ganador_id)
+    {
+        $partido = $this->CI->Torneo_model->obtenerPartidos($partido_id);
+        if (!$partido || !$partido->partido_siguiente_id) {
+            return;
+        }
+
+        $siguiente_id = $partido->partido_siguiente_id;
+        $slot         = (int)$partido->slot_siguiente; // 1 o 2
+
+        $update = [];
+        if ($slot === 1) {
+            $update['pareja1_id'] = $ganador_id;
+        } elseif ($slot === 2) {
+            $update['pareja2_id'] = $ganador_id;
+        }
+
+        if ($update) {
+            $this->CI->Torneo_model->actualizarPartidoDatos($siguiente_id, $update);
+
+            // Si el partido siguiente ya tiene ambas parejas, activarlo
+            $sig = $this->CI->Torneo_model->obtenerPartidos($siguiente_id);
+            if ($sig && $sig->pareja1_id && $sig->pareja2_id && $sig->estado === 'pendiente') {
+                $this->CI->Torneo_model->actualizarPartidoDatos($siguiente_id, ['estado' => 'listo']);
+            }
+        }
     }
 
     // private function recalcularTablaZona($zona_id)
