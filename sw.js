@@ -30,14 +30,14 @@ self.addEventListener('fetch', e => {
 
 /* ===== PUSH NOTIFICATION ===== */
 self.addEventListener('push', e => {
-    let data = { title: 'Telares Padel', body: 'Tenés una novedad!', url: '/torneos-telares-padel/' };
+    let data = { title: 'Telares Padel', body: 'Tenés una novedad!', url: BASE };
     try { data = Object.assign(data, e.data.json()); } catch(err) {}
 
     e.waitUntil(
         self.registration.showNotification(data.title, {
             body:    data.body,
-            icon:    '/torneos-telares-padel/logo_inicio.png',
-            badge:   '/torneos-telares-padel/logo_inicio.png',
+            icon:    BASE + 'logo_inicio.png',
+            badge:   BASE + 'logo_inicio.png',
             vibrate: [200, 100, 200],
             data:    { url: data.url },
             actions: [{ action: 'ver', title: 'Ver torneo' }]
@@ -48,7 +48,7 @@ self.addEventListener('push', e => {
 /* ===== CLICK en notificación ===== */
 self.addEventListener('notificationclick', e => {
     e.notification.close();
-    const url = (e.notification.data && e.notification.data.url) || '/torneos-telares-padel/';
+    const url = (e.notification.data && e.notification.data.url) || BASE;
     e.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
             for (const c of list) {

@@ -137,7 +137,45 @@
 </script>
 <?php endif; ?>
 </body>
-<!-- ====== PWA ====== -->
+<!-- ====== PWA INSTALL BANNER ====== -->
+<style>
+#pwa-banner {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #1a1a2e;
+    border-top: 2px solid #FF6600;
+    padding: 14px 18px;
+    z-index: 99999;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.35);
+}
+#pwa-banner.show { display: flex; }
+#pwa-banner img { width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0; }
+#pwa-banner .pwa-txt { flex: 1; }
+#pwa-banner .pwa-txt strong { display: block; color: #fff; font-size: 14px; }
+#pwa-banner .pwa-txt span { color: rgba(255,255,255,.6); font-size: 12px; }
+#pwa-banner .pwa-instalar {
+    background: #FF6600; color: #fff; border: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 13px;
+    font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+#pwa-banner .pwa-cerrar {
+    background: none; border: none; color: rgba(255,255,255,.45);
+    font-size: 20px; cursor: pointer; padding: 4px 6px; flex-shrink: 0; line-height: 1;
+}
+</style>
+
+<div id="pwa-banner">
+    <img src="<?= base_url('logo_inicio.png') ?>" alt="Telares Padel">
+    <div class="pwa-txt">
+        <strong>Telares Padel</strong>
+        <span>Instalá la app y seguí los torneos</span>
+    </div>
+    <button class="pwa-instalar" id="pwa-btn-instalar">Instalar</button>
+    <button class="pwa-cerrar" id="pwa-btn-cerrar" title="Cerrar">&times;</button>
+</div>
 
 <script>
 (function() {
@@ -157,7 +195,43 @@
     }
 
     /* ===== INSTALAR PWA ===== */
-    // Sin e.preventDefault() → el browser muestra su propio prompt nativo
+    let deferredPrompt = null;
+    const banner      = document.getElementById('pwa-banner');
+    const btnInstalar = document.getElementById('pwa-btn-instalar');
+    const btnCerrar   = document.getElementById('pwa-btn-cerrar');
+
+    // No mostrar si ya fue instalada
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        // ya instalada, nada que hacer
+    } else {
+        // Limpiar dismissed si pasaron más de 7 días
+        const ts = localStorage.getItem('pwa-dismissed-ts');
+        if (ts && Date.now() - parseInt(ts) > 7 * 24 * 3600 * 1000) {
+            localStorage.removeItem('pwa-dismissed');
+            localStorage.removeItem('pwa-dismissed-ts');
+        }
+
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (!localStorage.getItem('pwa-dismissed')) {
+                banner.classList.add('show');
+            }
+        });
+
+        btnInstalar.addEventListener('click', function() {
+            if (!deferredPrompt) return;
+            banner.classList.remove('show');
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function() { deferredPrompt = null; });
+        });
+
+        btnCerrar.addEventListener('click', function() {
+            banner.classList.remove('show');
+            localStorage.setItem('pwa-dismissed', '1');
+            localStorage.setItem('pwa-dismissed-ts', Date.now().toString());
+        });
+    }
 
     /* ===== SUSCRIPCIÓN PUSH ===== */
     function urlBase64ToUint8Array(base64String) {
