@@ -71,7 +71,14 @@
         /* 2. Mostrar al navegar a otra página */
         window.addEventListener('beforeunload', show);
 
-        /* 3. Interceptar todos los fetch para mostrar durante AJAX */
+        /* 3b. Al volver con el botón atrás (bfcache) el overlay queda visible — forzar hide */
+        window.addEventListener('pageshow', function (e) {
+            pageReady = true;
+            fetchCount = 0;
+            hide();
+        });
+
+        /* 4. Interceptar todos los fetch para mostrar durante AJAX */
         var _origFetch = window.fetch;
         window.fetch = function () {
             var args = arguments;
@@ -130,4 +137,84 @@
 </script>
 <?php endif; ?>
 </body>
+<!-- ====== PWA BANNER + SERVICE WORKER ====== -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,.3);">
+    <img src="<?= base_url('logo_inicio.png') ?>" style="width:40px;height:40px;border-radius:10px;object-fit:cover;" alt="logo">
+    <div style="flex:1">
+        <strong style="display:block;font-size:14px;">Instalar Telares Padel</strong>
+        <span style="font-size:12px;color:rgba(255,255,255,.6);">Agregá la app a tu pantalla de inicio</span>
+    </div>
+    <button id="pwa-btn-instalar" style="background:#FF6600;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;">Instalar</button>
+    <button onclick="document.getElementById('pwa-banner').style.display='none';localStorage.setItem('pwa-dismissed','1')" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;padding:0 4px;">&times;</button>
+</div>
+
+<script>
+(function() {
+    const VAPID_PUBLIC = '<?= getenv("VAPID_PUBLIC") ?>';
+    const URL_SUSCRIBIR   = '<?= base_url("admin/Push/suscribir") ?>';
+    const URL_DESUSCRIBIR = '<?= base_url("admin/Push/desuscribir") ?>';
+
+    /* ===== REGISTRAR SERVICE WORKER ===== */
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('<?= base_url("sw.js") ?>')
+            .then(reg => {
+                /* Solo pedir permiso y suscribir si el usuario está logueado */
+                <?php if ($this->session->userdata('usuario_id')): ?>
+                solicitarPush(reg);
+                <?php endif; ?>
+            })
+            .catch(err => console.warn('SW error:', err));
+    }
+
+    /* ===== INSTALAR PWA ===== */
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
+            document.getElementById('pwa-banner').style.display = 'flex';
+        }
+    });
+
+    const btnInstalar = document.getElementById('pwa-btn-instalar');
+    if (btnInstalar) {
+        btnInstalar.addEventListener('click', () => {
+            document.getElementById('pwa-banner').style.display = 'none';
+            if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+        });
+    }
+
+    /* ===== SUSCRIPCIÓN PUSH ===== */
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = window.atob(base64);
+        return new Uint8Array([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    function solicitarPush(reg) {
+        if (!('PushManager' in window)) return;
+        if (Notification.permission === 'denied') return;
+
+        reg.pushManager.getSubscription().then(sub => {
+            if (sub) return; // ya suscripto
+
+            Notification.requestPermission().then(perm => {
+                if (perm !== 'granted') return;
+
+                reg.pushManager.subscribe({
+                    userVisibleOnly:      true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+                }).then(newSub => {
+                    fetch(URL_SUSCRIBIR, {
+                        method: 'POST',
+                        body:   JSON.stringify(newSub),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                }).catch(err => console.warn('Push subscribe error:', err));
+            });
+        });
+    }
+})();
+</script>
 </html>

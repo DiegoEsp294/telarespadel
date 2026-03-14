@@ -35,6 +35,38 @@ class Torneo_model extends CI_Model {
         return $this->db->get()->result();
     }
 
+    public function obtener_participantes_categorizados()
+    {
+        return $this->db->query("
+            SELECT id, nombre, apellido, dni, telefono, categoria, lugar
+            FROM participantes
+            WHERE nombre  ~ '[A-Za-záéíóúÁÉÍÓÚñÑüÜ]' AND LENGTH(TRIM(nombre))  >= 2
+              AND apellido ~ '[A-Za-záéíóúÁÉÍÓÚñÑüÜ]' AND LENGTH(TRIM(apellido)) >= 2
+            ORDER BY
+                CASE WHEN categoria IS NULL OR categoria = '' THEN 1 ELSE 0 END,
+                categoria ASC,
+                apellido  ASC,
+                nombre    ASC
+        ")->result();
+    }
+
+    public function obtener_finalizados($limite = 4)
+    {
+        return $this->db
+            ->select("
+                torneos.*,
+                STRING_AGG(c.nombre, ', ' ORDER BY c.nombre) AS categorias_label
+            ")
+            ->from('torneos')
+            ->join('torneo_categorias tc', 'tc.torneo_id = torneos.id', 'INNER')
+            ->join('categorias c', 'c.id = tc.categoria_id', 'INNER')
+            ->where('torneos.estado', 'finalizado')
+            ->group_by('torneos.id')
+            ->order_by('torneos.fecha_fin', 'DESC')
+            ->limit($limite)
+            ->get()->result();
+    }
+
     public function obtener_por_id($id)
     {
         $query = $this->db->where('id', $id)->get('torneos');
@@ -278,17 +310,18 @@ class Torneo_model extends CI_Model {
         if ($search !== '') {
             $like = '%' . $search . '%';
             return $this->db->query("
-                SELECT id, nombre, apellido, dni, categoria, telefono
+                SELECT id, nombre, apellido, dni, categoria, telefono, lugar
                 FROM participantes
                 WHERE unaccent(nombre)   ILIKE unaccent(?)
                    OR unaccent(apellido) ILIKE unaccent(?)
                    OR COALESCE(dni, '')  ILIKE ?
+                   OR COALESCE(unaccent(lugar), '') ILIKE unaccent(?)
                 ORDER BY apellido ASC, nombre ASC
-            ", [$like, $like, $like])->result();
+            ", [$like, $like, $like, $like])->result();
         }
 
         return $this->db
-            ->select('id, nombre, apellido, dni, categoria, telefono')
+            ->select('id, nombre, apellido, dni, categoria, telefono, lugar')
             ->from('participantes')
             ->order_by('apellido', 'ASC')
             ->order_by('nombre', 'ASC')

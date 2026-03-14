@@ -1,0 +1,18 @@
+{
+  "name": "Telares Padel",
+  "short_name": "Telares Padel",
+  "description": "Torneos de pádel en Los Telares, Santiago del Estero",
+  "start_url": "/torneos-telares-padel/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#FF6600",
+  "lang": "es",
+  "icons": [
+    { "src": "/torneos-telares-padel/logo_inicio.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/torneos-telares-padel/logo_inicio.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    { "src": "/torneos-telares-padel/assets/images/portada-telarespadel.jpeg", "sizes": "1280x720", "type": "image/jpeg" }
+  ]
+}

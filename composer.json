@@ -2,7 +2,8 @@
     "name": "telarespadel/telarespadel",
     "description": "Club de Padel - Telares Padel",
     "require": {
-        "php": ">=5.6.0"
+        "php": ">=5.6.0",
+        "minishlink/web-push": "^7.0"
     },
     "minimum-stability": "stable"
 }

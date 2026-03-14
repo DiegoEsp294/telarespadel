@@ -94,6 +94,21 @@
 
                         <div class="torneo-card <?php echo 'status-' . $torneo->estado; ?>">
 
+                            <?php if($torneo->estado === 'proxima' && !empty($torneo->fecha_inicio) && $torneo->fecha_inicio !== '0000-00-00'): ?>
+                            <div class="torneo-countdown" data-fecha="<?php echo $torneo->fecha_inicio; ?>">
+                                <div class="cd-label"><i class="fas fa-clock"></i> Comienza en</div>
+                                <div class="cd-boxes">
+                                    <div class="cd-box"><span class="cd-num cd-dias">--</span><span class="cd-unit">días</span></div>
+                                    <div class="cd-sep">:</div>
+                                    <div class="cd-box"><span class="cd-num cd-horas">--</span><span class="cd-unit">hs</span></div>
+                                    <div class="cd-sep">:</div>
+                                    <div class="cd-box"><span class="cd-num cd-mins">--</span><span class="cd-unit">min</span></div>
+                                    <div class="cd-sep">:</div>
+                                    <div class="cd-box"><span class="cd-num cd-segs">--</span><span class="cd-unit">seg</span></div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
                             <div class="torneo-header">
                                 <h3><?php echo $torneo->nombre; ?></h3>
                                 <span class="status-badge <?php echo $torneo->estado; ?>">
@@ -197,6 +212,85 @@
         </div>
     </section>
 
+    <!-- Sección Torneos Finalizados -->
+    <?php if (!empty($torneos_finalizados)): ?>
+    <section class="torneos-section" style="background:#f7f8fa; padding-top:40px; padding-bottom:48px;">
+        <div class="container">
+            <h2>Torneos Finalizados</h2>
+            <p class="section-subtitle">Los últimos torneos disputados</p>
+
+            <div class="torneos-grid">
+                <?php foreach($torneos_finalizados as $torneo): ?>
+                <div class="torneo-card status-finalizado">
+
+                    <div class="torneo-header">
+                        <h3><?php echo $torneo->nombre; ?></h3>
+                        <span class="status-badge finalizado">Finalizado</span>
+                    </div>
+
+                    <div class="torneo-body">
+                        <div class="torneo-info-item">
+                            <i class="fas fa-calendar"></i>
+                            <div>
+                                <strong>Fechas</strong>
+                                <p><?php
+                                    $fi = (!empty($torneo->fecha_inicio) && $torneo->fecha_inicio != '0000-00-00') ? date('d/m/Y', strtotime($torneo->fecha_inicio)) : null;
+                                    $ff = (!empty($torneo->fecha_fin)    && $torneo->fecha_fin    != '0000-00-00') ? date('d/m/Y', strtotime($torneo->fecha_fin))    : null;
+                                    echo ($fi || $ff) ? (($fi ?? 'a confirmar') . ' - ' . ($ff ?? 'a confirmar')) : 'a confirmar';
+                                ?></p>
+                            </div>
+                        </div>
+
+                        <div class="torneo-info-item">
+                            <i class="fas fa-users"></i>
+                            <div>
+                                <strong>Categorías</strong>
+                                <p><?php echo $torneo->categorias_label; ?></p>
+                            </div>
+                        </div>
+
+                        <?php if (!empty($torneo->nombre_organizador)): ?>
+                        <div class="torneo-info-item">
+                            <i class="fas fa-user"></i>
+                            <div>
+                                <strong>Organizador</strong>
+                                <p><?php echo $torneo->nombre_organizador; ?></p>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="torneo-image">
+                        <?php if (!empty($torneo->imagen)): ?>
+                            <img src="data:image/jpeg;base64,<?php echo $torneo->imagen; ?>" alt="Flyer <?php echo $torneo->nombre; ?>">
+                        <?php else: ?>
+                            <img src="<?php echo base_url('assets/img/torneo-default.jpg'); ?>" alt="Flyer por defecto">
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="torneo-footer">
+                        <a href="<?php echo base_url('home/torneo/'.$torneo->id); ?>" class="btn-info">
+                            Ver Resultados
+                        </a>
+                        <div class="torneo-share-row">
+                            <button onclick="compartirTorneo('<?php echo addslashes($torneo->nombre); ?>', '<?php echo base_url('home/torneo/'.$torneo->id); ?>')"
+                                    class="btn-share btn-share-wpp" title="Compartir por WhatsApp">
+                                <i class="fab fa-whatsapp"></i> Compartir
+                            </button>
+                            <button onclick="copiarLink('<?php echo base_url('home/torneo/'.$torneo->id); ?>', this)"
+                                    class="btn-share btn-share-copy" title="Copiar link">
+                                <i class="fas fa-link"></i> Copiar link
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
+
     <!-- Sección de Servicios -->
     <section class="servicios-section">
         <div class="container">
@@ -236,6 +330,66 @@
         </div>
     </section>
 
+<style>
+.torneo-countdown {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 14px 16px 12px;
+    border-radius: 10px 10px 0 0;
+    text-align: center;
+}
+.cd-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.5);
+    margin-bottom: 10px;
+}
+.cd-label i { margin-right: 5px; color: #FF6600; }
+.cd-boxes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+.cd-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,.08);
+    border-radius: 7px;
+    padding: 6px 10px;
+    min-width: 48px;
+}
+.cd-num {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+.cd-unit {
+    font-size: 9px;
+    color: rgba(255,255,255,.45);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 3px;
+}
+.cd-sep {
+    font-size: 20px;
+    font-weight: 700;
+    color: #FF6600;
+    line-height: 1;
+    margin-bottom: 12px;
+}
+.cd-terminado {
+    font-size: 13px;
+    font-weight: 700;
+    color: #FF6600;
+    letter-spacing: .5px;
+}
+</style>
+
 <script>
 function compartirTorneo(nombre, url) {
     if (navigator.share) {
@@ -254,5 +408,37 @@ function copiarLink(url, btn) {
             btn.style.background = '';
         }, 2000);
     });
+}
+
+/* ===== COUNTDOWN ===== */
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function tickCountdowns() {
+    document.querySelectorAll('.torneo-countdown').forEach(function(el) {
+        const fecha  = el.dataset.fecha;          // "YYYY-MM-DD"
+        const target = new Date(fecha + 'T00:00:00').getTime();
+        const ahora  = Date.now();
+        const diff   = target - ahora;
+
+        if (diff <= 0) {
+            el.innerHTML = '<div class="cd-label"><i class="fas fa-clock"></i> <span class="cd-terminado">¡Comienza hoy!</span></div>';
+            return;
+        }
+
+        const dias  = Math.floor(diff / 86400000);
+        const horas = Math.floor((diff % 86400000) / 3600000);
+        const mins  = Math.floor((diff % 3600000)  / 60000);
+        const segs  = Math.floor((diff % 60000)    / 1000);
+
+        el.querySelector('.cd-dias').textContent = pad(dias);
+        el.querySelector('.cd-horas').textContent = pad(horas);
+        el.querySelector('.cd-mins').textContent  = pad(mins);
+        el.querySelector('.cd-segs').textContent  = pad(segs);
+    });
+}
+
+if (document.querySelector('.torneo-countdown')) {
+    tickCountdowns();
+    setInterval(tickCountdowns, 1000);
 }
 </script>

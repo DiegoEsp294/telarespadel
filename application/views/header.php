@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- PWA -->
+    <link rel="manifest" href="<?= base_url('manifest.json') ?>">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Telares Padel">
+    <meta name="theme-color" content="#FF6600">
+    <link rel="apple-touch-icon" href="<?= base_url('logo_inicio.png') ?>">
+
     <?php
         $seo_title       = isset($seo_title)       ? $seo_title       : (isset($club_nombre) ? $club_nombre : 'Telares Padel');
         $seo_description = isset($seo_description) ? $seo_description : 'Torneos de pádel en Los Telares, Santiago del Estero. Seguí los fixtures, resultados y cruces en tiempo real.';

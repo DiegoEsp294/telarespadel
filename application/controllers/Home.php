@@ -26,10 +26,11 @@ class Home extends CI_Controller {
         $es_admin = ($this->session->userdata('id_roles') == 1);
         $data['torneos'] = $this->Torneo_model->obtener_proximos(!$es_admin);
 
-        // Si no hay torneos, mostrar array vacío
         if (empty($data['torneos'])) {
             $data['torneos'] = array();
         }
+
+        $data['torneos_finalizados'] = $this->Torneo_model->obtener_finalizados(4);
 
         $data['seo_title']       = 'Telares Padel';
         $data['seo_description'] = 'Torneos de pádel en Los Telares, Santiago del Estero. Seguí los fixtures, resultados y cruces en tiempo real.';

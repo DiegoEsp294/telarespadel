@@ -22,6 +22,37 @@ class Participantes extends CI_Controller {
         $this->load->view('footer');
     }
 
+    public function categorizacion()
+    {
+        $todos = $this->Torneo_model->obtener_participantes_categorizados();
+
+        // Agrupar por categoría en PHP
+        $por_categoria = [];
+        $sin_categoria = [];
+        foreach ($todos as $p) {
+            if (empty($p->categoria)) {
+                $sin_categoria[] = $p;
+            } else {
+                $por_categoria[$p->categoria][] = $p;
+            }
+        }
+
+        // Lugares únicos para el filtro
+        $lugares = [];
+        foreach ($todos as $p) {
+            if (!empty($p->lugar)) $lugares[$p->lugar] = true;
+        }
+        ksort($lugares);
+
+        $data['por_categoria'] = $por_categoria;
+        $data['sin_categoria'] = $sin_categoria;
+        $data['lugares']       = array_keys($lugares);
+
+        $this->load->view('header');
+        $this->load->view('admin/categorizacion', $data);
+        $this->load->view('footer');
+    }
+
     // Devuelve lista filtrada como JSON (para búsqueda AJAX en la página)
     public function listar()
     {
@@ -37,6 +68,7 @@ class Participantes extends CI_Controller {
             'dni'       => $this->input->post('dni') ?: null,
             'telefono'  => $this->input->post('telefono') ?: null,
             'categoria' => $this->input->post('categoria') ?: null,
+            'lugar'     => $this->input->post('lugar') ?: null,
         ]);
 
         echo json_encode(['ok' => (bool)$id, 'id' => $id]);
@@ -50,6 +82,7 @@ class Participantes extends CI_Controller {
             'dni'       => $this->input->post('dni') ?: null,
             'telefono'  => $this->input->post('telefono') ?: null,
             'categoria' => $this->input->post('categoria') ?: null,
+            'lugar'     => $this->input->post('lugar') ?: null,
         ]);
 
         echo json_encode(['ok' => (bool)$ok]);
