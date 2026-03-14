@@ -138,27 +138,41 @@
 <?php endif; ?>
 </body>
 <!-- ====== PWA BANNER + SERVICE WORKER ====== -->
-<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,.3);">
+<style>
+#pwa-banner {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 9999;
+    background: #1a1a2e;
+    color: #fff;
+    padding: 14px 18px;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.3);
+}
+#pwa-banner.visible { display: flex; }
+</style>
+
+<div id="pwa-banner">
     <img src="<?= base_url('logo_inicio.png') ?>" style="width:40px;height:40px;border-radius:10px;object-fit:cover;" alt="logo">
     <div style="flex:1">
         <strong style="display:block;font-size:14px;">Instalar Telares Padel</strong>
         <span style="font-size:12px;color:rgba(255,255,255,.6);">Agregá la app a tu pantalla de inicio</span>
     </div>
     <button id="pwa-btn-instalar" style="background:#FF6600;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;">Instalar</button>
-    <button onclick="document.getElementById('pwa-banner').style.display='none';localStorage.setItem('pwa-dismissed','1')" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;padding:0 4px;">&times;</button>
+    <button id="pwa-btn-cerrar" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;padding:0 6px;line-height:1;">&times;</button>
 </div>
 
 <script>
 (function() {
-    const VAPID_PUBLIC = '<?= getenv("VAPID_PUBLIC") ?>';
+    const VAPID_PUBLIC    = '<?= getenv("VAPID_PUBLIC") ?>';
     const URL_SUSCRIBIR   = '<?= base_url("admin/Push/suscribir") ?>';
-    const URL_DESUSCRIBIR = '<?= base_url("admin/Push/desuscribir") ?>';
 
     /* ===== REGISTRAR SERVICE WORKER ===== */
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('<?= base_url("sw.js") ?>')
+        navigator.serviceWorker.register('<?= base_url("sw.js") ?>', { scope: '<?= base_url() ?>' })
             .then(reg => {
-                /* Solo pedir permiso y suscribir si el usuario está logueado */
                 <?php if ($this->session->userdata('usuario_id')): ?>
                 solicitarPush(reg);
                 <?php endif; ?>
@@ -168,21 +182,29 @@
 
     /* ===== INSTALAR PWA ===== */
     let deferredPrompt = null;
+    const banner     = document.getElementById('pwa-banner');
+    const btnInstalar = document.getElementById('pwa-btn-instalar');
+    const btnCerrar   = document.getElementById('pwa-btn-cerrar');
+
     window.addEventListener('beforeinstallprompt', e => {
         e.preventDefault();
         deferredPrompt = e;
         if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
-            document.getElementById('pwa-banner').style.display = 'flex';
+            banner.classList.add('visible');
         }
     });
 
-    const btnInstalar = document.getElementById('pwa-btn-instalar');
-    if (btnInstalar) {
-        btnInstalar.addEventListener('click', () => {
-            document.getElementById('pwa-banner').style.display = 'none';
-            if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
-        });
-    }
+    btnInstalar.addEventListener('click', () => {
+        if (!deferredPrompt) return;
+        banner.classList.remove('visible');
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+    });
+
+    btnCerrar.addEventListener('click', () => {
+        banner.classList.remove('visible');
+        localStorage.setItem('pwa-dismissed', '1');
+    });
 
     /* ===== SUSCRIPCIÓN PUSH ===== */
     function urlBase64ToUint8Array(base64String) {

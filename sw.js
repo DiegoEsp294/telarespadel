@@ -1,10 +1,11 @@
-const CACHE = 'telares-v1';
-const OFFLINE_URL = '/torneos-telares-padel/';
+const CACHE = 'telares-v2';
+const BASE  = self.registration.scope;
+const OFFLINE_URL = BASE;
 
 /* ===== INSTALL ===== */
 self.addEventListener('install', e => {
     e.waitUntil(
-        caches.open(CACHE).then(c => c.addAll([OFFLINE_URL]))
+        caches.open(CACHE).then(c => c.addAll([BASE]))
     );
     self.skipWaiting();
 });
