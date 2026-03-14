@@ -97,22 +97,41 @@
                             <p class="config-hint">No hay inscriptos en esta categoría aún.</p>
                         <?php endif; ?>
 
-                        <div class="config-actions">
-                            <button type="submit" class="btn-guardar-config">Guardar Configuración</button>
+                        <!-- Paso 1: submit vive dentro del form guardar_zonas -->
+                        <div class="config-pasos">
+                            <div class="config-paso">
+                                <div class="config-paso-num">1</div>
+                                <div class="config-paso-body">
+                                    <div class="config-paso-label">Guardar zonas</div>
+                                    <div class="config-paso-hint">Asigná cada pareja a su zona y guardá.</div>
+                                    <button type="submit" class="btn-guardar-config">Guardar configuración</button>
+                                </div>
+                            </div>
+
+                            <div class="config-paso-arrow">→</div>
+
+                            <!-- Paso 2: referencia form externo via HTML5 form= -->
+                            <div class="config-paso <?= empty($zonas_db) ? 'config-paso-disabled' : '' ?>">
+                                <div class="config-paso-num">2</div>
+                                <div class="config-paso-body">
+                                    <div class="config-paso-label">Generar partidos</div>
+                                    <div class="config-paso-hint">Crea todos los partidos de zona automáticamente.</div>
+                                    <button type="submit" form="form-generar-partidos"
+                                            class="btn-generar-partidos"
+                                            <?= empty($zonas_db) ? 'disabled' : '' ?>>⚙ Generar partidos</button>
+                                </div>
+                            </div>
                         </div>
 
                     </form>
 
-                    <?php if (!empty($zonas_db)): ?>
-                    <form method="post"
+                    <!-- Form 2 sin botón propio, el botón del Paso 2 lo referencia con form= -->
+                    <form id="form-generar-partidos"
+                          method="post"
                           action="<?= base_url('admin/Torneos/generar_partidos/'.$torneo->id) ?>"
                           onsubmit="return confirm('¿Generar partidos? Se eliminarán los partidos actuales.')">
                         <input type="hidden" name="categoria_id" value="<?= $categoria_id ?>">
-                        <div class="config-actions" style="margin-top:10px;">
-                            <button type="submit" class="btn-generar-partidos">⚙ Generar Partidos</button>
-                        </div>
                     </form>
-                    <?php endif; ?>
 
                 </div>
 
@@ -408,6 +427,25 @@
                 <?php
                 $rondas     = array_values($playoff);
                 $total_cols = count($rondas);
+
+                // Numeración correlativa: partido_id => "Partido N"
+                $_n = 1;
+                $partido_num = [];
+                foreach ($rondas as $_r) {
+                    foreach ($_r['partidos'] as $_p) {
+                        $partido_num[$_p->id] = $_n++;
+                    }
+                }
+
+                // Mapa inverso: [partido_siguiente_id][slot] => partido_id fuente
+                $feeder_map = [];
+                foreach ($rondas as $_r) {
+                    foreach ($_r['partidos'] as $_p) {
+                        if ($_p->partido_siguiente_id) {
+                            $feeder_map[$_p->partido_siguiente_id][(int)$_p->slot_siguiente] = $_p->id;
+                        }
+                    }
+                }
                 ?>
 
                 <div class="playoff-grid">
@@ -434,8 +472,30 @@
                             <?php foreach ($group as $p):
                                 $p1w    = $p->ganador_id && $p->ganador_id == $p->pareja1_id;
                                 $p2w    = $p->ganador_id && $p->ganador_id == $p->pareja2_id;
-                                $p1n    = $p->pareja1_nombre ?: ($p->referencia1 ?: '?');
-                                $p2n    = $p->pareja2_nombre ?: ($p->referencia2 ?: '?');
+
+                                // PostgreSQL CONCAT con NULLs devuelve " / " — descartar si no hay nombre real
+                                $p1_real = $p->pareja1_nombre && strlen(trim(str_replace('/', '', $p->pareja1_nombre))) > 1;
+                                $p2_real = $p->pareja2_nombre && strlen(trim(str_replace('/', '', $p->pareja2_nombre))) > 1;
+
+                                if ($p1_real) {
+                                    $p1n = $p->pareja1_nombre;
+                                } elseif (isset($feeder_map[$p->id][1])) {
+                                    $p1n = 'Ganador Partido ' . $partido_num[$feeder_map[$p->id][1]];
+                                } elseif ($p->referencia1) {
+                                    $p1n = $p->referencia1;
+                                } else {
+                                    $p1n = 'Por definir';
+                                }
+
+                                if ($p2_real) {
+                                    $p2n = $p->pareja2_nombre;
+                                } elseif (isset($feeder_map[$p->id][2])) {
+                                    $p2n = 'Ganador Partido ' . $partido_num[$feeder_map[$p->id][2]];
+                                } elseif ($p->referencia2) {
+                                    $p2n = $p->referencia2;
+                                } else {
+                                    $p2n = 'Por definir';
+                                }
                                 $jugado = $p->set1_p1 !== null;
                                 $pg_s1 = 0; $pg_s2 = 0;
                                 if ($jugado) {
@@ -453,10 +513,12 @@
                                      data-partido-id="<?= $p->id ?>"
                                      onclick="abrirModalPartido(this)"
                                      title="Cargar resultado">
-                                    <div class="pg-match-id"><?= $p->id ?></div>
+                                    <div class="pg-match-id">Partido <?= $partido_num[$p->id] ?></div>
 
                                     <div class="pg-team <?= $p1w ? 'pg-winner' : '' ?>">
-                                        <span class="pg-seed"><?= htmlspecialchars($p->referencia1 ?: '-') ?></span>
+                                        <?php if ($p1_real && $p->referencia1): ?>
+                                            <span class="pg-seed"><?= htmlspecialchars($p->referencia1) ?></span>
+                                        <?php endif; ?>
                                         <span class="pg-name"><?= htmlspecialchars($p1n) ?></span>
                                         <div class="pg-scores">
                                             <?php if ($jugado): ?>
@@ -473,7 +535,9 @@
                                     <div class="pg-divider"></div>
 
                                     <div class="pg-team <?= $p2w ? 'pg-winner' : '' ?>">
-                                        <span class="pg-seed"><?= htmlspecialchars($p->referencia2 ?: '-') ?></span>
+                                        <?php if ($p2_real && $p->referencia2): ?>
+                                            <span class="pg-seed"><?= htmlspecialchars($p->referencia2) ?></span>
+                                        <?php endif; ?>
                                         <span class="pg-name"><?= htmlspecialchars($p2n) ?></span>
                                         <div class="pg-scores">
                                             <?php if ($jugado): ?>
@@ -615,7 +679,7 @@
 
                         <div class="bulk-fill-row" id="bulk-fill-row" style="display:none;">
                             <label>Fecha: <input type="date" id="fill-fecha" class="bulk-input"></label>
-                            <label>Hora: <input type="time" id="fill-hora" class="bulk-input"></label>
+                            <label>Hora: <input type="time" id="fill-hora" class="bulk-input" step="1800"></label>
                             <label>Cancha: <input type="number" id="fill-cancha" class="bulk-input" min="1" max="30" placeholder="#"></label>
                             <button class="btn-guardar btn-sm" id="btn-apply-fill">Aplicar</button>
                         </div>
@@ -662,7 +726,7 @@
                                         <span><?= htmlspecialchars($p->pareja2_nombre ?? '(por definir)') ?></span>
                                     </td>
                                     <td><input type="date" class="bulk-input bulk-fecha" value="<?= $bf ?>"></td>
-                                    <td><input type="time" class="bulk-input bulk-hora" value="<?= $bh ?>"></td>
+                                    <td><input type="time" class="bulk-input bulk-hora" value="<?= $bh ?>" step="1800"></td>
                                     <td><input type="number" class="bulk-input bulk-cancha" min="1" max="30" placeholder="#" value="<?= $bc ?>"></td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -810,18 +874,18 @@
                 </div>
                 <div class="set-grid-set-col">
                     <div class="set-grid-header">Set 1</div>
-                    <input type="number" class="set-num-input" id="s1p1" min="0" max="9" placeholder="–">
-                    <input type="number" class="set-num-input" id="s1p2" min="0" max="9" placeholder="–">
+                    <input type="number" class="set-num-input" id="s1p1" min="0" max="7" placeholder="–">
+                    <input type="number" class="set-num-input" id="s1p2" min="0" max="7" placeholder="–">
                 </div>
                 <div class="set-grid-set-col">
                     <div class="set-grid-header">Set 2</div>
-                    <input type="number" class="set-num-input" id="s2p1" min="0" max="9" placeholder="–">
-                    <input type="number" class="set-num-input" id="s2p2" min="0" max="9" placeholder="–">
+                    <input type="number" class="set-num-input" id="s2p1" min="0" max="7" placeholder="–">
+                    <input type="number" class="set-num-input" id="s2p2" min="0" max="7" placeholder="–">
                 </div>
                 <div class="set-grid-set-col">
                     <div class="set-grid-header">Set 3</div>
-                    <input type="number" class="set-num-input" id="s3p1" min="0" max="9" placeholder="–">
-                    <input type="number" class="set-num-input" id="s3p2" min="0" max="9" placeholder="–">
+                    <input type="number" class="set-num-input" id="s3p1" min="0" max="7" placeholder="–">
+                    <input type="number" class="set-num-input" id="s3p2" min="0" max="7" placeholder="–">
                 </div>
             </div>
 
@@ -936,15 +1000,47 @@ document.getElementById('formPartido')
 
     e.preventDefault();
 
+    // Validar resultado de set de pádel
+    function isValidPadelSet(a, b) {
+        a = parseInt(a, 10); b = parseInt(b, 10);
+        if (isNaN(a) || isNaN(b)) return true; // vacío → se ignora
+        // 6-x o x-6 con diferencia mínima de 2
+        if (a === 6 && b <= 4) return true;
+        if (b === 6 && a <= 4) return true;
+        // 7-5 o 5-7
+        if ((a === 7 && b === 5) || (a === 5 && b === 7)) return true;
+        // 7-6 o 6-7
+        if ((a === 7 && b === 6) || (a === 6 && b === 7)) return true;
+        return false;
+    }
+
     // Combinar inputs numéricos en formato "N-N" para el backend
     function buildSet(p1id, p2id) {
         const v1 = document.getElementById(p1id).value;
         const v2 = document.getElementById(p2id).value;
         return (v1 !== '' && v2 !== '') ? v1 + '-' + v2 : '';
     }
-    document.getElementById('set_1').value = buildSet('s1p1','s1p2');
-    document.getElementById('set_2').value = buildSet('s2p1','s2p2');
-    document.getElementById('set_3').value = buildSet('s3p1','s3p2');
+    const s1 = buildSet('s1p1','s1p2');
+    const s2 = buildSet('s2p1','s2p2');
+    const s3 = buildSet('s3p1','s3p2');
+
+    const setsToCheck = [
+        {set: s1, label: 'Set 1'},
+        {set: s2, label: 'Set 2'},
+        {set: s3, label: 'Set 3'},
+    ];
+    for (const {set, label} of setsToCheck) {
+        if (!set) continue;
+        const [a, b] = set.split('-');
+        if (!isValidPadelSet(a, b)) {
+            alert(`Resultado inválido en ${label}: ${set}.\nResultados válidos: 6-0 a 6-4, 7-5, 7-6 (y sus inversos).`);
+            return;
+        }
+    }
+
+    document.getElementById('set_1').value = s1;
+    document.getElementById('set_2').value = s2;
+    document.getElementById('set_3').value = s3;
 
     const formData = new FormData(this);
 

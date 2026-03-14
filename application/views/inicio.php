@@ -173,12 +173,11 @@
                                 </a>
 
                                 <div class="torneo-share-row">
-                                    <a href="https://wa.me/?text=<?php echo urlencode('Mirá este torneo de pádel: '.base_url('home/torneo/'.$torneo->id)); ?>"
-                                       target="_blank"
-                                       class="btn-share btn-share-wpp"
-                                       title="Compartir por WhatsApp">
+                                    <button onclick="compartirTorneo('<?php echo addslashes($torneo->nombre); ?>', '<?php echo base_url('home/torneo/'.$torneo->id); ?>')"
+                                            class="btn-share btn-share-wpp"
+                                            title="Compartir por WhatsApp">
                                         <i class="fab fa-whatsapp"></i> Compartir
-                                    </a>
+                                    </button>
                                     <button onclick="copiarLink('<?php echo base_url('home/torneo/'.$torneo->id); ?>', this)"
                                             class="btn-share btn-share-copy"
                                             title="Copiar link">
@@ -238,6 +237,13 @@
     </section>
 
 <script>
+function compartirTorneo(nombre, url) {
+    if (navigator.share) {
+        navigator.share({ title: 'Ver torneo ' + nombre, url: url }).catch(function() {});
+    } else {
+        window.open('https://wa.me/?text=' + encodeURIComponent(url), '_blank');
+    }
+}
 function copiarLink(url, btn) {
     navigator.clipboard.writeText(url).then(function() {
         const original = btn.innerHTML;

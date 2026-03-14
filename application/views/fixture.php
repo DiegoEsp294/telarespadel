@@ -228,6 +228,20 @@
                         <button class="btn-descargar" onclick="descargarImagen('playoff-bracket', 'cruces.png')">Descargar</button>
                     </div>
                     <div class="bracket-wrapper" id="playoff-bracket">
+                        <?php
+                        // Numeración correlativa
+                        $_n = 1; $partido_num = []; $feeder_map = [];
+                        foreach ($playoff as $_r) {
+                            foreach ($_r['partidos'] as $_p) { $partido_num[$_p->id] = $_n++; }
+                        }
+                        foreach ($playoff as $_r) {
+                            foreach ($_r['partidos'] as $_p) {
+                                if ($_p->partido_siguiente_id) {
+                                    $feeder_map[$_p->partido_siguiente_id][(int)$_p->slot_siguiente] = $_p->id;
+                                }
+                            }
+                        }
+                        ?>
                         <?php foreach ($playoff as $ronda => $rondaData): ?>
 
                             <div class="bracket-round">
@@ -242,8 +256,28 @@
                                             $p1_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja1_id;
                                             $p2_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja2_id;
 
-                                            $p1_name = $partido->pareja1_nombre ?: ($partido->referencia1 ? '['.$partido->referencia1.']' : 'Por definir');
-                                            $p2_name = $partido->pareja2_nombre ?: ($partido->referencia2 ? '['.$partido->referencia2.']' : 'Por definir');
+                                            $p1_real = $partido->pareja1_nombre && strlen(trim(str_replace('/', '', $partido->pareja1_nombre))) > 1;
+                                            $p2_real = $partido->pareja2_nombre && strlen(trim(str_replace('/', '', $partido->pareja2_nombre))) > 1;
+
+                                            if ($p1_real) {
+                                                $p1_name = $partido->pareja1_nombre;
+                                            } elseif (isset($feeder_map[$partido->id][1])) {
+                                                $p1_name = 'Ganador Partido ' . $partido_num[$feeder_map[$partido->id][1]];
+                                            } elseif ($partido->referencia1) {
+                                                $p1_name = $partido->referencia1;
+                                            } else {
+                                                $p1_name = 'Por definir';
+                                            }
+
+                                            if ($p2_real) {
+                                                $p2_name = $partido->pareja2_nombre;
+                                            } elseif (isset($feeder_map[$partido->id][2])) {
+                                                $p2_name = 'Ganador Partido ' . $partido_num[$feeder_map[$partido->id][2]];
+                                            } elseif ($partido->referencia2) {
+                                                $p2_name = $partido->referencia2;
+                                            } else {
+                                                $p2_name = 'Por definir';
+                                            }
 
                                             $p1_tbd = !$partido->pareja1_id;
                                             $p2_tbd = !$partido->pareja2_id;
@@ -264,6 +298,8 @@
                                         ?>
                                         <div class="match-wrapper">
                                             <div class="match-card-bracket">
+
+                                                <div class="match-card-num">Partido <?= $partido_num[$partido->id] ?></div>
 
                                                 <?php if ($meta_playoff): ?>
                                                     <div class="match-card-meta"><?= htmlspecialchars($meta_playoff) ?></div>

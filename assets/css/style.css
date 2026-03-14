@@ -1717,37 +1717,107 @@ body {
     margin-bottom: 10px;
 }
 
+/* ---- Pasos de configuración ---- */
+.config-pasos {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.config-paso {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #f4f7fb;
+    border: 1px solid #dce8f5;
+    border-radius: 12px;
+    padding: 16px 18px;
+    transition: opacity 0.2s;
+}
+
+.config-paso-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.config-paso-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #003366;
+    color: #fff;
+    font-weight: 800;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.config-paso-disabled .config-paso-num {
+    background: #aab;
+}
+
+.config-paso-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.config-paso-label {
+    font-weight: 700;
+    font-size: 14px;
+    color: #003366;
+}
+
+.config-paso-hint {
+    font-size: 12px;
+    color: #667;
+    margin-bottom: 8px;
+}
+
+.config-paso-arrow {
+    font-size: 24px;
+    color: #b0bec5;
+    font-weight: 300;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .config-paso-arrow { transform: rotate(90deg); width: 100%; text-align: center; }
+    .config-paso { min-width: 100%; }
+}
+
 .btn-guardar-config {
     background: #003366;
     color: #fff;
     border: none;
-    padding: 10px 22px;
+    padding: 9px 20px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     transition: background 0.2s;
 }
-
-.btn-guardar-config:hover {
-    background: #004499;
-}
+.btn-guardar-config:hover { background: #004499; }
 
 .btn-generar-partidos {
     background: #1a7a4a;
     color: #fff;
     border: none;
-    padding: 10px 22px;
+    padding: 9px 20px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     transition: background 0.2s;
 }
-
-.btn-generar-partidos:hover {
-    background: #1f9a5e;
-}
+.btn-generar-partidos:hover { background: #1f9a5e; }
+.btn-generar-partidos:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ---------- GRID CATEGORIAS ---------- */
 
@@ -2871,6 +2941,16 @@ button {
     background: #fff;
     box-shadow: 0 1px 4px rgba(0,0,0,0.07);
 }
+.match-card-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background: #003366;
+    padding: 3px 8px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
 .match-card-meta {
     font-size: 10px;
     font-weight: 600;
@@ -3135,7 +3215,7 @@ button {
 .pg-match{width:100%;background:#fff;border:1px solid #d0d8e2;border-radius:6px;overflow:hidden;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
 .pg-match.admin-clickable{cursor:pointer;transition:border-color .2s;}
 .pg-match.admin-clickable:hover{border-color:#e67e22;}
-.pg-match-id{padding:2px 6px;font-size:10px;color:#1565c0;font-weight:700;background:#e8f0fe;}
+.pg-match-id{padding:3px 8px;font-size:10px;color:#fff;font-weight:700;background:#003366;letter-spacing:0.5px;text-transform:uppercase;}
 .pg-team{display:flex;align-items:center;padding:5px 6px;gap:5px;min-height:30px;}
 .pg-team.pg-winner{background:#f0f7ff;}
 .pg-winner .pg-name{font-weight:700;}

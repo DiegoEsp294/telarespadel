@@ -501,7 +501,17 @@ class Torneos extends CI_Controller {
                         return;
                     }
                     $parts = explode('-', $set);
-                    $sets[] = [ (int)$parts[0], (int)$parts[1] ];
+                    $a = (int)$parts[0]; $b = (int)$parts[1];
+                    $valid = (($a === 6 && $b <= 4) || ($b === 6 && $a <= 4)
+                           || ($a === 7 && $b === 5) || ($a === 5 && $b === 7)
+                           || ($a === 7 && $b === 6) || ($a === 6 && $b === 7));
+                    if (!$valid) {
+                        echo json_encode([
+                            "error" => "Resultado inválido en set ".($index+1).": $set"
+                        ]);
+                        return;
+                    }
+                    $sets[] = [ $a, $b ];
                 } else {
                     $sets[] = [null, null];
                 }

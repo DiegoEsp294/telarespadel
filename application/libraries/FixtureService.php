@@ -801,15 +801,39 @@ class FixtureService
 
     private function verificarClasificadosZona($zona_id)
     {
+        // Solo propagar al playoff cuando TODOS los partidos de la zona estén finalizados
+        $total      = $this->CI->db->where('zona_id', $zona_id)->where('fase', 'zona')->count_all_results('partidos');
+        $finalizados = $this->CI->db->where('zona_id', $zona_id)->where('fase', 'zona')->where('estado', 'finalizado')->count_all_results('partidos');
+
+        $zona = $this->CI->Torneo_model->obtenerZona($zona_id);
+
+        // Limpiar asignaciones previas de esta zona (por si se recalcula con resultados parciales)
+        foreach (['1', '2'] as $puesto) {
+            $codigo = $puesto . $zona->nombre; // '1A', '2A', etc.
+            $this->CI->db->where('torneo_id', $zona->torneo_id)
+                         ->where('categoria_id', $zona->categoria_id)
+                         ->where('referencia1', $codigo)
+                         ->set('pareja1_id', null)
+                         ->update('partidos');
+            $this->CI->db->where('torneo_id', $zona->torneo_id)
+                         ->where('categoria_id', $zona->categoria_id)
+                         ->where('referencia2', $codigo)
+                         ->set('pareja2_id', null)
+                         ->update('partidos');
+        }
+
+        if ($total === 0 || $finalizados < $total) return;
+
+        // Zona completa: asignar clasificados definitivos
         $tabla = $this->CI->Torneo_model->obtenerTablaZona($zona_id);
 
         foreach ($tabla as $fila)
         {
             if ($fila->posicion == 1)
-                $this->registrarSeed($zona_id,'1',$fila->inscripcion_id);
+                $this->registrarSeed($zona_id, '1', $fila->inscripcion_id);
 
             if ($fila->posicion == 2)
-                $this->registrarSeed($zona_id,'2',$fila->inscripcion_id);
+                $this->registrarSeed($zona_id, '2', $fila->inscripcion_id);
         }
     }
 
