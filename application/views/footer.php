@@ -137,32 +137,7 @@
 </script>
 <?php endif; ?>
 </body>
-<!-- ====== PWA BANNER + SERVICE WORKER ====== -->
-<style>
-#pwa-banner {
-    display: none;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 9999;
-    background: #1a1a2e;
-    color: #fff;
-    padding: 14px 18px;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 -4px 20px rgba(0,0,0,.3);
-}
-#pwa-banner.visible { display: flex; }
-</style>
-
-<div id="pwa-banner">
-    <img src="<?= base_url('logo_inicio.png') ?>" style="width:40px;height:40px;border-radius:10px;object-fit:cover;" alt="logo">
-    <div style="flex:1">
-        <strong style="display:block;font-size:14px;">Instalar Telares Padel</strong>
-        <span style="font-size:12px;color:rgba(255,255,255,.6);">Agregá la app a tu pantalla de inicio</span>
-    </div>
-    <button id="pwa-btn-instalar" style="background:#FF6600;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;">Instalar</button>
-    <button id="pwa-btn-cerrar" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;padding:0 6px;line-height:1;">&times;</button>
-</div>
+<!-- ====== PWA ====== -->
 
 <script>
 (function() {
@@ -182,38 +157,7 @@
     }
 
     /* ===== INSTALAR PWA ===== */
-    let deferredPrompt = null;
-    const banner      = document.getElementById('pwa-banner');
-    const btnInstalar = document.getElementById('pwa-btn-instalar');
-    const btnCerrar   = document.getElementById('pwa-btn-cerrar');
-
-    // Limpiar dismissed si pasaron más de 7 días
-    const dismissed = localStorage.getItem('pwa-dismissed-ts');
-    if (dismissed && Date.now() - parseInt(dismissed) > 7 * 24 * 3600 * 1000) {
-        localStorage.removeItem('pwa-dismissed');
-        localStorage.removeItem('pwa-dismissed-ts');
-    }
-
-    window.addEventListener('beforeinstallprompt', e => {
-        e.preventDefault();
-        deferredPrompt = e;
-        if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
-            banner.classList.add('visible');
-        }
-    });
-
-    btnInstalar.addEventListener('click', () => {
-        if (!deferredPrompt) return;
-        banner.classList.remove('visible');
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-    });
-
-    btnCerrar.addEventListener('click', () => {
-        banner.classList.remove('visible');
-        localStorage.setItem('pwa-dismissed', '1');
-        localStorage.setItem('pwa-dismissed-ts', Date.now().toString());
-    });
+    // Sin e.preventDefault() → el browser muestra su propio prompt nativo
 
     /* ===== SUSCRIPCIÓN PUSH ===== */
     function urlBase64ToUint8Array(base64String) {
