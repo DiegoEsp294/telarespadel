@@ -171,7 +171,8 @@
 
     /* ===== REGISTRAR SERVICE WORKER ===== */
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('<?= base_url("sw.js") ?>', { scope: '<?= base_url() ?>' })
+        // Sin scope explícito: el browser lo infiere desde la ubicación del archivo sw.js
+        navigator.serviceWorker.register('<?= base_url("sw.js") ?>')
             .then(reg => {
                 <?php if ($this->session->userdata('usuario_id')): ?>
                 solicitarPush(reg);
@@ -182,9 +183,16 @@
 
     /* ===== INSTALAR PWA ===== */
     let deferredPrompt = null;
-    const banner     = document.getElementById('pwa-banner');
+    const banner      = document.getElementById('pwa-banner');
     const btnInstalar = document.getElementById('pwa-btn-instalar');
     const btnCerrar   = document.getElementById('pwa-btn-cerrar');
+
+    // Limpiar dismissed si pasaron más de 7 días
+    const dismissed = localStorage.getItem('pwa-dismissed-ts');
+    if (dismissed && Date.now() - parseInt(dismissed) > 7 * 24 * 3600 * 1000) {
+        localStorage.removeItem('pwa-dismissed');
+        localStorage.removeItem('pwa-dismissed-ts');
+    }
 
     window.addEventListener('beforeinstallprompt', e => {
         e.preventDefault();
@@ -204,6 +212,7 @@
     btnCerrar.addEventListener('click', () => {
         banner.classList.remove('visible');
         localStorage.setItem('pwa-dismissed', '1');
+        localStorage.setItem('pwa-dismissed-ts', Date.now().toString());
     });
 
     /* ===== SUSCRIPCIÓN PUSH ===== */
