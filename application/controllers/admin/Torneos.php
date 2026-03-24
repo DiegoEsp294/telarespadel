@@ -464,6 +464,178 @@ class Torneos extends CI_Controller {
         echo json_encode($partido);
     }
 
+    public function debug_partidos($torneo_id, $categoria_id)
+    {
+        $partidos = $this->db->query("
+            SELECT id, fase, ronda, estado, pareja1_id, pareja2_id, ganador_id, zona_id
+            FROM partidos
+            WHERE torneo_id = ? AND categoria_id = ?
+            ORDER BY fase, ronda, id ASC
+        ", [$torneo_id, $categoria_id])->result();
+
+        echo json_encode($partidos);
+    }
+
+    // AUTO-RESULTADOS para testing: carga resultados ficticios ronda por ronda
+    public function auto_resultados_test($torneo_id, $categoria_id)
+    {
+        $this->load->model('Torneo_model');
+        $this->load->library('FixtureService');
+
+        $resultados = [
+            [[6,3],[6,4]],
+            [[3,6],[4,6]],
+            [[6,1],[6,2]],
+            [[6,4],[4,6],[6,3]],
+            [[4,6],[6,4],[3,6]],
+        ];
+
+        $cargados = 0;
+
+        // Cargar primero zonas round-robin (ronda IS NULL) - todas de una
+        $partidos_rr = $this->db->query("
+            SELECT id, pareja1_id, pareja2_id
+            FROM partidos
+            WHERE torneo_id = ? AND categoria_id = ? AND fase = 'zona'
+              AND ronda IS NULL
+              AND pareja1_id IS NOT NULL AND pareja2_id IS NOT NULL
+              AND estado IN ('pendiente','listo')
+            ORDER BY id ASC
+        ", [$torneo_id, $categoria_id])->result();
+
+        foreach ($partidos_rr as $p) {
+            $sets = $resultados[$cargados % count($resultados)];
+            $this->fixtureservice->cargarResultadoPartido(
+                $p->id,
+                $sets[0][0], $sets[0][1],
+                $sets[1][0], $sets[1][1],
+                isset($sets[2]) ? $sets[2][0] : null,
+                isset($sets[2]) ? $sets[2][1] : null
+            );
+            $cargados++;
+        }
+
+        // Cargar zonas APA4 (ronda NOT NULL) ronda por ronda con reparación entre cada una
+        $rondas = $this->db->query("
+            SELECT DISTINCT ronda FROM partidos
+            WHERE torneo_id = ? AND categoria_id = ? AND fase = 'zona'
+              AND ronda IS NOT NULL
+            ORDER BY ronda ASC
+        ", [$torneo_id, $categoria_id])->result_array();
+
+        foreach ($rondas as $ronda_row) {
+            $ronda = $ronda_row['ronda'];
+
+            $partidos = $this->db->query("
+                SELECT id, pareja1_id, pareja2_id
+                FROM partidos
+                WHERE torneo_id = ? AND categoria_id = ? AND fase = 'zona'
+                  AND ronda = ? AND pareja1_id IS NOT NULL AND pareja2_id IS NOT NULL
+                  AND estado IN ('pendiente','listo')
+                ORDER BY id ASC
+            ", [$torneo_id, $categoria_id, $ronda])->result();
+
+            foreach ($partidos as $p) {
+                $sets = $resultados[$cargados % count($resultados)];
+                $this->fixtureservice->cargarResultadoPartido(
+                    $p->id,
+                    $sets[0][0], $sets[0][1],
+                    $sets[1][0], $sets[1][1],
+                    isset($sets[2]) ? $sets[2][0] : null,
+                    isset($sets[2]) ? $sets[2][1] : null
+                );
+                $cargados++;
+            }
+
+            // Reparar propagación APA4 después de cada ronda
+            $this->_reparar_apa4($torneo_id, $categoria_id);
+        }
+
+        echo json_encode(['ok' => true, 'partidos_cargados' => $cargados]);
+    }
+
+    private function _reparar_apa4($torneo_id, $categoria_id)
+    {
+        $zonas = $this->db->query(
+            "SELECT id FROM zonas WHERE torneo_id = ? AND categoria_id = ?",
+            [$torneo_id, $categoria_id]
+        )->result();
+
+        foreach ($zonas as $zona) {
+            $r1 = $this->db->query("
+                SELECT id, pareja1_id, pareja2_id, ganador_id
+                FROM partidos WHERE zona_id = ? AND ronda = 1 AND estado = 'finalizado'
+                ORDER BY id ASC
+            ", [$zona->id])->result();
+
+            $r2 = $this->db->query("
+                SELECT id FROM partidos WHERE zona_id = ? AND ronda = 2 ORDER BY id ASC
+            ", [$zona->id])->result();
+
+            if (count($r1) !== 2 || count($r2) !== 2) continue;
+            if (!$r1[0]->ganador_id || !$r1[1]->ganador_id) continue;
+
+            $g1 = $r1[0]->ganador_id;
+            $p1 = ($r1[0]->pareja1_id == $g1) ? $r1[0]->pareja2_id : $r1[0]->pareja1_id;
+            $g2 = $r1[1]->ganador_id;
+            $p2 = ($r1[1]->pareja1_id == $g2) ? $r1[1]->pareja2_id : $r1[1]->pareja1_id;
+
+            $this->db->where('id', $r2[0]->id)->update('partidos', ['pareja1_id' => $g1, 'pareja2_id' => $p2]);
+            $this->db->where('id', $r2[1]->id)->update('partidos', ['pareja1_id' => $g2, 'pareja2_id' => $p1]);
+        }
+    }
+
+    // Reparar propagación APA4: completa los partidos de ronda 2 con los ganadores/perdedores de ronda 1
+    public function reparar_propagacion($torneo_id, $categoria_id)
+    {
+        $this->load->model('Torneo_model');
+
+        // Obtener todas las zonas de este torneo/categoria
+        $zonas = $this->db->query("
+            SELECT id FROM zonas WHERE torneo_id = ? AND categoria_id = ?
+        ", [$torneo_id, $categoria_id])->result();
+
+        $reparadas = 0;
+
+        foreach ($zonas as $zona) {
+            // Obtener partidos de ronda 1 finalizados
+            $ronda1 = $this->db->query("
+                SELECT id, pareja1_id, pareja2_id, ganador_id
+                FROM partidos
+                WHERE zona_id = ? AND ronda = 1 AND estado = 'finalizado'
+                ORDER BY id ASC
+            ", [$zona->id])->result();
+
+            // Obtener partidos de ronda 2 (M3, M4)
+            $ronda2 = $this->db->query("
+                SELECT id FROM partidos
+                WHERE zona_id = ? AND ronda = 2
+                ORDER BY id ASC
+            ", [$zona->id])->result();
+
+            // APA4: necesita exactamente 2 partidos en cada ronda
+            if (count($ronda1) !== 2 || count($ronda2) !== 2) continue;
+
+            $m1 = $ronda1[0]; $m2 = $ronda1[1];
+            $m3_id = $ronda2[0]->id; $m4_id = $ronda2[1]->id;
+
+            if (!$m1->ganador_id || !$m2->ganador_id) continue;
+
+            $g1 = $m1->ganador_id;
+            $p1 = ($m1->pareja1_id == $g1) ? $m1->pareja2_id : $m1->pareja1_id;
+            $g2 = $m2->ganador_id;
+            $p2 = ($m2->pareja1_id == $g2) ? $m2->pareja2_id : $m2->pareja1_id;
+
+            // M3: G1 vs P2, M4: G2 vs P1
+            $this->db->where('id', $m3_id)->update('partidos', ['pareja1_id' => $g1, 'pareja2_id' => $p2]);
+            $this->db->where('id', $m4_id)->update('partidos', ['pareja1_id' => $g2, 'pareja2_id' => $p1]);
+
+            $reparadas++;
+        }
+
+        echo json_encode(['ok' => true, 'zonas_reparadas' => $reparadas]);
+    }
+
     public function actualizar_partido(){
         $this->load->model('Torneo_model');
         $this->load->library('FixtureService');

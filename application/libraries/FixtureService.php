@@ -1166,39 +1166,53 @@ class FixtureService
         $this->CI->db->trans_complete();
 
         // ============================
-        // 8. Propagar ganador al siguiente cruce (playoff)
+        // 8. Propagar ganador (y perdedor en zona APA4) al siguiente cruce
         // ============================
-        if ($fase === 'playoff') {
-            $this->propagarGanadorPlayoff($partido_id, $ganador_id);
-        }
+        $perdedor_id = ($ganador_id === $pareja1) ? $pareja2 : $pareja1;
+        $this->propagarGanadorPlayoff($partido_id, $ganador_id, $perdedor_id);
 
         return $this->CI->db->trans_status();
     }
 
-    private function propagarGanadorPlayoff($partido_id, $ganador_id)
+    public function propagarGanadorPublico($partido_id, $ganador_id, $perdedor_id = null)
+    {
+        $this->propagarGanadorPlayoff($partido_id, $ganador_id, $perdedor_id);
+    }
+
+    private function propagarGanadorPlayoff($partido_id, $ganador_id, $perdedor_id = null)
     {
         $partido = $this->CI->Torneo_model->obtenerPartidos($partido_id);
-        if (!$partido || !$partido->partido_siguiente_id) {
+        if (!$partido) {
             return;
         }
 
-        $siguiente_id = $partido->partido_siguiente_id;
-        $slot         = (int)$partido->slot_siguiente; // 1 o 2
+        // Propagar ganador al partido siguiente
+        if ($partido->partido_siguiente_id) {
+            $slot   = (int)$partido->slot_siguiente;
+            $update = $slot === 1
+                ? ['pareja1_id' => $ganador_id]
+                : ['pareja2_id' => $ganador_id];
 
-        $update = [];
-        if ($slot === 1) {
-            $update['pareja1_id'] = $ganador_id;
-        } elseif ($slot === 2) {
-            $update['pareja2_id'] = $ganador_id;
+            $this->CI->Torneo_model->actualizarPartidoDatos($partido->partido_siguiente_id, $update);
+
+            $sig = $this->CI->Torneo_model->obtenerPartidos($partido->partido_siguiente_id);
+            if ($sig && $sig->pareja1_id && $sig->pareja2_id && $sig->estado === 'pendiente') {
+                $this->CI->Torneo_model->actualizarPartidoDatos($partido->partido_siguiente_id, ['estado' => 'listo']);
+            }
         }
 
-        if ($update) {
-            $this->CI->Torneo_model->actualizarPartidoDatos($siguiente_id, $update);
+        // Propagar perdedor al partido siguiente del perdedor (zona APA4)
+        if ($perdedor_id && !empty($partido->partido_siguiente_perdedor_id)) {
+            $slot_perd   = isset($partido->slot_siguiente_perdedor) ? (int)$partido->slot_siguiente_perdedor : 2;
+            $update_perd = $slot_perd === 1
+                ? ['pareja1_id' => $perdedor_id]
+                : ['pareja2_id' => $perdedor_id];
 
-            // Si el partido siguiente ya tiene ambas parejas, activarlo
-            $sig = $this->CI->Torneo_model->obtenerPartidos($siguiente_id);
-            if ($sig && $sig->pareja1_id && $sig->pareja2_id && $sig->estado === 'pendiente') {
-                $this->CI->Torneo_model->actualizarPartidoDatos($siguiente_id, ['estado' => 'listo']);
+            $this->CI->Torneo_model->actualizarPartidoDatos($partido->partido_siguiente_perdedor_id, $update_perd);
+
+            $sig_perd = $this->CI->Torneo_model->obtenerPartidos($partido->partido_siguiente_perdedor_id);
+            if ($sig_perd && $sig_perd->pareja1_id && $sig_perd->pareja2_id && $sig_perd->estado === 'pendiente') {
+                $this->CI->Torneo_model->actualizarPartidoDatos($partido->partido_siguiente_perdedor_id, ['estado' => 'listo']);
             }
         }
     }

@@ -182,7 +182,7 @@
                                                     <?php if ($partido['set3_p1'] !== null): ?>
                                                         <span class="set-box <?= $partido['set3_p1'] > $partido['set3_p2'] ? 'win' : '' ?>"><?= $partido['set3_p1'] ?></span>
                                                     <?php endif; ?>
-                                                    <span class="set-box set-box-final <?= $p1_win ? 'win' : '' ?>"><?= $sets_p1 ?></span>
+                                                    <span class="set-box set-box-final set-box-final-<?= $sets_p1 ?> <?= $p1_win ? 'win' : '' ?>"><?= $sets_p1 ?></span>
                                                 </div>
                                             <?php endif; ?>
                                         </div>
@@ -198,7 +198,7 @@
                                                     <?php if ($partido['set3_p1'] !== null): ?>
                                                         <span class="set-box <?= $partido['set3_p2'] > $partido['set3_p1'] ? 'win' : '' ?>"><?= $partido['set3_p2'] ?></span>
                                                     <?php endif; ?>
-                                                    <span class="set-box set-box-final <?= $p2_win ? 'win' : '' ?>"><?= $sets_p2 ?></span>
+                                                    <span class="set-box set-box-final set-box-final-<?= $sets_p2 ?> <?= $p2_win ? 'win' : '' ?>"><?= $sets_p2 ?></span>
                                                 </div>
                                             <?php endif; ?>
                                         </div>
@@ -224,6 +224,22 @@
                     <p class="bracket-empty">No hay cruces generados aún.</p>
                 <?php else: ?>
 
+                    <div class="bracket-controls">
+                        <button class="bracket-ctrl-btn" onclick="bZoomOut('playoff-bracket')">− Zoom</button>
+                        <button class="bracket-ctrl-btn" onclick="bZoomReset('playoff-bracket')">↺</button>
+                        <button class="bracket-ctrl-btn" onclick="bZoomIn('playoff-bracket')">+ Zoom</button>
+                        <button class="bracket-ctrl-btn bracket-ctrl-landscape" onclick="bFsOpen('playoff-bracket','pub-bracket-fs')">⤢ Horizontal</button>
+                    </div>
+
+                    <!-- Overlay modo horizontal (rotado 90°) -->
+                    <div id="pub-bracket-fs" class="bracket-fs-overlay">
+                        <div class="bracket-fs-bar">
+                            <span class="fs-title">Cruces</span>
+                            <button class="fs-close" onclick="bFsClose('playoff-bracket','pub-bracket-fs')">✕ Cerrar</button>
+                        </div>
+                        <div class="bracket-fs-content" id="pub-bracket-fs-content"></div>
+                    </div>
+
                     <div class="btn-descargar-wrap">
                         <button class="btn-descargar" onclick="descargarImagen('playoff-bracket', 'cruces.png')">Descargar</button>
                     </div>
@@ -241,70 +257,108 @@
                                 }
                             }
                         }
-                        ?>
-                        <?php foreach ($playoff as $ronda => $rondaData): ?>
 
-                            <div class="bracket-round">
+                        // ---- Cálculo de slots para alineación correcta del bracket ----
+                        $pub_rondas    = array_values($playoff);
+                        $pub_numRounds = count($pub_rondas);
+                        $pub_slotMap   = [];
+                        $pub_roundSizes = [];
+
+                        foreach ($pub_rondas[$pub_numRounds - 1]['partidos'] as $i => $m) {
+                            $pub_slotMap[$m->id] = $i + 1;
+                        }
+                        $pub_roundSizes[$pub_numRounds - 1] = count($pub_rondas[$pub_numRounds - 1]['partidos']);
+
+                        for ($ri = $pub_numRounds - 2; $ri >= 0; $ri--) {
+                            $nextSz   = $pub_roundSizes[$ri + 1];
+                            $thisCnt  = count($pub_rondas[$ri]['partidos']);
+                            $isDouble = ($thisCnt === $nextSz * 2);
+                            $pub_roundSizes[$ri] = $isDouble ? $nextSz * 2 : $nextSz;
+                            $total_en_ronda_pub = count($pub_rondas[$ri]['partidos']);
+                            foreach ($pub_rondas[$ri]['partidos'] as $i => $m) {
+                                if ($m->partido_siguiente_id && isset($pub_slotMap[$m->partido_siguiente_id])) {
+                                    $ps = $pub_slotMap[$m->partido_siguiente_id];
+                                    $pub_slotMap[$m->id] = $isDouble ? ($ps - 1) * 2 + (int)$m->slot_siguiente : $ps;
+                                } else {
+                                    // Fallback: en rondas no-doble el último partido va al último slot
+                                    if (!$isDouble && $i === $total_en_ronda_pub - 1) {
+                                        $pub_slotMap[$m->id] = $pub_roundSizes[$ri];
+                                    } else {
+                                        $pub_slotMap[$m->id] = $i + 1;
+                                    }
+                                }
+                            }
+                        }
+
+                        $pub_slotGrid = []; $pub_isDoubleTrans = [];
+                        for ($ri = 0; $ri < $pub_numRounds; $ri++) {
+                            $sz = $pub_roundSizes[$ri];
+                            $pub_slotGrid[$ri] = array_fill(1, $sz, null);
+                            foreach ($pub_rondas[$ri]['partidos'] as $m) {
+                                if (isset($pub_slotMap[$m->id])) $pub_slotGrid[$ri][$pub_slotMap[$m->id]] = $m;
+                            }
+                            $pub_isDoubleTrans[$ri] = ($ri < $pub_numRounds - 1) && ($pub_roundSizes[$ri] === $pub_roundSizes[$ri + 1] * 2);
+                        }
+                        ?>
+                        <?php foreach ($pub_rondas as $ri => $rondaData):
+                            $es_ultima_pub = ($ri === $pub_numRounds - 1);
+                            $colClass_pub  = $pub_isDoubleTrans[$ri] ? 'col-feeds-double' : 'col-feeds-same';
+                        ?>
+
+                            <div class="bracket-round <?= $colClass_pub ?> <?= $es_ultima_pub ? 'bracket-last-col' : '' ?>">
 
                                 <div class="round-label"><?= htmlspecialchars($rondaData['nombre']) ?></div>
 
                                 <div class="round-matches">
 
-                                    <?php foreach ($rondaData['partidos'] as $partido): ?>
+                                    <?php for ($s = 1; $s <= $pub_roundSizes[$ri]; $s++):
+                                        $partido = $pub_slotGrid[$ri][$s];
+                                    ?>
 
-                                        <?php
-                                            $p1_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja1_id;
-                                            $p2_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja2_id;
-
-                                            $p1_real = $partido->pareja1_nombre && strlen(trim(str_replace('/', '', $partido->pareja1_nombre))) > 1;
-                                            $p2_real = $partido->pareja2_nombre && strlen(trim(str_replace('/', '', $partido->pareja2_nombre))) > 1;
-
-                                            if ($p1_real) {
-                                                $p1_name = $partido->pareja1_nombre;
-                                            } elseif (isset($feeder_map[$partido->id][1])) {
-                                                $p1_name = 'Ganador Partido ' . $partido_num[$feeder_map[$partido->id][1]];
-                                            } elseif ($partido->referencia1) {
-                                                $p1_name = $partido->referencia1;
-                                            } else {
-                                                $p1_name = 'Por definir';
-                                            }
-
-                                            if ($p2_real) {
-                                                $p2_name = $partido->pareja2_nombre;
-                                            } elseif (isset($feeder_map[$partido->id][2])) {
-                                                $p2_name = 'Ganador Partido ' . $partido_num[$feeder_map[$partido->id][2]];
-                                            } elseif ($partido->referencia2) {
-                                                $p2_name = $partido->referencia2;
-                                            } else {
-                                                $p2_name = 'Por definir';
-                                            }
-
-                                            $p1_tbd = !$partido->pareja1_id;
-                                            $p2_tbd = !$partido->pareja2_id;
-                                        ?>
-
-                                        <?php
-                                            $jugado_playoff = $partido->set1_p1 !== null;
-                                            $po_s1 = 0; $po_s2 = 0;
-                                            if ($jugado_playoff) {
-                                                if ($partido->set1_p1 > $partido->set1_p2) $po_s1++; else $po_s2++;
-                                                if ($partido->set2_p1 !== null) { if ($partido->set2_p1 > $partido->set2_p2) $po_s1++; else $po_s2++; }
-                                                if ($partido->set3_p1 !== null) { if ($partido->set3_p1 > $partido->set3_p2) $po_s1++; else $po_s2++; }
-                                            }
-                                            $meta_playoff = '';
-                                            if (!empty($partido->hora))   $meta_playoff .= substr($partido->hora, 0, 5).'h';
-                                            if (!empty($partido->cancha)) $meta_playoff .= ($meta_playoff ? ' · ' : '').'Cancha '.$partido->cancha;
-                                            if (!empty($partido->fecha))  $meta_playoff .= ($meta_playoff ? ' · ' : '').date('d/m', strtotime($partido->fecha));
-                                        ?>
+                                    <div class="bracket-slot <?= $partido ? '' : 'bracket-slot-bye' ?>">
+                                    <?php if ($partido):
+                                        $p1_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja1_id;
+                                        $p2_winner = $partido->ganador_id && $partido->ganador_id == $partido->pareja2_id;
+                                        $p1_real = $partido->pareja1_nombre && strlen(trim(str_replace('/', '', $partido->pareja1_nombre))) > 1;
+                                        $p2_real = $partido->pareja2_nombre && strlen(trim(str_replace('/', '', $partido->pareja2_nombre))) > 1;
+                                        if ($p1_real) {
+                                            $p1_name = $partido->pareja1_nombre;
+                                        } elseif (isset($feeder_map[$partido->id][1])) {
+                                            $p1_name = 'Ganador Partido ' . $partido_num[$feeder_map[$partido->id][1]];
+                                        } elseif ($partido->referencia1) {
+                                            $p1_name = $partido->referencia1;
+                                        } else {
+                                            $p1_name = 'Por definir';
+                                        }
+                                        if ($p2_real) {
+                                            $p2_name = $partido->pareja2_nombre;
+                                        } elseif (isset($feeder_map[$partido->id][2])) {
+                                            $p2_name = 'Ganador Partido ' . $partido_num[$feeder_map[$partido->id][2]];
+                                        } elseif ($partido->referencia2) {
+                                            $p2_name = $partido->referencia2;
+                                        } else {
+                                            $p2_name = 'Por definir';
+                                        }
+                                        $p1_tbd = !$partido->pareja1_id;
+                                        $p2_tbd = !$partido->pareja2_id;
+                                        $jugado_playoff = $partido->set1_p1 !== null;
+                                        $po_s1 = 0; $po_s2 = 0;
+                                        if ($jugado_playoff) {
+                                            if ($partido->set1_p1 > $partido->set1_p2) $po_s1++; else $po_s2++;
+                                            if ($partido->set2_p1 !== null) { if ($partido->set2_p1 > $partido->set2_p2) $po_s1++; else $po_s2++; }
+                                            if ($partido->set3_p1 !== null) { if ($partido->set3_p1 > $partido->set3_p2) $po_s1++; else $po_s2++; }
+                                        }
+                                        $meta_playoff = '';
+                                        if (!empty($partido->hora))   $meta_playoff .= substr($partido->hora, 0, 5).'h';
+                                        if (!empty($partido->cancha)) $meta_playoff .= ($meta_playoff ? ' · ' : '').'Cancha '.$partido->cancha;
+                                        if (!empty($partido->fecha))  $meta_playoff .= ($meta_playoff ? ' · ' : '').date('d/m', strtotime($partido->fecha));
+                                    ?>
                                         <div class="match-wrapper">
                                             <div class="match-card-bracket">
-
                                                 <div class="match-card-num">Partido <?= $partido_num[$partido->id] ?></div>
-
                                                 <?php if ($meta_playoff): ?>
                                                     <div class="match-card-meta"><?= htmlspecialchars($meta_playoff) ?></div>
                                                 <?php endif; ?>
-
                                                 <div class="match-team <?= $p1_winner ? 'winner' : ($p1_tbd ? 'tbd' : '') ?>">
                                                     <span class="team-name"><?= htmlspecialchars($p1_name) ?></span>
                                                     <?php if ($jugado_playoff): ?>
@@ -320,9 +374,7 @@
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
-
                                                 <div class="match-divider"></div>
-
                                                 <div class="match-team <?= $p2_winner ? 'winner' : ($p2_tbd ? 'tbd' : '') ?>">
                                                     <span class="team-name"><?= htmlspecialchars($p2_name) ?></span>
                                                     <?php if ($jugado_playoff): ?>
@@ -338,11 +390,14 @@
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
-
                                             </div>
                                         </div>
+                                    <?php else: ?>
+                                        <div class="match-card-bye"></div>
+                                    <?php endif; ?>
+                                    </div>
 
-                                    <?php endforeach; ?>
+                                    <?php endfor; ?>
 
                                 </div>
 
@@ -483,6 +538,31 @@ document.getElementById('formPartido')
 });
 </script>
 
+
+<script>
+/* ---- Bracket: zoom & modo horizontal ---- */
+(function(){
+    var _zm = 1, _origP, _origN;
+    var STEP = 0.2, MIN = 0.3, MAX = 3;
+    function _el(id){ return document.getElementById(id); }
+    window.bZoomIn    = function(id){ _zm = Math.min(MAX, +(_zm+STEP).toFixed(1)); _el(id).style.zoom = _zm; };
+    window.bZoomOut   = function(id){ _zm = Math.max(MIN, +(_zm-STEP).toFixed(1)); _el(id).style.zoom = _zm; };
+    window.bZoomReset = function(id){ _zm = 1; _el(id).style.zoom = ''; };
+    window.bFsOpen = function(bracketId, overlayId){
+        var el = _el(bracketId), ov = _el(overlayId);
+        _origP = el.parentNode; _origN = el.nextSibling;
+        ov.querySelector('.bracket-fs-content').appendChild(el);
+        ov.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+    window.bFsClose = function(bracketId, overlayId){
+        var el = _el(bracketId), ov = _el(overlayId);
+        if(_origN) _origP.insertBefore(el,_origN); else _origP.appendChild(el);
+        ov.style.display = 'none';
+        document.body.style.overflow = '';
+    };
+})();
+</script>
 
 <script>
 var _fixtureContext = {

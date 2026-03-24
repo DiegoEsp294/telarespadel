@@ -2145,7 +2145,7 @@ body {
 
 /* ZONA A / B / C */
 .grupo-title {
-    background: #003366;
+    background: var(--color-naranja, #f60);
     color: #fff;
     font-size: 20px;
     font-weight: 800;
@@ -2153,7 +2153,6 @@ body {
     padding: 14px 20px;
     margin-bottom: 0;
     text-align: left;
-    border-left: 5px solid var(--color-naranja, #f60);
     font-family: inherit;
 }
 
@@ -2905,32 +2904,69 @@ button {
 .round-matches {
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
     width: 100%;
     flex: 1;
-    gap: 24px;
     padding: 0 8px;
+}
+
+/* Slot fijo: todos tienen la misma altura para alinear el bracket */
+.bracket-slot {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-right: 20px;
+}
+
+/* Conector horizontal → siguiente ronda */
+.bracket-round:not(.bracket-last-col) .bracket-slot:not(.bracket-slot-bye)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 20px;
+    height: 1px;
+    background: #bbb;
+    pointer-events: none;
+}
+
+/* Conectores verticales para rondas "double" (Cuartos→Semi, Semi→Final) */
+.bracket-round.col-feeds-double .round-matches .bracket-slot:nth-child(odd)::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 1px;
+    height: 50%;
+    background: #bbb;
+    pointer-events: none;
+}
+.bracket-round.col-feeds-double .round-matches .bracket-slot:nth-child(even)::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 1px;
+    height: 50%;
+    background: #bbb;
+    pointer-events: none;
 }
 
 .match-wrapper {
     display: flex;
     align-items: center;
     position: relative;
+    width: 100%;
 }
 
-/* Connecting line going right from each match (desktop only) */
-.match-wrapper::after {
-    content: '';
-    position: absolute;
-    right: -8px;
-    top: 50%;
-    width: 8px;
-    height: 1px;
-    background: #bbb;
-}
-
-.bracket-round:last-child .match-wrapper::after {
-    display: none;
+/* Slot vacío (bye) en vista pública */
+.bracket-slot-bye .match-card-bye {
+    width: 100%;
+    border: 1px dashed #d8dce5;
+    border-radius: 6px;
+    background: #f8f9fb;
+    min-height: 68px;
+    opacity: 0.4;
 }
 
 .match-card-bracket {
@@ -3038,22 +3074,68 @@ button {
     background: rgba(255,255,255,0.35);
     color: #fff;
 }
+.match-team.winner .set-box-final {
+    border-style: solid;
+    border-color: #5a8cc2;
+    background: #5a8cc2;
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(90, 140, 194, 0.25);
+}
+.match-team.winner .set-box-final.win {
+    border-style: solid;
+    border-color: #356fa4;
+    background: #356fa4;
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(53, 111, 164, 0.35);
+}
 
 /* Cuadrito resultado final (sets ganados) */
 .set-box-final {
     margin-left: 4px;
-    border-style: dashed;
-    border-color: #8a9ab5;
-    background: #e8ecf3;
-    color: #1a3a6b;
-    font-size: 14px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: #ced4da;
+    background: #f4f7fb;
+    color: #495057;
+    font-size: 15px;
+    font-weight: 700;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
 }
 .set-box-final.win {
     border-style: solid;
-    border-color: #1a3a6b;
-    background: #1a3a6b;
+    border-width: 2px;
+    border-color: #5a8cc2;
+    background: #6f98c7;
+    color: #fff;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+}
+
+.set-box-final-2 {
+    border-color: #3178b1;
+    background: #5d90c9;
     color: #fff;
 }
+
+.set-box-final-1 {
+    border-color: #7fa4c8;
+    background: #d9e8f8;
+    color: #1d3d5b;
+}
+
+.set-box-final-0 {
+    border-color: #b8bdc4;
+    background: #f2f5f8;
+    color: #6c757d;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+
 /* Modal: inputs de sets — grilla tipo marcador */
 .set-input-grid {
     display: flex;
@@ -3128,38 +3210,10 @@ button {
     box-shadow: 0 2px 8px rgba(255,102,0,0.18);
 }
 
-/* --- Mobile: rounds stacked vertically --- */
+/* --- Mobile: mismo layout horizontal que desktop, scroll horizontal si hace falta --- */
 @media (max-width: 640px) {
     .bracket-wrapper {
-        flex-direction: column;
-        gap: 8px;
-        overflow-x: visible;
-        padding: 16px 0 24px;
-    }
-
-    .bracket-round {
-        width: 100%;
-        min-width: unset;
-        flex-shrink: unset;
-        margin-bottom: 8px;
-    }
-
-    .round-matches {
-        gap: 12px;
-        padding: 0;
-    }
-
-    .match-wrapper::after {
-        display: none;
-    }
-
-    .match-team {
-        flex-wrap: wrap;
-    }
-
-    .match-team .team-name {
-        white-space: normal;
-        word-break: break-word;
+        padding: 16px 8px 32px;
     }
 }
 
@@ -3199,17 +3253,16 @@ button {
 .playoff-grid{display:flex;overflow-x:auto;padding:16px 0 24px;gap:0;align-items:stretch;}
 .pg-col{display:flex;flex-direction:column;flex-shrink:0;width:260px;}
 .pg-col-header{text-align:center;font-weight:700;font-size:12px;letter-spacing:1px;color:#003366;padding:6px 28px 10px 0;text-transform:uppercase;border-bottom:2px solid #e67e22;margin-bottom:4px;}
-.pg-pair{display:flex;flex-direction:column;flex:1;position:relative;}
-.pg-pair:not(.pg-single)::after{content:'';position:absolute;right:8px;top:25%;height:50%;border-right:2px solid #b0bec5;border-top:2px solid #b0bec5;border-bottom:2px solid #b0bec5;width:12px;pointer-events:none;}
-.pg-pair:not(.pg-single)::before{content:'';position:absolute;right:-4px;top:50%;width:12px;border-top:2px solid #b0bec5;pointer-events:none;}
-.pg-pair.pg-single::before{content:'';position:absolute;left:-12px;top:50%;width:12px;border-top:2px solid #b0bec5;pointer-events:none;}
-.pg-pair.pg-single{justify-content:center;}
-/* single match que alimenta la siguiente ronda (ej: 1 cuarto → 1 semi) */
-.pg-pair.pg-feeds-next::before{content:'';position:absolute;right:-4px;top:50%;width:12px;border-top:2px solid #b0bec5;pointer-events:none;}
-.pg-pair.pg-feeds-next{justify-content:center;}
-.pg-pair.pg-feeds-next>.pg-slot{flex:0 0 auto;}
-.pg-slot{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:stretch;padding:5px 20px 5px 0;box-sizing:border-box;gap:4px;}
-.pg-pair.pg-single>.pg-slot{flex:0 0 auto;}
+/* Fixed-slot grid: cada slot tiene la misma altura → alineación correcta entre rondas */
+.pg-slots{display:flex;flex-direction:column;flex:1;}
+.pg-slot-fixed{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:stretch;padding:5px 20px 5px 0;box-sizing:border-box;position:relative;gap:4px;}
+/* Conector horizontal → siguiente ronda (solo slots con partido real) */
+.pg-col:not(.pg-last-col) .pg-slot-fixed:not(.pg-slot-bye)::after{content:'';position:absolute;right:0;top:50%;width:20px;height:2px;background:#b0bec5;pointer-events:none;}
+/* Conector vertical para rondas de tipo "double" (ej: Cuartos→Semi): par de slots forma codo */
+.pg-col.col-feeds-double .pg-slots .pg-slot-fixed:nth-child(odd)::before{content:'';position:absolute;right:0;top:50%;width:2px;height:50%;background:#b0bec5;pointer-events:none;}
+.pg-col.col-feeds-double .pg-slots .pg-slot-fixed:nth-child(even)::before{content:'';position:absolute;right:0;top:0;width:2px;height:50%;background:#b0bec5;pointer-events:none;}
+/* Slot vacío (bye) */
+.pg-slot-bye .pg-bye{border:1px dashed #d8dce5;border-radius:6px;background:#f8f9fb;min-height:68px;opacity:0.45;}
 .btn-editar-pareja{font-size:11px;padding:3px 8px;background:#f0f4ff;border:1px solid #b0c0e8;border-radius:4px;cursor:pointer;color:#3a5fc8;text-align:center;}
 .btn-editar-pareja:hover{background:#dce8ff;}
 .pg-match{width:100%;background:#fff;border:1px solid #d0d8e2;border-radius:6px;overflow:hidden;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
@@ -3227,20 +3280,90 @@ button {
 .pg-score-final.win{border-style:solid;border-color:#1a3a6b;background:#1a3a6b;color:#fff;}
 .pg-divider{height:1px;background:#e8ecf0;margin:0;}
 .pg-footer{padding:3px 6px;font-size:10px;color:#e67e22;background:#fff9f4;border-top:1px solid #fde8d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* Mobile: stack rounds vertically instead of side by side */
-@media(max-width:640px){
-  .playoff-grid{flex-direction:column;overflow-x:visible;gap:0;align-items:stretch;}
-  .pg-col{width:100%;flex-shrink:1;}
-  /* hide horizontal bracket connectors — not meaningful in vertical layout */
-  .pg-pair::before,.pg-pair::after{display:none !important;}
-  /* let pairs/slots shrink to content height (no fixed column height to distribute) */
-  .pg-pair{flex:0 0 auto;gap:6px;}
-  .pg-slot{flex:0 0 auto;padding:4px 0;}
-  /* round headers full width, no right-padding offset */
-  .pg-col-header{padding-right:0;margin-bottom:8px;}
-  /* arrow divider between rounds */
-  .pg-col+.pg-col .pg-col-header::before{content:'▼';display:block;text-align:center;color:#b0bec5;font-size:18px;margin-bottom:6px;}
-  .pg-name{font-size:11px;}
+/* Mobile: mismo layout horizontal que desktop, sin cambios */
+
+/* =============================================
+   BRACKET CONTROLS (zoom & landscape)
+   ============================================= */
+.bracket-controls {
+    display: flex;
+    gap: 6px;
+    padding: 6px 8px 2px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+.bracket-ctrl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #c0ccda;
+    border-radius: 6px;
+    background: #f4f7fb;
+    color: #003366;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.bracket-ctrl-btn:active { background: #dde8f4; }
+.bracket-ctrl-landscape {
+    background: var(--color-naranja);
+    color: #fff;
+    border-color: var(--color-naranja);
+}
+.bracket-ctrl-landscape:active { background: #d45500; border-color: #d45500; }
+
+/* ---- Overlay pantalla completa rotada 90° (modo horizontal) ---- */
+.bracket-fs-overlay {
+    display: none;
+    position: fixed;
+    /* Ocupa 100vh de ancho × 100vw de alto (antes de rotar), centrado */
+    top: 50%;
+    left: 50%;
+    width: 100vh;
+    height: 100vw;
+    margin-top: -50vw;
+    margin-left: -50vh;
+    transform: rotate(90deg);
+    z-index: 9990;
+    background: #fff;
+    flex-direction: column;
+}
+.bracket-fs-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    background: #003366;
+    color: #fff;
+    flex-shrink: 0;
+    height: 40px;
+    box-sizing: border-box;
+}
+.bracket-fs-bar .fs-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.bracket-fs-bar .fs-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+.bracket-fs-bar .fs-close:active { background: rgba(255,255,255,0.2); }
+.bracket-fs-content {
+    flex: 1;
+    overflow: auto;
+    padding: 8px 0;
 }
 
 /* ================================ */

@@ -381,7 +381,7 @@
                                                 <?php if ($partido['set3_p1'] !== null): ?>
                                                     <span class="set-box <?= $partido['set3_p1'] > $partido['set3_p2'] ? 'win' : '' ?>"><?= $partido['set3_p1'] ?></span>
                                                 <?php endif; ?>
-                                                <span class="set-box set-box-final <?= $p1_win ? 'win' : '' ?>"><?= $sets_p1 ?></span>
+                                                <span class="set-box set-box-final set-box-final-<?= $sets_p1 ?> <?= $p1_win ? 'win' : '' ?>"><?= $sets_p1 ?></span>
                                             </div>
                                         <?php else: ?>
                                             <span class="team-score" style="color:#bbb;">Pendiente</span>
@@ -399,7 +399,7 @@
                                                 <?php if ($partido['set3_p1'] !== null): ?>
                                                     <span class="set-box <?= $partido['set3_p2'] > $partido['set3_p1'] ? 'win' : '' ?>"><?= $partido['set3_p2'] ?></span>
                                                 <?php endif; ?>
-                                                <span class="set-box set-box-final <?= $p2_win ? 'win' : '' ?>"><?= $sets_p2 ?></span>
+                                                <span class="set-box set-box-final set-box-final-<?= $sets_p2 ?> <?= $p2_win ? 'win' : '' ?>"><?= $sets_p2 ?></span>
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -425,16 +425,13 @@
                 <?php else: ?>
 
                 <?php
-                $rondas     = array_values($playoff);
-                $total_cols = count($rondas);
+                $rondas    = array_values($playoff);
+                $numRounds = count($rondas);
 
                 // Numeración correlativa: partido_id => "Partido N"
-                $_n = 1;
-                $partido_num = [];
+                $_n = 1; $partido_num = [];
                 foreach ($rondas as $_r) {
-                    foreach ($_r['partidos'] as $_p) {
-                        $partido_num[$_p->id] = $_n++;
-                    }
+                    foreach ($_r['partidos'] as $_p) { $partido_num[$_p->id] = $_n++; }
                 }
 
                 // Mapa inverso: [partido_siguiente_id][slot] => partido_id fuente
@@ -446,37 +443,90 @@
                         }
                     }
                 }
-                ?>
 
-                <div class="playoff-grid">
-                <?php foreach ($rondas as $r_idx => $rondaData):
-                    $es_ultima = ($r_idx === $total_cols - 1);
-                    // Agrupar por partido_siguiente_id para respetar los cruces reales
-                    $groups_map = [];
-                    foreach ($rondaData['partidos'] as $p) {
-                        $key = $p->partido_siguiente_id ?: ('solo_' . $p->id);
-                        $groups_map[$key][] = $p;
+                // ---- Cálculo de slots para alineación correcta del bracket ----
+                // Cada ronda tiene un número fijo de slots (potencia de 2).
+                // Los slots vacíos se muestran como "bye" (gris) para mantener alineación.
+                $slotMap    = [];
+                $roundSizes = [];
+
+                // Última ronda: slots 1..N
+                foreach ($rondas[$numRounds - 1]['partidos'] as $i => $m) {
+                    $slotMap[$m->id] = $i + 1;
+                }
+                $roundSizes[$numRounds - 1] = count($rondas[$numRounds - 1]['partidos']);
+
+                // Recorrer hacia atrás asignando slots
+                for ($ri = $numRounds - 2; $ri >= 0; $ri--) {
+                    $nextSz   = $roundSizes[$ri + 1];
+                    $thisCnt  = count($rondas[$ri]['partidos']);
+                    // Si esta ronda tiene el doble de partidos que la siguiente → duplica slots
+                    $isDouble = ($thisCnt === $nextSz * 2);
+                    $roundSizes[$ri] = $isDouble ? $nextSz * 2 : $nextSz;
+                    $total_en_ronda = count($rondas[$ri]['partidos']);
+                    foreach ($rondas[$ri]['partidos'] as $i => $m) {
+                        if ($m->partido_siguiente_id && isset($slotMap[$m->partido_siguiente_id])) {
+                            $ps = $slotMap[$m->partido_siguiente_id];
+                            $slotMap[$m->id] = $isDouble
+                                ? ($ps - 1) * 2 + (int)$m->slot_siguiente
+                                : $ps;
+                        } else {
+                            // Fallback: en rondas no-doble el último partido va al último slot
+                            // (formato APA: Reclasif match 1→slot 1, match 2→slot N)
+                            if (!$isDouble && $i === $total_en_ronda - 1) {
+                                $slotMap[$m->id] = $roundSizes[$ri];
+                            } else {
+                                $slotMap[$m->id] = $i + 1;
+                            }
+                        }
                     }
-                    $groups = array_values($groups_map);
+                }
+
+                // Construir grilla de slots y flags de transición
+                $slotGrid = []; $isDoubleTrans = [];
+                for ($ri = 0; $ri < $numRounds; $ri++) {
+                    $sz = $roundSizes[$ri];
+                    $slotGrid[$ri] = array_fill(1, $sz, null);
+                    foreach ($rondas[$ri]['partidos'] as $m) {
+                        if (isset($slotMap[$m->id])) $slotGrid[$ri][$slotMap[$m->id]] = $m;
+                    }
+                    $isDoubleTrans[$ri] = ($ri < $numRounds - 1) && ($roundSizes[$ri] === $roundSizes[$ri + 1] * 2);
+                }
                 ?>
-                    <div class="pg-col">
+
+                <div class="bracket-controls">
+                    <button class="bracket-ctrl-btn" onclick="bZoomOut('admin-playoff-bracket')">− Zoom</button>
+                    <button class="bracket-ctrl-btn" onclick="bZoomReset('admin-playoff-bracket')">↺</button>
+                    <button class="bracket-ctrl-btn" onclick="bZoomIn('admin-playoff-bracket')">+ Zoom</button>
+                    <button class="bracket-ctrl-btn bracket-ctrl-landscape" onclick="bFsOpen('admin-playoff-bracket','admin-bracket-fs')">⤢ Horizontal</button>
+                </div>
+
+                <!-- Overlay modo horizontal (rotado 90°) -->
+                <div id="admin-bracket-fs" class="bracket-fs-overlay">
+                    <div class="bracket-fs-bar">
+                        <span class="fs-title">Cruces</span>
+                        <button class="fs-close" onclick="bFsClose('admin-playoff-bracket','admin-bracket-fs')">✕ Cerrar</button>
+                    </div>
+                    <div class="bracket-fs-content"></div>
+                </div>
+
+                <div class="playoff-grid" id="admin-playoff-bracket">
+                <?php foreach ($rondas as $ri => $rondaData):
+                    $es_ultima = ($ri === $numRounds - 1);
+                    $colClass  = $isDoubleTrans[$ri] ? 'col-feeds-double' : 'col-feeds-same';
+                ?>
+                    <div class="pg-col <?= $colClass ?> <?= $es_ultima ? 'pg-last-col' : '' ?>">
                         <div class="pg-col-header"><?= htmlspecialchars($rondaData['nombre']) ?></div>
-
-                        <?php foreach ($groups as $group):
-                            $single      = (count($group) === 1);
-                            $feeds_next  = $single && !$es_ultima && !empty($group[0]->partido_siguiente_id);
-                            $pair_class  = $es_ultima ? 'pg-single' : ($feeds_next ? 'pg-feeds-next' : ($single ? 'pg-single' : ''));
+                        <div class="pg-slots">
+                        <?php for ($s = 1; $s <= $roundSizes[$ri]; $s++):
+                            $p = $slotGrid[$ri][$s];
                         ?>
-                        <div class="pg-pair <?= $pair_class ?> <?= $es_ultima ? 'pg-last' : '' ?>">
-
-                            <?php foreach ($group as $p):
-                                $p1w    = $p->ganador_id && $p->ganador_id == $p->pareja1_id;
-                                $p2w    = $p->ganador_id && $p->ganador_id == $p->pareja2_id;
-
-                                // PostgreSQL CONCAT con NULLs devuelve " / " — descartar si no hay nombre real
+                            <div class="pg-slot-fixed <?= $p ? '' : 'pg-slot-bye' ?>">
+                            <?php if ($p):
+                                $p1w = $p->ganador_id && $p->ganador_id == $p->pareja1_id;
+                                $p2w = $p->ganador_id && $p->ganador_id == $p->pareja2_id;
                                 $p1_real = $p->pareja1_nombre && strlen(trim(str_replace('/', '', $p->pareja1_nombre))) > 1;
                                 $p2_real = $p->pareja2_nombre && strlen(trim(str_replace('/', '', $p->pareja2_nombre))) > 1;
-
                                 if ($p1_real) {
                                     $p1n = $p->pareja1_nombre;
                                 } elseif (isset($feeder_map[$p->id][1])) {
@@ -486,7 +536,6 @@
                                 } else {
                                     $p1n = 'Por definir';
                                 }
-
                                 if ($p2_real) {
                                     $p2n = $p->pareja2_nombre;
                                 } elseif (isset($feeder_map[$p->id][2])) {
@@ -508,13 +557,11 @@
                                 if (!empty($p->cancha)) $footer .= ($footer?' ':'').'C'.$p->cancha;
                                 if (!empty($p->fecha))  $footer .= ($footer?' ':'').date('d/m', strtotime($p->fecha));
                             ?>
-                            <div class="pg-slot">
                                 <div class="pg-match admin-clickable"
                                      data-partido-id="<?= $p->id ?>"
                                      onclick="abrirModalPartido(this)"
                                      title="Cargar resultado">
                                     <div class="pg-match-id">Partido <?= $partido_num[$p->id] ?></div>
-
                                     <div class="pg-team <?= $p1w ? 'pg-winner' : '' ?>">
                                         <?php if ($p1_real && $p->referencia1): ?>
                                             <span class="pg-seed"><?= htmlspecialchars($p->referencia1) ?></span>
@@ -531,9 +578,7 @@
                                             <?php endif; ?>
                                         </div>
                                     </div>
-
                                     <div class="pg-divider"></div>
-
                                     <div class="pg-team <?= $p2w ? 'pg-winner' : '' ?>">
                                         <?php if ($p2_real && $p->referencia2): ?>
                                             <span class="pg-seed"><?= htmlspecialchars($p->referencia2) ?></span>
@@ -550,7 +595,6 @@
                                             <?php endif; ?>
                                         </div>
                                     </div>
-
                                     <?php if ($footer): ?>
                                     <div class="pg-footer"><?= htmlspecialchars($footer) ?></div>
                                     <?php endif; ?>
@@ -561,11 +605,12 @@
                                         data-p2="<?= (int)$p->pareja2_id ?>"
                                         onclick="abrirModalParejaPlayoff(this)"
                                         title="Editar parejas del cruce">✏️ Parejas</button>
+                            <?php else: ?>
+                                <div class="pg-bye"></div>
+                            <?php endif; ?>
                             </div>
-                            <?php endforeach; ?>
-
+                        <?php endfor; ?>
                         </div>
-                        <?php endforeach; ?>
                     </div>
                 <?php endforeach; ?>
                 </div>
@@ -897,6 +942,31 @@
     </div>
 </div>
 
+
+<script>
+/* ---- Bracket: zoom & modo horizontal ---- */
+(function(){
+    var _zm = 1, _origP, _origN;
+    var STEP = 0.2, MIN = 0.3, MAX = 3;
+    function _el(id){ return document.getElementById(id); }
+    window.bZoomIn    = function(id){ _zm = Math.min(MAX, +(_zm+STEP).toFixed(1)); _el(id).style.zoom = _zm; };
+    window.bZoomOut   = function(id){ _zm = Math.max(MIN, +(_zm-STEP).toFixed(1)); _el(id).style.zoom = _zm; };
+    window.bZoomReset = function(id){ _zm = 1; _el(id).style.zoom = ''; };
+    window.bFsOpen = function(bracketId, overlayId){
+        var el = _el(bracketId), ov = _el(overlayId);
+        _origP = el.parentNode; _origN = el.nextSibling;
+        ov.querySelector('.bracket-fs-content').appendChild(el);
+        ov.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+    window.bFsClose = function(bracketId, overlayId){
+        var el = _el(bracketId), ov = _el(overlayId);
+        if(_origN) _origP.insertBefore(el,_origN); else _origP.appendChild(el);
+        ov.style.display = 'none';
+        document.body.style.overflow = '';
+    };
+})();
+</script>
 
 <script>
 function _parseSet(str) {
