@@ -76,6 +76,7 @@ $db['default'] = array(
     'dbdriver' => 'postgre',
     'port'     => 5432,
     'sslmode'  => 'require',
+    'options'  => getenv('DB_OPTIONS') ?: '',
     'pconnect' => FALSE,
     'db_debug' => TRUE,
     'char_set' => 'utf8',
