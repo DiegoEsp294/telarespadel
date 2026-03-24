@@ -149,4 +149,19 @@ class Home extends CI_Controller {
         redirect('home/torneo/'.$torneo_id);
     }
 
+    /**
+     * Endpoint de ping — usado por cron externo para evitar que Render duerma el servicio.
+     * URL: /home/ping
+     */
+    public function ping()
+    {
+        $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status' => 'ok',
+                'ts'     => date('Y-m-d H:i:s'),
+            ]));
+    }
+
 }
