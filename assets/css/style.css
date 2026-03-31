@@ -3838,3 +3838,219 @@ button {
     font-size: 11px;
     font-weight: 600;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SPONSORS — Ticker sticky + Sección en página
+══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Barra ticker pegada bajo la navbar ───────────────────────────────── */
+.sponsor-ticker-bar {
+    position: sticky;
+    top: 0;                         /* se pega al tope cuando la navbar ya scrolleó */
+    z-index: 998;
+    background: #1a1a2e;
+    border-bottom: 2px solid #FF6600;
+    display: flex;
+    align-items: center;
+    height: 42px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+
+.sponsor-ticker-label {
+    flex-shrink: 0;
+    padding: 0 14px 0 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #FF6600;
+    border-right: 1px solid rgba(255,102,0,.3);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+}
+
+.sponsor-ticker-viewport {
+    flex: 1;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    /* Mascara de degradado en los bordes para efecto de fundido */
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%);
+}
+
+.sponsor-ticker-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    white-space: nowrap;
+    animation: sponsorScroll 28s linear infinite;
+    will-change: transform;
+}
+
+.sponsor-ticker-bar:hover .sponsor-ticker-track {
+    animation-play-state: paused;
+}
+
+@keyframes sponsorScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-33.333%); }   /* 1/3 del track (3 repeticiones) */
+}
+
+.sponsor-ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 18px;
+    text-decoration: none;
+    color: #fff;
+    transition: opacity .2s;
+    height: 42px;
+}
+.sponsor-ticker-item:hover { opacity: .75; }
+
+.sponsor-ticker-logo {
+    height: 26px;
+    width: auto;
+    max-width: 80px;
+    object-fit: contain;
+    opacity: .9;
+}
+.sponsor-ticker-item:hover .sponsor-ticker-logo { opacity: 1; }
+
+.sponsor-ticker-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,.85);
+    letter-spacing: .3px;
+}
+
+.sponsor-ticker-sep {
+    color: #FF6600;
+    font-size: 14px;
+    opacity: .5;
+    padding: 0 4px;
+    flex-shrink: 0;
+}
+
+/* ── Sección Auspiciantes en la página de inicio ──────────────────────── */
+.sponsors-section {
+    background: #f8f9fb;
+    padding: 60px 0 50px;
+    border-top: 1px solid #eee;
+}
+
+.sponsors-section-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.sponsors-section-sub {
+    text-align: center;
+    font-size: 15px;
+    color: #888;
+    margin-bottom: 40px;
+}
+
+.sponsors-logos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+}
+
+.sponsor-logo-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    padding: 20px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-width: 140px;
+    max-width: 200px;
+    transition: transform .2s, box-shadow .2s;
+    text-decoration: none;
+}
+.sponsor-logo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+
+.sponsor-logo-card a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    width: 100%;
+}
+
+.sponsor-logo-grid-img {
+    height: 60px;
+    width: auto;
+    max-width: 140px;
+    object-fit: contain;
+}
+
+.sponsor-logo-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    text-align: center;
+    line-height: 1.3;
+}
+.sponsor-logo-card a .sponsor-logo-name { color: #444; }
+.sponsor-logo-card a:hover .sponsor-logo-name { color: #FF6600; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .sponsor-ticker-bar {
+        height: 38px;
+    }
+    .sponsor-ticker-label {
+        padding: 0 10px;
+        font-size: 9px;
+    }
+    .sponsor-ticker-item {
+        padding: 0 14px;
+        height: 38px;
+    }
+    .sponsor-ticker-logo {
+        height: 22px;
+    }
+    .sponsor-ticker-track {
+        animation-duration: 22s;
+    }
+    .sponsors-section {
+        padding: 40px 0 36px;
+    }
+    .sponsors-section-title {
+        font-size: 22px;
+    }
+    .sponsors-logos-grid {
+        gap: 16px;
+    }
+    .sponsor-logo-card {
+        min-width: 110px;
+        padding: 16px 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sponsor-ticker-label {
+        display: none;     /* en móvil muy chico ocultamos la etiqueta para dar más espacio */
+    }
+    .sponsor-ticker-bar {
+        border-top: none;
+    }
+}

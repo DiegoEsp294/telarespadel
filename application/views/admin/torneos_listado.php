@@ -88,6 +88,9 @@
             <a href="<?= base_url('admin/Push/index') ?>" class="tl-btn tl-btn-secondary">
                 <i class="fas fa-bell"></i> Notificaciones
             </a>
+            <a href="<?= base_url('admin/Sponsors/index') ?>" class="tl-btn tl-btn-secondary">
+                <i class="fas fa-handshake"></i> Sponsors
+            </a>
         </div>
     </div>
 

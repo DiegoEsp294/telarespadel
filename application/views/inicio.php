@@ -291,6 +291,42 @@
     </section>
     <?php endif; ?>
 
+    <!-- ══ Sección Auspiciantes ══════════════════════════════════════════ -->
+    <?php
+    $CI_sps =& get_instance();
+    if (!isset($CI_sps->Sponsor_model)) {
+        $CI_sps->load->model('Sponsor_model');
+    }
+    $sponsors_seccion = $CI_sps->Sponsor_model->obtener_activos_para_seccion();
+    if (!empty($sponsors_seccion)):
+    ?>
+    <section class="sponsors-section" id="auspiciantes">
+        <div class="container">
+            <h2 class="sponsors-section-title">Nuestros Auspiciantes</h2>
+            <p class="sponsors-section-sub">Gracias a quienes hacen posible el pádel en Telares</p>
+            <div class="sponsors-logos-grid">
+                <?php foreach ($sponsors_seccion as $sp): ?>
+                <div class="sponsor-logo-card">
+                    <?php if ($sp->sitio_web): ?>
+                    <a href="<?= htmlspecialchars($sp->sitio_web) ?>"
+                       target="_blank" rel="noopener sponsored">
+                    <?php endif; ?>
+                        <?php if ($sp->logo): ?>
+                            <img src="data:image/png;base64,<?= $sp->logo ?>"
+                                 alt="<?= htmlspecialchars($sp->nombre) ?>"
+                                 class="sponsor-logo-grid-img">
+                        <?php endif; ?>
+                        <span class="sponsor-logo-name"><?= htmlspecialchars($sp->nombre) ?></span>
+                    <?php if ($sp->sitio_web): ?>
+                    </a>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
+
     <!-- Sección de Servicios -->
     <section class="servicios-section">
         <div class="container">

@@ -378,6 +378,57 @@
         </div>
     </nav>
 
+    <?php
+    // ── Ticker de sponsors ──────────────────────────────────────────────────
+    $CI_sp =& get_instance();
+    $CI_sp->load->model('Sponsor_model');
+    $sponsors_ticker = $CI_sp->Sponsor_model->obtener_activos_global();
+    if (!empty($sponsors_ticker)):
+    ?>
+    <div class="sponsor-ticker-bar" id="sponsorTickerBar">
+        <div class="sponsor-ticker-label">
+            <i class="fas fa-handshake"></i> Auspiciantes
+        </div>
+        <div class="sponsor-ticker-viewport">
+            <div class="sponsor-ticker-track" id="sponsorTrack">
+                <?php
+                // Renderizar 3 veces para asegurar bucle continuo sin cortes
+                for ($r = 0; $r < 3; $r++):
+                    foreach ($sponsors_ticker as $sp):
+                ?>
+                    <?php if ($sp->sitio_web): ?>
+                    <a class="sponsor-ticker-item"
+                       href="<?= htmlspecialchars($sp->sitio_web) ?>"
+                       target="_blank" rel="noopener sponsored"
+                       title="<?= htmlspecialchars($sp->nombre) ?>">
+                    <?php else: ?>
+                    <span class="sponsor-ticker-item" title="<?= htmlspecialchars($sp->nombre) ?>">
+                    <?php endif; ?>
+
+                        <?php if ($sp->logo): ?>
+                            <img src="data:image/png;base64,<?= $sp->logo ?>"
+                                 alt="<?= htmlspecialchars($sp->nombre) ?>"
+                                 class="sponsor-ticker-logo">
+                        <?php else: ?>
+                            <span class="sponsor-ticker-name"><?= htmlspecialchars($sp->nombre) ?></span>
+                        <?php endif; ?>
+
+                    <?php if ($sp->sitio_web): ?>
+                    </a>
+                    <?php else: ?>
+                    </span>
+                    <?php endif; ?>
+
+                    <span class="sponsor-ticker-sep">•</span>
+                <?php
+                    endforeach;
+                endfor;
+                ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <script>
         // Debug: Verificar estado de login
         console.log('usuario_logueado:', '<?php echo isset($usuario_logueado) && $usuario_logueado ? "SI" : "NO"; ?>');
