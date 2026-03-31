@@ -3852,7 +3852,7 @@ button {
     border-bottom: 2px solid #FF6600;
     display: flex;
     align-items: center;
-    height: 42px;
+    height: 68px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
@@ -3910,14 +3910,14 @@ button {
     text-decoration: none;
     color: #fff;
     transition: opacity .2s;
-    height: 42px;
+    height: 68px;
 }
 .sponsor-ticker-item:hover { opacity: .75; }
 
 .sponsor-ticker-logo {
-    height: 26px;
+    height: 48px;
     width: auto;
-    max-width: 80px;
+    max-width: 140px;
     object-fit: contain;
     opacity: .9;
 }
@@ -4015,7 +4015,7 @@ button {
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .sponsor-ticker-bar {
-        height: 38px;
+        height: 56px;
     }
     .sponsor-ticker-label {
         padding: 0 10px;
@@ -4023,10 +4023,10 @@ button {
     }
     .sponsor-ticker-item {
         padding: 0 14px;
-        height: 38px;
+        height: 56px;
     }
     .sponsor-ticker-logo {
-        height: 22px;
+        height: 38px;
     }
     .sponsor-ticker-track {
         animation-duration: 22s;
