@@ -45,7 +45,9 @@ class Push extends CI_Controller {
     /* ===== PANTALLA ADMIN ===== */
     public function index()
     {
+        $this->load->model('Torneo_model');
         $data['total_suscriptores'] = $this->Push_model->total();
+        $data['torneos'] = $this->Torneo_model->obtener_por_usuario($this->session->userdata('usuario_id'));
         $this->load->view('header');
         $this->load->view('admin/push_notificaciones', $data);
         $this->load->view('footer');

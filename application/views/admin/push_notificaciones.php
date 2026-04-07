@@ -68,10 +68,7 @@
             <label>Destino (URL al tocar la notificación)</label>
             <select name="url" id="pUrl">
                 <option value="<?= base_url() ?>">Inicio del sitio</option>
-                <?php
-                $this->load->model('Torneo_model');
-                $torneos = $this->Torneo_model->obtener_por_usuario($this->session->userdata('usuario_id'));
-                foreach ($torneos as $t): ?>
+                <?php foreach ($torneos as $t): ?>
                 <option value="<?= base_url('home/torneo/'.$t->id) ?>"><?= htmlspecialchars($t->nombre) ?></option>
                 <?php endforeach; ?>
             </select>
