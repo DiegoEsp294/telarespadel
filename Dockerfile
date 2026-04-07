@@ -5,12 +5,19 @@ FROM php:7.4-apache
 # -----------------------------
 RUN apt-get update && apt-get install -y \
     libpq-dev \
+    unzip \
+    curl \
     && docker-php-ext-install \
         mysqli \
         pdo \
         pdo_mysql \
         pgsql \
         pdo_pgsql
+
+# -----------------------------
+# Composer
+# -----------------------------
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # -----------------------------
 # Apache config
@@ -31,6 +38,11 @@ RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 # Copiar proyecto
 # -----------------------------
 COPY . /var/www/html/
+
+# -----------------------------
+# Instalar dependencias PHP
+# -----------------------------
+RUN cd /var/www/html && composer install --no-dev --optimize-autoloader --no-interaction
 
 # Crear carpetas necesarias
 RUN mkdir -p /var/www/html/application/logs \
