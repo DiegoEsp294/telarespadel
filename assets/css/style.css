@@ -1648,6 +1648,37 @@ body {
 }
 .btn-editar-insc:hover { background: #cf6d17; }
 
+.input-disponibilidad {
+    width: 100%;
+    min-width: 160px;
+    padding: 5px 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+.input-disponibilidad:focus {
+    outline: none;
+    border-color: #e67e22;
+}
+
+.badge-disponibilidad {
+    display: inline-block;
+    background: #fff3e0;
+    color: #b95000;
+    border: 1px solid #f5c88a;
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.sin-disponibilidad {
+    color: #bbb;
+    font-size: 13px;
+}
+
 .btn-cancelar {
     background: #aaa;
     color: #fff;
@@ -3852,7 +3883,7 @@ button {
     border-bottom: 2px solid #FF6600;
     display: flex;
     align-items: center;
-    height: 68px;
+    height: 100px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
@@ -3906,25 +3937,25 @@ button {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 0 18px;
+    padding: 0 4px;
     text-decoration: none;
     color: #fff;
     transition: opacity .2s;
-    height: 68px;
+    height: 100px;
 }
 .sponsor-ticker-item:hover { opacity: .75; }
 
 .sponsor-ticker-logo {
-    height: 48px;
+    height: 76px;
     width: auto;
-    max-width: 140px;
+    max-width: 200px;
     object-fit: contain;
     opacity: .9;
 }
 .sponsor-ticker-item:hover .sponsor-ticker-logo { opacity: 1; }
 
 .sponsor-ticker-name {
-    font-size: 13px;
+    font-size: 17px;
     font-weight: 600;
     color: rgba(255,255,255,.85);
     letter-spacing: .3px;
@@ -3934,7 +3965,7 @@ button {
     color: #FF6600;
     font-size: 14px;
     opacity: .5;
-    padding: 0 4px;
+    padding: 0;
     flex-shrink: 0;
 }
 
@@ -3971,13 +4002,13 @@ button {
     background: #fff;
     border-radius: 14px;
     box-shadow: 0 2px 12px rgba(0,0,0,.07);
-    padding: 20px 28px;
+    padding: 40px 50px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    min-width: 140px;
-    max-width: 200px;
+    gap: 16px;
+    min-width: 240px;
+    max-width: 340px;
     transition: transform .2s, box-shadow .2s;
     text-decoration: none;
 }
@@ -3996,14 +4027,14 @@ button {
 }
 
 .sponsor-logo-grid-img {
-    height: 60px;
+    height: 140px;
     width: auto;
-    max-width: 140px;
+    max-width: 280px;
     object-fit: contain;
 }
 
 .sponsor-logo-name {
-    font-size: 13px;
+    font-size: 18px;
     font-weight: 600;
     color: #444;
     text-align: center;
@@ -4012,21 +4043,47 @@ button {
 .sponsor-logo-card a .sponsor-logo-name { color: #444; }
 .sponsor-logo-card a:hover .sponsor-logo-name { color: #FF6600; }
 
+.sponsor-social-links {
+    display: flex;
+    gap: 7px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+.ssp {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #fff;
+    text-decoration: none;
+    transition: opacity .15s, transform .15s;
+}
+.ssp:hover { opacity: .82; transform: translateY(-2px); }
+.ssp-web  { background: #555; }
+.ssp-ig   { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+.ssp-fb   { background: #1877f2; }
+.ssp-wa   { background: #25d366; }
+.ssp-otro { background: #888; }
+
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .sponsor-ticker-bar {
-        height: 56px;
+        height: 76px;
     }
     .sponsor-ticker-label {
         padding: 0 10px;
         font-size: 9px;
     }
     .sponsor-ticker-item {
-        padding: 0 14px;
-        height: 56px;
+        padding: 0 4px;
+        height: 76px;
     }
     .sponsor-ticker-logo {
-        height: 38px;
+        height: 56px;
     }
     .sponsor-ticker-track {
         animation-duration: 22s;
@@ -4041,8 +4098,8 @@ button {
         gap: 16px;
     }
     .sponsor-logo-card {
-        min-width: 110px;
-        padding: 16px 18px;
+        min-width: 160px;
+        padding: 24px 28px;
     }
 }
 

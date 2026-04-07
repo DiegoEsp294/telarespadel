@@ -105,11 +105,34 @@ class Home extends CI_Controller {
         $data['seo_title']       = $torneo->nombre;
         $data['seo_description'] = $descripcion_torneo;
         $data['seo_url']         = site_url('home/torneo/' . $id);
+        $data['seo_image']       = !empty($torneo->imagen)
+                                   ? site_url('home/flyer/' . $id)
+                                   : base_url('logo_inicio.png');
 
         // Cargar vista
         $this->load->view('header', $data);
         $this->load->view('detalle_torneo', $data);
         $this->load->view('footer');
+    }
+
+    public function flyer($id)
+    {
+        $torneo = $this->Torneo_model->obtener_por_id($id);
+
+        if (!$torneo || empty($torneo->imagen)) {
+            header('Location: ' . base_url('logo_inicio.png'));
+            exit;
+        }
+
+        $imagen = base64_decode($torneo->imagen);
+
+        // Detectar si es PNG o JPEG por magic bytes
+        $mime = (substr($imagen, 0, 4) === "\x89PNG") ? 'image/png' : 'image/jpeg';
+
+        header('Content-Type: ' . $mime);
+        header('Cache-Control: public, max-age=86400');
+        echo $imagen;
+        exit;
     }
 
     public function solicitar_inscripcion()

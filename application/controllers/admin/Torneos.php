@@ -321,6 +321,21 @@ class Torneos extends CI_Controller {
         echo json_encode($this->Torneo_model->obtener_inscripciones($id_torneo));
     }
 
+    public function actualizar_disponibilidad()
+    {
+        $this->load->model('Torneo_model');
+        $id            = (int)$this->input->post('inscripcion_id');
+        $disponibilidad = $this->input->post('disponibilidad');
+
+        if (!$id) {
+            echo json_encode(['ok' => false]);
+            return;
+        }
+
+        $this->db->where('id', $id)->update('inscripciones', ['disponibilidad' => $disponibilidad]);
+        echo json_encode(['ok' => true]);
+    }
+
     public function fixture($torneo_id)
     {
         $this->load->library('FixtureService');

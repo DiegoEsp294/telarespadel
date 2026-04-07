@@ -127,6 +127,31 @@
 .badge-sp.torneo   { background: #fff3cd; color: #856404; }
 .badge-sp.orden    { background: #f0f0f0; color: #555; }
 
+.sponsor-social-icons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+.ssi {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #fff;
+    text-decoration: none;
+    transition: opacity .15s;
+}
+.ssi:hover { opacity: .8; }
+.ssi-web  { background: #555; }
+.ssi-ig   { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+.ssi-fb   { background: #1877f2; }
+.ssi-wa   { background: #25d366; }
+.ssi-otro { background: #888; }
+
 .sponsor-card-actions {
     display: flex;
     gap: 8px;
@@ -205,11 +230,24 @@
 
                     <div class="sponsor-card-info">
                         <h3><?= htmlspecialchars($s->nombre) ?></h3>
-                        <?php if ($s->sitio_web): ?>
-                            <a class="sitio" href="<?= htmlspecialchars($s->sitio_web) ?>" target="_blank" rel="noopener">
-                                <i class="fas fa-external-link-alt"></i> <?= htmlspecialchars($s->sitio_web) ?>
-                            </a>
-                        <?php endif; ?>
+                        <div class="sponsor-social-icons">
+                            <?php if ($s->sitio_web): ?>
+                                <a href="<?= htmlspecialchars($s->sitio_web) ?>" target="_blank" rel="noopener" title="Sitio web" class="ssi ssi-web"><i class="fas fa-globe"></i></a>
+                            <?php endif; ?>
+                            <?php if ($s->instagram): ?>
+                                <?php $ig_url = (strpos($s->instagram, 'http') === 0) ? $s->instagram : 'https://instagram.com/' . ltrim($s->instagram, '@'); ?>
+                                <a href="<?= htmlspecialchars($ig_url) ?>" target="_blank" rel="noopener" title="Instagram" class="ssi ssi-ig"><i class="fab fa-instagram"></i></a>
+                            <?php endif; ?>
+                            <?php if ($s->facebook): ?>
+                                <a href="<?= htmlspecialchars($s->facebook) ?>" target="_blank" rel="noopener" title="Facebook" class="ssi ssi-fb"><i class="fab fa-facebook"></i></a>
+                            <?php endif; ?>
+                            <?php if ($s->whatsapp): ?>
+                                <a href="https://wa.me/<?= preg_replace('/\D/', '', $s->whatsapp) ?>" target="_blank" rel="noopener" title="WhatsApp" class="ssi ssi-wa"><i class="fab fa-whatsapp"></i></a>
+                            <?php endif; ?>
+                            <?php if ($s->otro_link): ?>
+                                <a href="<?= htmlspecialchars($s->otro_link) ?>" target="_blank" rel="noopener" title="<?= htmlspecialchars($s->otro_label ?: 'Otro') ?>" class="ssi ssi-otro"><i class="fas fa-share-alt"></i></a>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
 

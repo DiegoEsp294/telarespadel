@@ -48,12 +48,17 @@ class Sponsors extends CI_Controller {
         $torneo_id = $this->input->post('torneo_id');
 
         $data = [
-            'nombre'    => $this->input->post('nombre'),
-            'sitio_web' => $this->input->post('sitio_web') ?: null,
-            'activo'    => (bool)$this->input->post('activo'),
-            'es_global' => (bool)$this->input->post('es_global'),
-            'torneo_id' => ($torneo_id !== '' && $torneo_id !== null) ? (int)$torneo_id : null,
-            'orden'     => (int)($this->input->post('orden') ?: 0),
+            'nombre'      => $this->input->post('nombre'),
+            'sitio_web'   => $this->input->post('sitio_web')   ?: null,
+            'instagram'   => $this->input->post('instagram')   ?: null,
+            'facebook'    => $this->input->post('facebook')    ?: null,
+            'whatsapp'    => $this->input->post('whatsapp')    ?: null,
+            'otro_link'   => $this->input->post('otro_link')   ?: null,
+            'otro_label'  => $this->input->post('otro_label')  ?: null,
+            'activo'      => (bool)$this->input->post('activo'),
+            'es_global'   => (bool)$this->input->post('es_global'),
+            'torneo_id'   => ($torneo_id !== '' && $torneo_id !== null) ? (int)$torneo_id : null,
+            'orden'       => (int)($this->input->post('orden') ?: 0),
         ];
 
         if ($logoBase64) {
@@ -106,12 +111,17 @@ class Sponsors extends CI_Controller {
         $torneo_id = $this->input->post('torneo_id');
 
         $data = [
-            'nombre'    => $this->input->post('nombre'),
-            'sitio_web' => $this->input->post('sitio_web') ?: null,
-            'activo'    => (bool)$this->input->post('activo'),
-            'es_global' => (bool)$this->input->post('es_global'),
-            'torneo_id' => ($torneo_id !== '' && $torneo_id !== null) ? (int)$torneo_id : null,
-            'orden'     => (int)($this->input->post('orden') ?: 0),
+            'nombre'      => $this->input->post('nombre'),
+            'sitio_web'   => $this->input->post('sitio_web')   ?: null,
+            'instagram'   => $this->input->post('instagram')   ?: null,
+            'facebook'    => $this->input->post('facebook')    ?: null,
+            'whatsapp'    => $this->input->post('whatsapp')    ?: null,
+            'otro_link'   => $this->input->post('otro_link')   ?: null,
+            'otro_label'  => $this->input->post('otro_label')  ?: null,
+            'activo'      => (bool)$this->input->post('activo'),
+            'es_global'   => (bool)$this->input->post('es_global'),
+            'torneo_id'   => ($torneo_id !== '' && $torneo_id !== null) ? (int)$torneo_id : null,
+            'orden'       => (int)($this->input->post('orden') ?: 0),
         ];
 
         if (!empty($_FILES['logo']['tmp_name'])) {

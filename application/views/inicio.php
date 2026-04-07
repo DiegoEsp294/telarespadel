@@ -307,18 +307,31 @@
             <div class="sponsors-logos-grid">
                 <?php foreach ($sponsors_seccion as $sp): ?>
                 <div class="sponsor-logo-card">
-                    <?php if ($sp->sitio_web): ?>
-                    <a href="<?= htmlspecialchars($sp->sitio_web) ?>"
-                       target="_blank" rel="noopener sponsored">
+                    <?php if ($sp->logo): ?>
+                        <img src="data:image/png;base64,<?= $sp->logo ?>"
+                             alt="<?= htmlspecialchars($sp->nombre) ?>"
+                             class="sponsor-logo-grid-img">
                     <?php endif; ?>
-                        <?php if ($sp->logo): ?>
-                            <img src="data:image/png;base64,<?= $sp->logo ?>"
-                                 alt="<?= htmlspecialchars($sp->nombre) ?>"
-                                 class="sponsor-logo-grid-img">
-                        <?php endif; ?>
-                        <span class="sponsor-logo-name"><?= htmlspecialchars($sp->nombre) ?></span>
-                    <?php if ($sp->sitio_web): ?>
-                    </a>
+                    <span class="sponsor-logo-name"><?= htmlspecialchars($sp->nombre) ?></span>
+                    <?php
+                    // Iconos de redes sociales
+                    $sp_redes = [];
+                    if (!empty($sp->sitio_web))   $sp_redes[] = ['url' => $sp->sitio_web, 'icon' => 'fas fa-globe', 'cls' => 'ssp-web'];
+                    if (!empty($sp->instagram))   $sp_redes[] = ['url' => (strpos($sp->instagram,'http')===0)?$sp->instagram:'https://instagram.com/'.ltrim($sp->instagram,'@'), 'icon' => 'fab fa-instagram', 'cls' => 'ssp-ig'];
+                    if (!empty($sp->facebook))    $sp_redes[] = ['url' => $sp->facebook, 'icon' => 'fab fa-facebook', 'cls' => 'ssp-fb'];
+                    if (!empty($sp->whatsapp))    $sp_redes[] = ['url' => 'https://wa.me/'.preg_replace('/\D/','',$sp->whatsapp), 'icon' => 'fab fa-whatsapp', 'cls' => 'ssp-wa'];
+                    if (!empty($sp->otro_link))   $sp_redes[] = ['url' => $sp->otro_link, 'icon' => 'fas fa-share-alt', 'cls' => 'ssp-otro'];
+                    if (!empty($sp_redes)):
+                    ?>
+                    <div class="sponsor-social-links">
+                        <?php foreach ($sp_redes as $red): ?>
+                        <a href="<?= htmlspecialchars($red['url']) ?>"
+                           target="_blank" rel="noopener sponsored"
+                           class="ssp <?= $red['cls'] ?>">
+                            <i class="<?= $red['icon'] ?>"></i>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
                     <?php endif; ?>
                 </div>
                 <?php endforeach; ?>

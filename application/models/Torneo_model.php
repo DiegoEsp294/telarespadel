@@ -78,7 +78,7 @@ class Torneo_model extends CI_Model {
         $query = $this->db
             ->where('i.torneo_id', $torneo_id)
             ->where('i.estado !=', 'cancelada')
-            ->select('i.*, p1.nombre as nombre_p1, p1.apellido as apellido_p1, p2.nombre as nombre_p2, p2.apellido as apellido_p2')
+            ->select('i.*, i.disponibilidad, p1.nombre as nombre_p1, p1.apellido as apellido_p1, p2.nombre as nombre_p2, p2.apellido as apellido_p2')
             ->from('inscripciones i')
             ->join('participantes p1', 'i.participante1_id = p1.id', 'left')
             ->join('participantes p2', 'i.participante2_id = p2.id', 'left')
@@ -349,7 +349,7 @@ class Torneo_model extends CI_Model {
     public function obtener_inscripciones_por_categoria($torneo_id, $categoria_id)
     {
         return $this->db
-            ->select('i.id, i.participante1_id, i.participante2_id, i.estado,
+            ->select('i.id, i.participante1_id, i.participante2_id, i.estado, i.disponibilidad,
                 p1.nombre as nombre1, p1.apellido as apellido1, p1.telefono as telefono1,
                 p2.nombre as nombre2, p2.apellido as apellido2, p2.telefono as telefono2')
             ->from('inscripciones i')
@@ -506,6 +506,7 @@ class Torneo_model extends CI_Model {
             SELECT
                 i.id,
                 CONCAT(p1.apellido, ' ', p1.nombre, ' / ', p2.apellido, ' ', p2.nombre) AS pareja_nombre,
+                i.disponibilidad,
                 z.id   AS zona_id,
                 z.numero AS zona_numero
             FROM inscripciones i

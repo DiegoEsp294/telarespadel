@@ -154,6 +154,51 @@
 .toggle-switch input:checked + .toggle-slider { background: #FF6600; }
 .toggle-switch input:checked + .toggle-slider:before { transform: translateX(22px); }
 
+.sp-links-section {
+    margin-top: 18px;
+    background: #f8f8f8;
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.sp-links-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #444;
+    margin: 0 0 4px;
+}
+.sp-links-title span { font-weight: 400; color: #aaa; }
+.sp-links-title i { margin-right: 5px; color: #FF6600; }
+
+.sp-link-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sp-link-row input {
+    flex: 1;
+    margin: 0 !important;
+    padding: 8px 12px !important;
+}
+.sp-link-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    color: #fff;
+}
+.sp-link-web  { background: #555; }
+.sp-link-ig   { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+.sp-link-fb   { background: #1877f2; }
+.sp-link-wa   { background: #25d366; }
+.sp-link-otro { background: #888; }
+
 .sp-form-actions {
     display: flex;
     gap: 12px;
@@ -249,12 +294,58 @@
                 <img id="logo-preview-live" src="" alt="Vista previa">
             </div>
 
-            <label>Sitio web</label>
-            <input type="url"
-                   name="sitio_web"
-                   placeholder="https://www.ejemplo.com"
-                   value="<?= htmlspecialchars($sponsor->sitio_web ?? '') ?>">
-            <p class="hint">Si el usuario hace clic en el logo será redirigido aquí (opcional).</p>
+            <div class="sp-links-section">
+                <p class="sp-links-title"><i class="fas fa-link"></i> Links de contacto / redes <span>(todos opcionales)</span></p>
+
+                <div class="sp-link-row">
+                    <span class="sp-link-icon sp-link-web"><i class="fas fa-globe"></i></span>
+                    <input type="url"
+                           name="sitio_web"
+                           placeholder="https://www.ejemplo.com"
+                           value="<?= htmlspecialchars($sponsor->sitio_web ?? '') ?>">
+                </div>
+
+                <div class="sp-link-row">
+                    <span class="sp-link-icon sp-link-ig"><i class="fab fa-instagram"></i></span>
+                    <input type="text"
+                           name="instagram"
+                           placeholder="https://instagram.com/usuario  o  @usuario"
+                           value="<?= htmlspecialchars($sponsor->instagram ?? '') ?>">
+                </div>
+
+                <div class="sp-link-row">
+                    <span class="sp-link-icon sp-link-fb"><i class="fab fa-facebook"></i></span>
+                    <input type="text"
+                           name="facebook"
+                           placeholder="https://facebook.com/pagina"
+                           value="<?= htmlspecialchars($sponsor->facebook ?? '') ?>">
+                </div>
+
+                <div class="sp-link-row">
+                    <span class="sp-link-icon sp-link-wa"><i class="fab fa-whatsapp"></i></span>
+                    <input type="text"
+                           name="whatsapp"
+                           placeholder="5493812345678  (código de país + número)"
+                           value="<?= htmlspecialchars($sponsor->whatsapp ?? '') ?>">
+                </div>
+
+                <div class="sp-link-row sp-link-row-otro">
+                    <span class="sp-link-icon sp-link-otro"><i class="fas fa-share-alt"></i></span>
+                    <div style="flex:1;display:flex;gap:8px;flex-wrap:wrap;">
+                        <input type="url"
+                               name="otro_link"
+                               placeholder="https://otro-sitio.com"
+                               value="<?= htmlspecialchars($sponsor->otro_link ?? '') ?>"
+                               style="flex:2;min-width:160px;">
+                        <input type="text"
+                               name="otro_label"
+                               placeholder="Etiqueta (ej: TikTok)"
+                               value="<?= htmlspecialchars($sponsor->otro_label ?? '') ?>"
+                               style="flex:1;min-width:100px;">
+                    </div>
+                </div>
+            </div>
+            <p class="hint" style="margin-top:6px;">El primer link disponible se usará al hacer clic en el logo del ticker.</p>
 
             <label>Orden en el ticker</label>
             <input type="number"

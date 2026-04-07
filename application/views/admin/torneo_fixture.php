@@ -70,6 +70,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Pareja</th>
+                                        <th>Disponibilidad</th>
                                         <th>Zona</th>
                                     </tr>
                                 </thead>
@@ -78,6 +79,13 @@
                                     <tr>
                                         <td><?= $idx + 1 ?></td>
                                         <td><?= htmlspecialchars($insc->pareja_nombre) ?></td>
+                                        <td>
+                                            <?php if (!empty($insc->disponibilidad)): ?>
+                                                <span class="badge-disponibilidad"><?= htmlspecialchars($insc->disponibilidad) ?></span>
+                                            <?php else: ?>
+                                                <span class="sin-disponibilidad">—</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td>
                                             <select name="zona[<?= $insc->id ?>]" class="zona-select">
                                                 <option value="">-- Sin asignar --</option>
@@ -156,6 +164,7 @@
                                     <th>#</th>
                                     <th>Jugador 1</th>
                                     <th>Jugador 2</th>
+                                    <th>Disponibilidad</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -165,6 +174,13 @@
                                     <td><?= $idx + 1 ?></td>
                                     <td><?= htmlspecialchars($insc->apellido1 . ' ' . $insc->nombre1) ?></td>
                                     <td><?= htmlspecialchars($insc->apellido2 . ' ' . $insc->nombre2) ?></td>
+                                    <td>
+                                        <input type="text"
+                                               class="input-disponibilidad"
+                                               data-id="<?= $insc->id ?>"
+                                               value="<?= htmlspecialchars($insc->disponibilidad ?? '') ?>"
+                                               placeholder="Ej: Sábados tarde">
+                                    </td>
                                     <td>
                                         <button class="btn-editar-insc" type="button"
                                             onclick="abrirModalInscripto(
@@ -1192,6 +1208,31 @@ document.getElementById('formEditarInscripto')
         } else {
             alert('Error al guardar: ' + (resp.error ?? ''));
         }
+    });
+});
+
+// ── Disponibilidad: guardar con debounce al escribir ──────────────────────
+document.querySelectorAll('.input-disponibilidad').forEach(function(input) {
+    var timer;
+    input.addEventListener('input', function() {
+        clearTimeout(timer);
+        var id = this.dataset.id;
+        var val = this.value;
+        var el = this;
+        timer = setTimeout(function() {
+            var fd = new FormData();
+            fd.append('inscripcion_id', id);
+            fd.append('disponibilidad', val);
+            fetch("<?= base_url('admin/Torneos/actualizar_disponibilidad') ?>", {
+                method: 'POST',
+                body: fd
+            })
+            .then(r => r.json())
+            .then(function(resp) {
+                el.style.borderColor = resp.ok ? '#2ecc71' : '#e74c3c';
+                setTimeout(function() { el.style.borderColor = ''; }, 1500);
+            });
+        }, 600);
     });
 });
 

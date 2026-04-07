@@ -396,9 +396,18 @@
                 for ($r = 0; $r < 3; $r++):
                     foreach ($sponsors_ticker as $sp):
                 ?>
-                    <?php if ($sp->sitio_web): ?>
+                    <?php
+                    // Primer link disponible para el ticker
+                    $sp_link = null;
+                    if (!empty($sp->sitio_web))   $sp_link = $sp->sitio_web;
+                    elseif (!empty($sp->instagram)) $sp_link = (strpos($sp->instagram,'http')===0) ? $sp->instagram : 'https://instagram.com/'.ltrim($sp->instagram,'@');
+                    elseif (!empty($sp->facebook))  $sp_link = $sp->facebook;
+                    elseif (!empty($sp->whatsapp))  $sp_link = 'https://wa.me/'.preg_replace('/\D/','',$sp->whatsapp);
+                    elseif (!empty($sp->otro_link)) $sp_link = $sp->otro_link;
+                    ?>
+                    <?php if ($sp_link): ?>
                     <a class="sponsor-ticker-item"
-                       href="<?= htmlspecialchars($sp->sitio_web) ?>"
+                       href="<?= htmlspecialchars($sp_link) ?>"
                        target="_blank" rel="noopener sponsored"
                        title="<?= htmlspecialchars($sp->nombre) ?>">
                     <?php else: ?>
@@ -413,7 +422,7 @@
                             <span class="sponsor-ticker-name"><?= htmlspecialchars($sp->nombre) ?></span>
                         <?php endif; ?>
 
-                    <?php if ($sp->sitio_web): ?>
+                    <?php if ($sp_link): ?>
                     </a>
                     <?php else: ?>
                     </span>
