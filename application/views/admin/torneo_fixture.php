@@ -798,6 +798,64 @@
                         <div id="bulk-msg" style="display:none;margin-top:10px;padding:8px 12px;border-radius:6px;font-size:13px;font-weight:600;"></div>
                     </div>
 
+                    <!-- ══ PANEL DE AVISOS ══════════════════════════════════ -->
+                    <div class="avisos-panel">
+                        <div class="avisos-panel-header">
+                            <span class="avisos-panel-title">⚠️ Avisos de atraso</span>
+                            <span class="avisos-panel-sub">Se envían como notificación push y se muestran en la plataforma</span>
+                        </div>
+
+                        <form id="form-aviso" class="avisos-form">
+                            <input type="hidden" name="torneo_id" value="<?= $torneo->id ?>">
+                            <div class="avisos-form-row">
+                                <div class="avisos-form-group">
+                                    <label>Cancha</label>
+                                    <input type="number" name="cancha" min="1" max="30" placeholder="Opcional" class="avisos-input-sm">
+                                </div>
+                                <div class="avisos-form-group avisos-form-group-grow">
+                                    <label>Mensaje</label>
+                                    <input type="text" name="mensaje" placeholder="Ej: Se atrasa 1 hora por lluvia" required class="avisos-input">
+                                </div>
+                                <div class="avisos-form-group">
+                                    <label>Duración (hs)</label>
+                                    <input type="number" name="horas" value="2" min="0.5" max="24" step="0.5" class="avisos-input-sm">
+                                </div>
+                                <div class="avisos-form-group avisos-form-group-btn">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn-aviso-crear">Publicar aviso</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div id="avisos-lista">
+                        <?php foreach ($avisos as $av): ?>
+                            <div class="aviso-item <?= $av->activo ? 'aviso-activo' : 'aviso-expirado' ?>" data-id="<?= $av->id ?>">
+                                <div class="aviso-item-info">
+                                    <?php if ($av->cancha): ?>
+                                        <span class="aviso-cancha-badge">Cancha <?= $av->cancha ?></span>
+                                    <?php endif; ?>
+                                    <span class="aviso-mensaje"><?= htmlspecialchars($av->mensaje) ?></span>
+                                    <span class="aviso-expira">
+                                        <?= $av->activo ? 'Expira: ' . date('d/m H:i', strtotime($av->expira_at)) : 'Expirado' ?>
+                                    </span>
+                                </div>
+                                <div class="aviso-item-actions">
+                                    <button class="btn-aviso-wpp" onclick="compartirAviso(<?= $av->id ?>, '<?= addslashes($av->mensaje) ?>', <?= $av->cancha ?: 'null' ?>)" title="Compartir por WhatsApp">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </button>
+                                    <button class="btn-aviso-del" onclick="eliminarAviso(<?= $av->id ?>)" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (empty($avisos)): ?>
+                            <p class="avisos-empty" id="avisos-empty">No hay avisos publicados aún.</p>
+                        <?php endif; ?>
+                        </div>
+                    </div>
+                    <!-- ════════════════════════════════════════════════════ -->
+
                     <?php
                     $dias_es = ['Sunday'=>'Domingo','Monday'=>'Lunes','Tuesday'=>'Martes','Wednesday'=>'Miércoles','Thursday'=>'Jueves','Friday'=>'Viernes','Saturday'=>'Sábado'];
 
@@ -825,6 +883,9 @@
                                     </button>
                                 <?php endforeach; ?>
                             </div>
+                            <button class="btn-compartir-filtro" id="btn-compartir-filtro" title="Compartir partidos con filtro aplicado">
+                                <i class="fab fa-whatsapp"></i> Compartir
+                            </button>
                         </div>
 
                         <div class="listado-cards" id="listado-tbody">
@@ -1156,16 +1217,25 @@ function showTab(e, tab)
 
     e.currentTarget.classList.add('active');
 
-    location.hash = tab;
+    var url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    if (tab !== 'listado') url.searchParams.delete('fecha');
+    history.replaceState(null, '', url.toString());
 }
 
-// Restaurar tab activo al cargar
+// Restaurar tab activo + filtro de fecha al cargar
 (function() {
-    const tab = location.hash.replace('#', '');
+    var params     = new URLSearchParams(window.location.search);
+    var fechaParam = params.get('fecha');
+    var tabParam   = params.get('tab') || location.hash.replace('#', '');
+
+    // Si viene fecha pero no tab, ir a listado
+    if (fechaParam && !tabParam) tabParam = 'listado';
+
     const validTabs = ['config','inscriptos','zonas','resultados','playoff','listado'];
-    if (tab && validTabs.includes(tab)) {
-        const el = document.getElementById('tab-' + tab);
-        const btn = document.querySelector('.tab[onclick*="\''+tab+'\'"]');
+    if (tabParam && validTabs.includes(tabParam)) {
+        const el  = document.getElementById('tab-' + tabParam);
+        const btn = document.querySelector('.tab[onclick*="\''+tabParam+'\'"]');
         if (el && btn) {
             document.querySelectorAll('.fixture-tab-content').forEach(e => e.style.display = 'none');
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1173,6 +1243,8 @@ function showTab(e, tab)
             btn.classList.add('active');
         }
     }
+
+    if (fechaParam) aplicarFiltroDia(fechaParam);
 })();
 
 function abrirModalInscripto(id, n1, ap1, tel1, n2, ap2, tel2)
@@ -1330,23 +1402,125 @@ function actualizarSelectsZona(numZonas)
 })();
 
 // ---- Listado de partidos: filtro por día ----
+function aplicarFiltroDia(fechaFiltro) {
+    document.querySelectorAll('.btn-dia').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.fecha === fechaFiltro);
+    });
+
+    var rows     = document.querySelectorAll('#listado-tbody .listado-row');
+    var visibles = 0;
+
+    rows.forEach(function(row) {
+        var mostrar = !fechaFiltro || row.dataset.fecha === fechaFiltro;
+        row.style.display = mostrar ? '' : 'none';
+        if (mostrar) visibles++;
+    });
+
+    var vacio = document.getElementById('listado-vacio');
+    if (vacio) vacio.style.display = visibles === 0 ? '' : 'none';
+
+    // Actualizar URL sin recargar
+    var url = new URL(window.location.href);
+    if (fechaFiltro) {
+        url.searchParams.set('fecha', fechaFiltro);
+    } else {
+        url.searchParams.delete('fecha');
+    }
+    history.replaceState(null, '', url.toString());
+}
+
 document.querySelectorAll('.btn-dia').forEach(function(btn) {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.btn-dia').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-
-        var fechaFiltro = this.dataset.fecha;
-        var rows        = document.querySelectorAll('#listado-tbody .listado-row');
-        var visibles    = 0;
-
-        rows.forEach(function(row) {
-            var mostrar = !fechaFiltro || row.dataset.fecha === fechaFiltro;
-            row.style.display = mostrar ? '' : 'none';
-            if (mostrar) visibles++;
-        });
-
-        var vacio = document.getElementById('listado-vacio');
-        if (vacio) vacio.style.display = visibles === 0 ? '' : 'none';
+        aplicarFiltroDia(this.dataset.fecha);
     });
 });
+
+// Aplicar filtro si viene en la URL al cargar
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    var fecha  = params.get('fecha');
+    if (fecha) aplicarFiltroDia(fecha);
+})();
+
+// Botón compartir filtro
+document.getElementById('btn-compartir-filtro').addEventListener('click', function() {
+    var url = window.location.href;
+    if (navigator.share) {
+        navigator.share({ title: document.title, url: url }).catch(function(){});
+    } else {
+        window.open('https://wa.me/?text=' + encodeURIComponent(url), '_blank');
+    }
+});
+
+// ── AVISOS ────────────────────────────────────────────────────────────────
+var _torneoId = <?= (int)$torneo->id ?>;
+var _torneoUrl = '<?= site_url('home/torneo/' . $torneo->id . '?tab=listado') ?>';
+
+document.getElementById('form-aviso').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var fd = new FormData(this);
+    var btn = this.querySelector('.btn-aviso-crear');
+    btn.disabled = true;
+    btn.textContent = 'Publicando...';
+
+    fetch('<?= base_url('admin/Avisos/crear') ?>', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(function(resp) {
+            if (resp.ok) {
+                renderAvisos(resp.avisos);
+                document.getElementById('form-aviso').reset();
+                document.querySelector('[name=horas]').value = '2';
+            } else {
+                alert('Error: ' + (resp.error ?? 'desconocido'));
+            }
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.textContent = 'Publicar aviso';
+        });
+});
+
+function eliminarAviso(id) {
+    if (!confirm('¿Eliminar este aviso?')) return;
+    var fd = new FormData();
+    fd.append('id', id);
+    fd.append('torneo_id', _torneoId);
+    fetch('<?= base_url('admin/Avisos/eliminar') ?>', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(function(resp) { if (resp.ok) renderAvisos(resp.avisos); });
+}
+
+function compartirAviso(id, mensaje, cancha) {
+    var texto = cancha ? '⚠️ Cancha ' + cancha + ': ' + mensaje : '⚠️ ' + mensaje;
+    texto += '\n\n' + _torneoUrl;
+    if (navigator.share) {
+        navigator.share({ title: 'Aviso Telares Padel', text: texto }).catch(function(){});
+    } else {
+        window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+    }
+}
+
+function renderAvisos(avisos) {
+    var lista = document.getElementById('avisos-lista');
+    if (!avisos || avisos.length === 0) {
+        lista.innerHTML = '<p class="avisos-empty" id="avisos-empty">No hay avisos publicados aún.</p>';
+        return;
+    }
+    lista.innerHTML = avisos.map(function(av) {
+        var activo = av.activo === true || av.activo === 't' || av.activo === '1';
+        var expiraLabel = activo
+            ? 'Expira: ' + new Date(av.expira_at).toLocaleString('es-AR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+            : 'Expirado';
+        return '<div class="aviso-item ' + (activo ? 'aviso-activo' : 'aviso-expirado') + '" data-id="' + av.id + '">' +
+            '<div class="aviso-item-info">' +
+            (av.cancha ? '<span class="aviso-cancha-badge">Cancha ' + av.cancha + '</span>' : '') +
+            '<span class="aviso-mensaje">' + av.mensaje + '</span>' +
+            '<span class="aviso-expira">' + expiraLabel + '</span>' +
+            '</div>' +
+            '<div class="aviso-item-actions">' +
+            '<button class="btn-aviso-wpp" onclick="compartirAviso(' + av.id + ',\'' + av.mensaje.replace(/'/g,"\\'") + '\',' + (av.cancha || 'null') + ')" title="Compartir"><i class="fab fa-whatsapp"></i></button>' +
+            '<button class="btn-aviso-del" onclick="eliminarAviso(' + av.id + ')" title="Eliminar"><i class="fas fa-trash"></i></button>' +
+            '</div></div>';
+    }).join('');
+}
 </script>

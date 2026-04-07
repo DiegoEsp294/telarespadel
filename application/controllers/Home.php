@@ -91,6 +91,7 @@ class Home extends CI_Controller {
         $data['zonas'] = $this->fixtureservice->obtenerFixtureCompleto($id, $categoria_id);
         $data['playoff'] = $this->Torneo_model->obtenerPlayoffBracket($id, $categoria_id);
         $data['todos_partidos'] = $this->Torneo_model->obtenerTodosPartidosTorneo($id);
+        $data['torneo_id']      = $id;
 
         // $data['resultados'] = $this->Torneo_model->ObtenerResultados($id_torneo);
 
@@ -113,6 +114,15 @@ class Home extends CI_Controller {
         $this->load->view('header', $data);
         $this->load->view('detalle_torneo', $data);
         $this->load->view('footer');
+    }
+
+    /* Avisos activos de un torneo — endpoint público para polling */
+    public function avisos_activos($torneo_id)
+    {
+        $this->load->model('Aviso_model');
+        header('Content-Type: application/json');
+        echo json_encode($this->Aviso_model->obtener_activos($torneo_id));
+        exit;
     }
 
     public function flyer($id)

@@ -2,6 +2,10 @@
     <div class="">
         <hr>
 
+        <!-- ══ BANNER DE AVISOS ══════════════════════════════════════════ -->
+        <div id="avisos-banner" style="display:none;"></div>
+        <!-- ════════════════════════════════════════════════════════════ -->
+
         <div class="container">
             <label>Seleccionar categoría:</label>
             <form method="get" style="width: 100%;">
@@ -438,6 +442,9 @@
                             </button>
                         <?php endforeach; ?>
                     </div>
+                    <button class="btn-compartir-filtro" id="btn-compartir-filtro" title="Compartir partidos con filtro aplicado">
+                        <i class="fab fa-whatsapp"></i> Compartir
+                    </button>
                 </div>
 
                 <div class="listado-cards" id="listado-tbody-pub">
@@ -586,6 +593,15 @@ function showTab(e, tab)
     // activar botón clickeado
     e.currentTarget.classList.add('active');
 
+    // Guardar tab en URL (sin recargar)
+    var url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    // Si cambia de tab, limpiar filtro de fecha
+    if (tab !== 'listado') {
+        url.searchParams.delete('fecha');
+    }
+    history.replaceState(null, '', url.toString());
+
     if (typeof trackAccion === 'function') {
         trackAccion('tab_' + tab, _fixtureContext);
     }
@@ -663,26 +679,112 @@ async function descargarImagen(elementId, filename) {
 }
 
 // Filtro por día - listado de partidos
+function aplicarFiltroDia(fechaFiltro) {
+    document.querySelectorAll('.btn-dia').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.fecha === fechaFiltro);
+    });
+
+    var rows     = document.querySelectorAll('.listado-row');
+    var visibles = 0;
+
+    rows.forEach(function(row) {
+        var mostrar = !fechaFiltro || row.dataset.fecha === fechaFiltro;
+        row.style.display = mostrar ? '' : 'none';
+        if (mostrar) visibles++;
+    });
+
+    ['listado-vacio', 'listado-vacio-pub'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = visibles === 0 ? '' : 'none';
+    });
+
+    // Actualizar URL sin recargar
+    var url = new URL(window.location.href);
+    if (fechaFiltro) {
+        url.searchParams.set('fecha', fechaFiltro);
+    } else {
+        url.searchParams.delete('fecha');
+    }
+    history.replaceState(null, '', url.toString());
+}
+
 document.querySelectorAll('.btn-dia').forEach(function(btn) {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.btn-dia').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-
-        var fechaFiltro = this.dataset.fecha;
-        var rows     = document.querySelectorAll('.listado-row');
-        var visibles = 0;
-
-        rows.forEach(function(row) {
-            var mostrar = !fechaFiltro || row.dataset.fecha === fechaFiltro;
-            row.style.display = mostrar ? '' : 'none';
-            if (mostrar) visibles++;
-        });
-
-        ['listado-vacio', 'listado-vacio-pub'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.style.display = visibles === 0 ? '' : 'none';
-        });
+        aplicarFiltroDia(this.dataset.fecha);
     });
 });
+
+// Aplicar tab + filtro si vienen en la URL al cargar
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    var fecha  = params.get('fecha');
+    var tab    = params.get('tab');
+
+    // Si viene fecha, forzar tab listado aunque no venga explícito
+    if (fecha && !tab) tab = 'listado';
+
+    if (tab) {
+        var tabBtn = document.querySelector('.tab[onclick*=\'' + tab + '\']');
+        if (tabBtn) tabBtn.click();
+    }
+
+    if (fecha) aplicarFiltroDia(fecha);
+})();
+
+// Botón compartir filtro
+document.getElementById('btn-compartir-filtro').addEventListener('click', function() {
+    var url = window.location.href;
+    if (navigator.share) {
+        navigator.share({ title: document.title, url: url }).catch(function(){});
+    } else {
+        window.open('https://wa.me/?text=' + encodeURIComponent(url), '_blank');
+    }
+});
+
+// ── AVISOS: polling cada 30s ──────────────────────────────────────────────
+var _avisosUrl = '<?= base_url('home/avisos_activos/' . $torneo_id) ?>';
+var _torneoUrlAviso = '<?= site_url('home/torneo/' . $torneo_id . '?tab=listado') ?>';
+
+function renderAvisoBanner(avisos) {
+    var banner = document.getElementById('avisos-banner');
+    if (!avisos || avisos.length === 0) {
+        banner.style.display = 'none';
+        banner.innerHTML = '';
+        return;
+    }
+    banner.style.display = 'block';
+    banner.innerHTML = '<div class="avisos-pub-wrap">' +
+        '<div class="avisos-pub-header"><span>⚠️ Avisos del torneo</span></div>' +
+        avisos.map(function(av) {
+            var expira = new Date(av.expira_at).toLocaleString('es-AR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+            return '<div class="aviso-pub-item">' +
+                (av.cancha ? '<span class="aviso-cancha-badge">Cancha ' + av.cancha + '</span> ' : '') +
+                '<span class="aviso-pub-msg">' + av.mensaje + '</span>' +
+                '<span class="aviso-pub-expira">hasta ' + expira + '</span>' +
+                '<button class="btn-aviso-wpp-pub" onclick="compartirAvisoPub(\'' + av.mensaje.replace(/'/g,"\\'") + '\',' + (av.cancha || 'null') + ')" title="Compartir"><i class="fab fa-whatsapp"></i></button>' +
+                '</div>';
+        }).join('') +
+        '</div>';
+}
+
+function compartirAvisoPub(mensaje, cancha) {
+    var texto = cancha ? '⚠️ Cancha ' + cancha + ': ' + mensaje : '⚠️ ' + mensaje;
+    texto += '\n\n' + _torneoUrlAviso;
+    if (navigator.share) {
+        navigator.share({ title: 'Aviso Telares Padel', text: texto }).catch(function(){});
+    } else {
+        window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+    }
+}
+
+function fetchAvisos() {
+    fetch(_avisosUrl)
+        .then(function(r) { return r.json(); })
+        .then(renderAvisoBanner)
+        .catch(function() {});
+}
+
+fetchAvisos();
+setInterval(fetchAvisos, 30000);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

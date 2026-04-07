@@ -369,6 +369,9 @@ class Torneos extends CI_Controller {
         $data['inscriptos_con_seed'] = $this->Torneo_model->obtenerInscripcionesConSeed($torneo_id, $categoria_id);
         $data['todos_partidos']      = $this->Torneo_model->obtenerTodosPartidosTorneo($torneo_id);
 
+        $this->load->model('Aviso_model');
+        $data['avisos']              = $this->Aviso_model->obtener_todos($torneo_id);
+
         $this->load->view('header');
         $this->load->view('admin/torneo_fixture', $data);
         $this->load->view('footer');

@@ -3715,6 +3715,24 @@ button {
     border-color: #003366;
 }
 
+.btn-compartir-filtro {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #25d366;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+    margin-left: auto;
+}
+.btn-compartir-filtro:hover { background: #1ebe5a; }
+
 .listado-tabla .listado-hora {
     font-weight: 700;
     font-size: 15px;
@@ -3764,6 +3782,205 @@ button {
     font-style: italic;
     padding: 20px 0;
 }
+
+/* ── Panel de avisos (admin) ─────────────────────────────────────────────── */
+.avisos-panel {
+    background: #fffbf0;
+    border: 1.5px solid #f5c842;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+}
+.avisos-panel-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.avisos-panel-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #7a5800;
+}
+.avisos-panel-sub {
+    font-size: 12px;
+    color: #a07800;
+}
+.avisos-form-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.avisos-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.avisos-form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+}
+.avisos-form-group-grow { flex: 1; min-width: 180px; }
+.avisos-form-group-btn  { justify-content: flex-end; }
+.avisos-input {
+    padding: 7px 10px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.avisos-input-sm {
+    padding: 7px 10px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    font-size: 13px;
+    width: 90px;
+}
+.btn-aviso-crear {
+    background: #e67e22;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .2s;
+}
+.btn-aviso-crear:hover { background: #cf6d17; }
+.btn-aviso-crear:disabled { opacity: .6; cursor: default; }
+
+.aviso-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid transparent;
+}
+.aviso-activo   { background: #fff8e1; border-color: #f5c842; }
+.aviso-expirado { background: #f5f5f5; border-color: #ddd; opacity: .65; }
+
+.aviso-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+.aviso-cancha-badge {
+    background: #003366;
+    color: #fff;
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.aviso-mensaje {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+}
+.aviso-expira {
+    font-size: 11px;
+    color: #888;
+    white-space: nowrap;
+}
+.aviso-item-actions {
+    display: flex;
+    gap: 6px;
+}
+.btn-aviso-wpp {
+    background: #25d366;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background .15s;
+}
+.btn-aviso-wpp:hover { background: #1ebe5a; }
+.btn-aviso-del {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background .15s;
+}
+.btn-aviso-del:hover { background: #c0392b; }
+.avisos-empty {
+    color: #aaa;
+    font-style: italic;
+    font-size: 13px;
+    text-align: center;
+    padding: 10px 0 0;
+}
+
+/* ── Banner de avisos (público) ─────────────────────────────────────────── */
+.avisos-pub-wrap {
+    background: linear-gradient(135deg, #fff3cd, #ffe69c);
+    border-left: 5px solid #f5c842;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 20px;
+    margin: 0 0 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.avisos-pub-header {
+    font-size: 13px;
+    font-weight: 800;
+    color: #7a5800;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 10px;
+}
+.aviso-pub-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 6px 0;
+    border-top: 1px solid rgba(0,0,0,.07);
+}
+.aviso-pub-item:first-of-type { border-top: none; }
+.aviso-pub-msg {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    flex: 1;
+}
+.aviso-pub-expira {
+    font-size: 11px;
+    color: #999;
+    white-space: nowrap;
+}
+.btn-aviso-wpp-pub {
+    background: #25d366;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: background .15s;
+}
+.btn-aviso-wpp-pub:hover { background: #1ebe5a; }
 
 /* Cards del listado */
 .listado-cards {
