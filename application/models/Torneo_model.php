@@ -239,6 +239,14 @@ class Torneo_model extends CI_Model {
         return $this->db->insert('inscripciones', $data);
     }
 
+    public function actualizar_pago($id, $pago, $metodo_pago)
+    {
+        return $this->db->where('id', $id)->update('inscripciones', [
+            'pago'        => (bool)$pago,
+            'metodo_pago' => $metodo_pago ?: null,
+        ]);
+    }
+
     public function guardar_participante($data)
     {
         $ok = $this->db->insert('participantes', $data);
@@ -349,7 +357,7 @@ class Torneo_model extends CI_Model {
     public function obtener_inscripciones_por_categoria($torneo_id, $categoria_id)
     {
         return $this->db
-            ->select('i.id, i.participante1_id, i.participante2_id, i.estado, i.disponibilidad,
+            ->select('i.id, i.participante1_id, i.participante2_id, i.estado, i.disponibilidad, i.pago, i.metodo_pago,
                 p1.nombre as nombre1, p1.apellido as apellido1, p1.telefono as telefono1,
                 p2.nombre as nombre2, p2.apellido as apellido2, p2.telefono as telefono2')
             ->from('inscripciones i')

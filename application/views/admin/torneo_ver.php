@@ -103,6 +103,54 @@
         </div>
     <?php endif; ?>
 
+    <!-- ══ CAMPEONES ══════════════════════════════════════════════════════ -->
+    <div class="campeones-admin-box">
+        <h3>🏆 Campeones del torneo</h3>
+
+        <form method="post" action="<?= base_url('admin/Torneos/guardar_campeones') ?>">
+            <input type="hidden" name="torneo_id" value="<?= $torneo->id ?>">
+
+            <div class="campeones-visibles-toggle">
+                <label class="toggle-label">
+                    <input type="checkbox" name="campeones_visibles" value="1"
+                           <?= $torneo->campeones_visibles ? 'checked' : '' ?>>
+                    Mostrar campeones al público
+                </label>
+            </div>
+
+            <?php
+            // Agrupar campeones existentes por categoria
+            $camp_map = [];
+            foreach ($campeones as $c) {
+                $camp_map[$c->categoria_id][$c->posicion] = $c->nombre;
+            }
+            ?>
+
+            <?php foreach ($categorias_torneo as $cat): ?>
+            <div class="campeones-cat-block">
+                <div class="campeones-cat-nombre"><?= htmlspecialchars($cat->nombre) ?></div>
+                <div class="campeones-cat-inputs">
+                    <div class="campeon-input-row">
+                        <span class="campeon-pos campeon-1">🥇 1°</span>
+                        <input type="text" name="campeones[<?= $cat->id ?>][1]"
+                               placeholder="Nombre de la pareja campeona"
+                               value="<?= htmlspecialchars($camp_map[$cat->id][1] ?? '') ?>">
+                    </div>
+                    <div class="campeon-input-row">
+                        <span class="campeon-pos campeon-2">🥈 2°</span>
+                        <input type="text" name="campeones[<?= $cat->id ?>][2]"
+                               placeholder="Nombre de la pareja finalista"
+                               value="<?= htmlspecialchars($camp_map[$cat->id][2] ?? '') ?>">
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+
+            <button type="submit" class="btn-guardar-campeones">Guardar campeones</button>
+        </form>
+    </div>
+    <!-- ═════════════════════════════════════════════════════════════════ -->
+
 </div>
 </section>
 

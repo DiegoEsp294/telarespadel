@@ -414,6 +414,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                 <div><strong>💰 Inscripción:</strong> $<?php echo $torneo->precio_inscripcion.' por integrante'; ?></div>
                             <?php endif; ?>
 
+                            <?php if(!empty($torneo->alias_pago)): ?>
+                                <div class="alias-pago-box">
+                                    <strong>🏦 Transferir a:</strong>
+                                    <span class="alias-pago-valor"><?php echo htmlspecialchars($torneo->alias_pago); ?></span>
+                                    <button class="btn-copiar-alias" onclick="copiarAlias('<?php echo htmlspecialchars($torneo->alias_pago); ?>', this)" title="Copiar alias">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+
                             <?php if(!empty($torneo->fecha_cierre_inscripcion)): ?>
                                 <div>
                                     <strong>⏳ Cierre inscripción:</strong>
@@ -440,6 +450,37 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             <a href="<?php echo $link_wpp; ?>" target="_blank" class="btn-enviar">
                 <i class="fab fa-whatsapp"></i> Inscribirme
             </a>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($campeones)): ?>
+        <?php
+        $campeones_por_cat = [];
+        foreach ($campeones as $c) {
+            $campeones_por_cat[$c->categoria_nombre][$c->posicion] = $c->nombre;
+        }
+        ?>
+        <div class="campeones-pub-section">
+            <h2 class="campeones-pub-titulo">🏆 Campeones</h2>
+            <div class="campeones-pub-grid">
+                <?php foreach ($campeones_por_cat as $cat => $posiciones): ?>
+                <div class="campeones-pub-card">
+                    <div class="campeones-pub-cat"><?= htmlspecialchars($cat) ?></div>
+                    <?php if (!empty($posiciones[1])): ?>
+                    <div class="campeones-pub-row campeon-pub-1">
+                        <span class="campeon-pub-medalla">🥇</span>
+                        <span class="campeon-pub-nombre"><?= htmlspecialchars($posiciones[1]) ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (!empty($posiciones[2])): ?>
+                    <div class="campeones-pub-row campeon-pub-2">
+                        <span class="campeon-pub-medalla">🥈</span>
+                        <span class="campeon-pub-nombre"><?= htmlspecialchars($posiciones[2]) ?></span>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
         </div>
         <?php endif; ?>
 
@@ -475,6 +516,14 @@ function copiarLink(url, btn) {
             btn.innerHTML = original;
             btn.style.background = '';
         }, 2000);
+    });
+}
+function copiarAlias(alias, btn) {
+    navigator.clipboard.writeText(alias).then(function() {
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.style.color = '#2ecc71';
+        setTimeout(function() { btn.innerHTML = orig; btn.style.color = ''; }, 2000);
     });
 }
 </script>

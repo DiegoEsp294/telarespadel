@@ -465,7 +465,7 @@ function pad(n) { return String(n).padStart(2, '0'); }
 function tickCountdowns() {
     document.querySelectorAll('.torneo-countdown').forEach(function(el) {
         const fecha  = el.dataset.fecha;          // "YYYY-MM-DD"
-        const target = new Date(fecha + 'T00:00:00').getTime();
+        const target = new Date(fecha + 'T16:00:00-03:00').getTime();
         const ahora  = Date.now();
         const diff   = target - ahora;
 

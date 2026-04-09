@@ -81,6 +81,7 @@ class Torneos extends CI_Controller {
             'telefono_organizador' => $telOrg ?: null,
             'precio_inscripcion'   => $this->input->post('precio_inscripcion') ?: 0,
             'premios'              => $this->input->post('premios') ?: null,
+            'alias_pago'           => $this->input->post('alias_pago') ?: null,
             'fecha_cierre_inscripcion' => $this->input->post('fecha_cierre_inscripcion') ?: null,
             'imagen'               => $imagenBase64,
             'visible'                  => $this->input->post('visible') ? TRUE : FALSE,
@@ -189,6 +190,7 @@ class Torneos extends CI_Controller {
             'telefono_organizador' => $telOrg ?: null,
             'precio_inscripcion'   => $this->input->post('precio_inscripcion') ?: 0,
             'premios'              => $this->input->post('premios') ?: null,
+            'alias_pago'           => $this->input->post('alias_pago') ?: null,
             'fecha_cierre_inscripcion' => $this->input->post('fecha_cierre_inscripcion') ?: null,
             'visible'                  => $this->input->post('visible') ? TRUE : FALSE,
             'inscripciones_visibles'   => $this->input->post('inscripciones_visibles') ? TRUE : FALSE,
@@ -246,6 +248,13 @@ class Torneos extends CI_Controller {
 
         $data['torneo'] = $torneo;
         $data['categorias_torneo'] = $this->Torneo_model->obtenerCategoriasPorTorneo($id);
+        $data['campeones'] = $this->db->query("
+            SELECT c.*, cat.nombre as categoria_nombre
+            FROM campeones c
+            JOIN categorias cat ON cat.id = c.categoria_id
+            WHERE c.torneo_id = ?
+            ORDER BY cat.nombre, c.posicion ASC
+        ", [$id])->result();
 
         $this->load->view('header');
         $this->load->view('admin/torneo_ver', $data);
@@ -319,6 +328,17 @@ class Torneos extends CI_Controller {
         $id_torneo      = $this->input->post('torneo_id');
         $this->Torneo_model->eliminar_inscripcion($id_inscripcion);
         echo json_encode($this->Torneo_model->obtener_inscripciones($id_torneo));
+    }
+
+    public function actualizar_pago()
+    {
+        $this->load->model('Torneo_model');
+        $id          = (int)$this->input->post('inscripcion_id');
+        $pago        = $this->input->post('pago');
+        $metodo_pago = $this->input->post('metodo_pago');
+        if (!$id) { echo json_encode(['ok' => false]); return; }
+        $this->Torneo_model->actualizar_pago($id, $pago, $metodo_pago);
+        echo json_encode(['ok' => true]);
     }
 
     public function actualizar_disponibilidad()
@@ -397,6 +417,39 @@ class Torneos extends CI_Controller {
 
         $this->Torneo_model->actualizarPartidoDatos($partido_id, $update);
         echo json_encode(['ok' => true]);
+    }
+
+    public function guardar_campeones()
+    {
+        $this->load->model('Torneo_model');
+        $torneo_id = (int)$this->input->post('torneo_id');
+        $campeones = $this->input->post('campeones'); // array [categoria_id => [1 => nombre, 2 => nombre]]
+
+        // Borrar los existentes y reinsertar
+        $this->db->where('torneo_id', $torneo_id)->delete('campeones');
+
+        if (!empty($campeones)) {
+            foreach ($campeones as $cat_id => $posiciones) {
+                foreach ($posiciones as $pos => $nombre) {
+                    $nombre = trim($nombre);
+                    if ($nombre) {
+                        $this->db->insert('campeones', [
+                            'torneo_id'    => $torneo_id,
+                            'categoria_id' => (int)$cat_id,
+                            'posicion'     => (int)$pos,
+                            'nombre'       => $nombre,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // Toggle visibilidad
+        $visible = $this->input->post('campeones_visibles') ? TRUE : FALSE;
+        $this->db->where('id', $torneo_id)->update('torneos', ['campeones_visibles' => $visible]);
+
+        $this->session->set_flashdata('ok', 'Campeones guardados.');
+        redirect('admin/Torneos/ver/' . $torneo_id);
     }
 
     public function guardar_zonas($torneo_id)

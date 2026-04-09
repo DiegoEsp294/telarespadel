@@ -9,7 +9,7 @@ class Aviso_model extends CI_Model {
             'torneo_id' => $torneo_id,
             'cancha'    => $cancha ?: null,
             'mensaje'   => $mensaje,
-            'expira_at' => date('Y-m-d H:i:s', strtotime("+{$horas} hours")),
+            'expira_at' => date('Y-m-d H:i:s', time() + (int)round($horas * 3600)),
             'creado_at' => date('Y-m-d H:i:s'),
         ]);
     }

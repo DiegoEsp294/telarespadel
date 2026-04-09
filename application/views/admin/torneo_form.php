@@ -72,6 +72,12 @@
            min="0"
            value="<?= $torneo->precio_inscripcion ?? '' ?>">
 
+    <label>Alias de pago <span style="font-weight:400;color:#888;">(para transferencias de inscripción)</span></label>
+    <input type="text"
+           name="alias_pago"
+           placeholder="Ej: telares.padel"
+           value="<?= htmlspecialchars($torneo->alias_pago ?? '') ?>">
+
     <label>Premios</label>
     <textarea name="premios"
               placeholder="Ej: 1° puesto: trofeo + bolsón de productos&#10;2° puesto: medalla"

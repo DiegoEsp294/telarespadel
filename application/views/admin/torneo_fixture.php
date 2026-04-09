@@ -158,6 +158,20 @@
 
                     <?php if (!empty($inscriptos)): ?>
 
+                        <?php
+                        $pagados = array_filter($inscriptos, fn($i) => $i->pago == true || $i->pago === 't');
+                        $total   = count($inscriptos);
+                        $npagados = count($pagados);
+                        ?>
+                        <div class="pago-resumen">
+                            <span class="pago-resumen-ok"><?= $npagados ?> pagaron</span>
+                            <span class="pago-resumen-sep">/</span>
+                            <span class="pago-resumen-total"><?= $total ?> inscriptos</span>
+                            <?php if ($npagados < $total): ?>
+                                <span class="pago-resumen-falta"><?= $total - $npagados ?> pendientes</span>
+                            <?php endif; ?>
+                        </div>
+
                         <table class="config-tabla">
                             <thead>
                                 <tr>
@@ -165,12 +179,15 @@
                                     <th>Jugador 1</th>
                                     <th>Jugador 2</th>
                                     <th>Disponibilidad</th>
+                                    <th>Pagó</th>
+                                    <th>Método</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($inscriptos as $idx => $insc): ?>
-                                <tr>
+                                <?php $pagado = $insc->pago === true || $insc->pago === 't'; ?>
+                                <tr class="<?= $pagado ? 'tr-pagado' : 'tr-sin-pagar' ?>">
                                     <td><?= $idx + 1 ?></td>
                                     <td><?= htmlspecialchars($insc->apellido1 . ' ' . $insc->nombre1) ?></td>
                                     <td><?= htmlspecialchars($insc->apellido2 . ' ' . $insc->nombre2) ?></td>
@@ -180,6 +197,20 @@
                                                data-id="<?= $insc->id ?>"
                                                value="<?= htmlspecialchars($insc->disponibilidad ?? '') ?>"
                                                placeholder="Ej: Sábados tarde">
+                                    </td>
+                                    <td class="td-pago-check">
+                                        <input type="checkbox"
+                                               class="check-pago"
+                                               data-id="<?= $insc->id ?>"
+                                               <?= $pagado ? 'checked' : '' ?>>
+                                    </td>
+                                    <td>
+                                        <select class="select-metodo-pago" data-id="<?= $insc->id ?>">
+                                            <option value="">—</option>
+                                            <option value="efectivo"      <?= $insc->metodo_pago === 'efectivo'      ? 'selected' : '' ?>>Efectivo</option>
+                                            <option value="transferencia" <?= $insc->metodo_pago === 'transferencia' ? 'selected' : '' ?>>Transferencia</option>
+                                            <option value="otro"          <?= $insc->metodo_pago === 'otro'          ? 'selected' : '' ?>>Otro</option>
+                                        </select>
                                     </td>
                                     <td>
                                         <button class="btn-editar-insc" type="button"
@@ -1280,6 +1311,38 @@ document.getElementById('formEditarInscripto')
         } else {
             alert('Error al guardar: ' + (resp.error ?? ''));
         }
+    });
+});
+
+// ── Pago de inscripción ───────────────────────────────────────────────────
+function guardarPago(id, pago, metodo) {
+    var fd = new FormData();
+    fd.append('inscripcion_id', id);
+    fd.append('pago', pago ? '1' : '0');
+    fd.append('metodo_pago', metodo);
+    fetch('<?= base_url('admin/Torneos/actualizar_pago') ?>', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(function(resp) {
+            var row = document.querySelector('.check-pago[data-id="' + id + '"]').closest('tr');
+            row.classList.toggle('tr-pagado', !!pago);
+            row.classList.toggle('tr-sin-pagar', !pago);
+        });
+}
+
+document.querySelectorAll('.check-pago').forEach(function(chk) {
+    chk.addEventListener('change', function() {
+        var id     = this.dataset.id;
+        var pago   = this.checked;
+        var metodo = this.closest('tr').querySelector('.select-metodo-pago').value;
+        guardarPago(id, pago, metodo);
+    });
+});
+
+document.querySelectorAll('.select-metodo-pago').forEach(function(sel) {
+    sel.addEventListener('change', function() {
+        var id   = this.dataset.id;
+        var pago = this.closest('tr').querySelector('.check-pago').checked;
+        guardarPago(id, pago, this.value);
     });
 });
 

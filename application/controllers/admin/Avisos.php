@@ -29,10 +29,14 @@ class Avisos extends CI_Controller {
         $this->Aviso_model->crear($torneo_id, $cancha, $mensaje, $horas);
 
         // Push notification a todos los suscriptores
-        $torneo = $this->Torneo_model->obtener_por_id($torneo_id);
-        $titulo = '⚠️ Aviso' . ($cancha ? ' · Cancha ' . $cancha : '') . ' — ' . ($torneo->nombre ?? 'Torneo');
-        $url    = site_url('home/torneo/' . $torneo_id . '?tab=listado');
-        $this->_enviar_push($titulo, $mensaje, $url);
+        try {
+            $torneo = $this->Torneo_model->obtener_por_id($torneo_id);
+            $titulo = '⚠️ Aviso' . ($cancha ? ' · Cancha ' . $cancha : '') . ' — ' . ($torneo->nombre ?? 'Torneo');
+            $url    = site_url('home/torneo/' . $torneo_id . '?tab=listado');
+            $this->_enviar_push($titulo, $mensaje, $url);
+        } catch (Exception $e) {
+            // Push falló pero el aviso ya se guardó, continuamos
+        }
 
         $avisos = $this->Aviso_model->obtener_todos($torneo_id);
         echo json_encode(['ok' => true, 'avisos' => $avisos]);
@@ -60,13 +64,18 @@ class Avisos extends CI_Controller {
     /* ── Helpers ── */
     private function _enviar_push($titulo, $cuerpo, $url)
     {
+        if (!file_exists(FCPATH . 'vendor/autoload.php')) return;
         require_once FCPATH . 'vendor/autoload.php';
+
+        $vapidPublic  = getenv('VAPID_PUBLIC');
+        $vapidPrivate = getenv('VAPID_PRIVATE');
+        if (!$vapidPublic || !$vapidPrivate) return;
 
         $auth = [
             'VAPID' => [
                 'subject'    => getenv('VAPID_SUBJECT') ?: 'mailto:admin@telarespadel.com.ar',
-                'publicKey'  => getenv('VAPID_PUBLIC'),
-                'privateKey' => getenv('VAPID_PRIVATE'),
+                'publicKey'  => $vapidPublic,
+                'privateKey' => $vapidPrivate,
             ],
         ];
 

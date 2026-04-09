@@ -92,6 +92,13 @@ class Home extends CI_Controller {
         $data['playoff'] = $this->Torneo_model->obtenerPlayoffBracket($id, $categoria_id);
         $data['todos_partidos'] = $this->Torneo_model->obtenerTodosPartidosTorneo($id);
         $data['torneo_id']      = $id;
+        $data['campeones']      = ($torneo->campeones_visibles) ? $this->db->query("
+            SELECT c.*, cat.nombre as categoria_nombre
+            FROM campeones c
+            JOIN categorias cat ON cat.id = c.categoria_id
+            WHERE c.torneo_id = ?
+            ORDER BY cat.nombre, c.posicion ASC
+        ", [$id])->result() : [];
 
         // $data['resultados'] = $this->Torneo_model->ObtenerResultados($id_torneo);
 
