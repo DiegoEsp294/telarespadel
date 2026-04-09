@@ -1346,28 +1346,25 @@ document.querySelectorAll('.select-metodo-pago').forEach(function(sel) {
     });
 });
 
-// ── Disponibilidad: guardar con debounce al escribir ──────────────────────
+// ── Disponibilidad: guardar al salir del input ──────────────────────
 document.querySelectorAll('.input-disponibilidad').forEach(function(input) {
-    var timer;
-    input.addEventListener('input', function() {
-        clearTimeout(timer);
-        var id = this.dataset.id;
-        var val = this.value;
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+    });
+    input.addEventListener('blur', function() {
         var el = this;
-        timer = setTimeout(function() {
-            var fd = new FormData();
-            fd.append('inscripcion_id', id);
-            fd.append('disponibilidad', val);
-            fetch("<?= base_url('admin/Torneos/actualizar_disponibilidad') ?>", {
-                method: 'POST',
-                body: fd
-            })
-            .then(r => r.json())
-            .then(function(resp) {
-                el.style.borderColor = resp.ok ? '#2ecc71' : '#e74c3c';
-                setTimeout(function() { el.style.borderColor = ''; }, 1500);
-            });
-        }, 600);
+        var fd = new FormData();
+        fd.append('inscripcion_id', this.dataset.id);
+        fd.append('disponibilidad', this.value);
+        fetch("<?= base_url('admin/Torneos/actualizar_disponibilidad') ?>", {
+            method: 'POST',
+            body: fd
+        })
+        .then(r => r.json())
+        .then(function(resp) {
+            el.style.borderColor = resp.ok ? '#2ecc71' : '#e74c3c';
+            setTimeout(function() { el.style.borderColor = ''; }, 1500);
+        });
     });
 });
 
