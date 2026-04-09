@@ -159,7 +159,7 @@
                     <?php if (!empty($inscriptos)): ?>
 
                         <?php
-                        $pagados = array_filter($inscriptos, fn($i) => $i->pago == true || $i->pago === 't');
+                        $pagados = array_filter($inscriptos, fn($i) => $i->pago === true || $i->pago === 't' || $i->pago === '1');
                         $total   = count($inscriptos);
                         $npagados = count($pagados);
                         ?>
@@ -186,7 +186,7 @@
                             </thead>
                             <tbody>
                                 <?php foreach ($inscriptos as $idx => $insc): ?>
-                                <?php $pagado = $insc->pago === true || $insc->pago === 't'; ?>
+                                <?php $pagado = $insc->pago === true || $insc->pago === 't' || $insc->pago === '1'; ?>
                                 <tr class="<?= $pagado ? 'tr-pagado' : 'tr-sin-pagar' ?>">
                                     <td><?= $idx + 1 ?></td>
                                     <td><?= htmlspecialchars($insc->apellido1 . ' ' . $insc->nombre1) ?></td>
