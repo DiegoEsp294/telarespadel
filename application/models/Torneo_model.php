@@ -1112,25 +1112,9 @@ class Torneo_model extends CI_Model {
             WHERE p.torneo_id = ?
         ", [$torneo_id])->result();
 
-        // Ordenar en PHP: sin fecha al final, luego por fecha y hora
+        // Ordenar: sin fecha al final, luego por fecha, hora, zona
         usort($rows, function($a, $b) {
-            // 1) Zona primero (NULL = playoff, va al final)
-            $za = $a->zona_numero;
-            $zb = $b->zona_numero;
-            if ($za !== $zb) {
-                if ($za === null) return 1;
-                if ($zb === null) return -1;
-                return $za - $zb;
-            }
-
-            // 2) Dentro del playoff: por ronda (Octavos→Cuartos→Semi→Final)
-            if ($za === null) {
-                $ra = (int)($a->ronda ?? 0);
-                $rb = (int)($b->ronda ?? 0);
-                if ($ra !== $rb) return $ra - $rb;
-            }
-
-            // 3) Dentro de la misma zona/ronda: por fecha
+            // 1) Partidos sin fecha van al final
             $fa = $a->fecha ? substr($a->fecha, 0, 10) : null;
             $fb = $b->fecha ? substr($b->fecha, 0, 10) : null;
 
@@ -1140,7 +1124,31 @@ class Torneo_model extends CI_Model {
                 return strcmp($fa, $fb);
             }
 
-            // 3) Misma fecha: por hora
+            // 2) Misma fecha: por hora
+            $ha = $a->hora ? substr($a->hora, 0, 5) : null;
+            $hb = $b->hora ? substr($b->hora, 0, 5) : null;
+
+            if ($ha !== $hb) {
+                if ($ha === null) return 1;
+                if ($hb === null) return -1;
+                return strcmp($ha, $hb);
+            }
+
+            // 3) Misma fecha y hora: por zona (playoff al final)
+            $za = $a->zona_numero;
+            $zb = $b->zona_numero;
+            if ($za !== $zb) {
+                if ($za === null) return 1;
+                if ($zb === null) return -1;
+                return $za - $zb;
+            }
+
+            // 4) Playoff: por ronda
+            $ra = (int)($a->ronda ?? 0);
+            $rb = (int)($b->ronda ?? 0);
+            if ($ra !== $rb) return $ra - $rb;
+
+            // 5) Sin fecha ni hora al final
             $ha = $a->hora ? substr($a->hora, 0, 5) : null;
             $hb = $b->hora ? substr($b->hora, 0, 5) : null;
 
