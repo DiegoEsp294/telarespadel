@@ -149,14 +149,19 @@ class FixtureService
         $direccion = 1;
         $indexZona = 0;
         $totalZonas = count($zonas);
+        $contadorPorZona = [];
 
         foreach ($parejas as $pareja)
         {
             $zonas[$indexZona]['parejas'][] = $pareja;
 
+            $zona_id = $zonas[$indexZona]['zona_id'];
+            $contadorPorZona[$zona_id] = ($contadorPorZona[$zona_id] ?? 0) + 1;
+
             $dataZonaParejas = [
-                'zona_id' => $zonas[$indexZona]['zona_id'],
-                'inscripcion_id' => $pareja->id
+                'zona_id'       => $zona_id,
+                'inscripcion_id'=> $pareja->id,
+                'posicion'      => $contadorPorZona[$zona_id],
             ];
             $this->CI->Torneo_model->insertarZonaParejas($dataZonaParejas);
 
@@ -889,6 +894,8 @@ class FixtureService
 
             p.pareja1_id,
             p.pareja2_id,
+            zp1.posicion as posicion_pareja1,
+            zp2.posicion as posicion_pareja2,
 
             CONCAT(p1a.apellido,' ',p1a.nombre,' - ',p1b.apellido,' ',p1b.nombre) as pareja1_nombre,
             CONCAT(p2a.apellido,' ',p2a.nombre,' - ',p2b.apellido,' ',p2b.nombre) as pareja2_nombre,
@@ -910,11 +917,13 @@ class FixtureService
         $this->CI->db->join('inscripciones ins1','ins1.id = p.pareja1_id','left');
         $this->CI->db->join('participantes p1a','p1a.id = ins1.participante1_id','left');
         $this->CI->db->join('participantes p1b','p1b.id = ins1.participante2_id','left');
+        $this->CI->db->join('zona_parejas zp1','zp1.zona_id = z.id AND zp1.inscripcion_id = p.pareja1_id','left');
 
         // pareja 2
         $this->CI->db->join('inscripciones ins2','ins2.id = p.pareja2_id','left');
         $this->CI->db->join('participantes p2a','p2a.id = ins2.participante1_id','left');
         $this->CI->db->join('participantes p2b','p2b.id = ins2.participante2_id','left');
+        $this->CI->db->join('zona_parejas zp2','zp2.zona_id = z.id AND zp2.inscripcion_id = p.pareja2_id','left');
 
         // sets
         $this->CI->db->join('partido_sets s1', 's1.partido_id = p.id AND s1.numero_set = 1', 'left');
@@ -956,9 +965,8 @@ class FixtureService
             /*
             ============================
             REGISTRAR PAREJAS (numeradas)
-            Paso 1: todas las pareja1 primero
-            Paso 2: todas las pareja2 que aún no tengan número
-            Esto garantiza que en zonas de 4 (bracket) quede 1 VS 3 y 2 VS 4
+            Usa posicion guardada en zona_parejas para que el número
+            de pareja sea estable sin importar el orden de la query.
             ============================
             */
 
@@ -966,27 +974,27 @@ class FixtureService
             {
                 if ($row->pareja1_id && !isset($zonas[$zona_id]['_mapParejas'][$row->pareja1_id]))
                 {
-                    $numero = count($zonas[$zona_id]['parejas']) + 1;
+                    $numero = (int)$row->posicion_pareja1 ?: (count($zonas[$zona_id]['parejas']) + 1);
                     $zonas[$zona_id]['_mapParejas'][$row->pareja1_id] = $numero;
-                    $zonas[$zona_id]['parejas'][] = [
+                    $zonas[$zona_id]['_parejasTmp'][$numero] = [
                         'numero' => $numero,
                         'nombre' => strtoupper($row->pareja1_nombre)
                     ];
                 }
-            }
-
-            foreach ($filas as $row)
-            {
                 if ($row->pareja2_id && !isset($zonas[$zona_id]['_mapParejas'][$row->pareja2_id]))
                 {
-                    $numero = count($zonas[$zona_id]['parejas']) + 1;
+                    $numero = (int)$row->posicion_pareja2 ?: (count($zonas[$zona_id]['_parejasTmp'] ?? []) + 1);
                     $zonas[$zona_id]['_mapParejas'][$row->pareja2_id] = $numero;
-                    $zonas[$zona_id]['parejas'][] = [
+                    $zonas[$zona_id]['_parejasTmp'][$numero] = [
                         'numero' => $numero,
                         'nombre' => strtoupper($row->pareja2_nombre)
                     ];
                 }
             }
+
+            // Ordenar por número de posición y aplanar
+            ksort($zonas[$zona_id]['_parejasTmp']);
+            $zonas[$zona_id]['parejas'] = array_values($zonas[$zona_id]['_parejasTmp']);
 
             /*
             ============================
