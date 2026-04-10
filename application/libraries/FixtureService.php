@@ -924,8 +924,6 @@ class FixtureService
         $this->CI->db->where('p.torneo_id', $torneo_id);
         $this->CI->db->where('z.categoria_id', $categoria_id);
 
-        $this->CI->db->order_by('p.fecha','ASC');
-        $this->CI->db->order_by('p.hora','ASC');
         $this->CI->db->order_by('z.numero','ASC');
         $this->CI->db->order_by('p.id','ASC');
 
