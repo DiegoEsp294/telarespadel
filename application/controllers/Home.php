@@ -123,6 +123,16 @@ class Home extends CI_Controller {
         $this->load->view('footer');
     }
 
+    public function programa($id)
+    {
+        $torneo = $this->Torneo_model->obtener_por_id($id);
+        if (!$torneo) redirect('/');
+
+        $data['torneo']         = $torneo;
+        $data['todos_partidos'] = $this->Torneo_model->obtenerTodosPartidosTorneo($id);
+        $this->load->view('programa_partidos', $data);
+    }
+
     /* Avisos activos de un torneo — endpoint público para polling */
     public function avisos_activos($torneo_id)
     {

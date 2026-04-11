@@ -917,6 +917,9 @@
                             <button class="btn-compartir-filtro" id="btn-compartir-filtro" title="Compartir partidos con filtro aplicado">
                                 <i class="fab fa-whatsapp"></i> Compartir
                             </button>
+                            <a href="<?= base_url('home/programa/' . $torneo->id) ?>" target="_blank" class="btn-compartir-filtro" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+                                <i class="fas fa-download"></i> Programa
+                            </a>
                         </div>
 
                         <div class="listado-cards" id="listado-tbody">
